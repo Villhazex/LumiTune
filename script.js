@@ -1,6 +1,8 @@
 const audioExtensions = ['.mp3', '.wav', '.ogg', '.flac', '.m4a', '.aac'];
 
-let playlists = {
+const DEFAULT_KEYS = ['chill', 'workout', 'focus'];
+
+const DEFAULT_PLAYLISTS = {
     chill: {
         name: "Chill Vibes", emoji: "🎵", color: "#d4f53c", sub: "Relax & unwind — FM 99.7",
         songs: [
@@ -33,9 +35,9 @@ let playlists = {
     }
 };
 
+let playlists = {};
 let audioPlayer = new Audio();
-
-let currentPlaylist  = "chill";
+let currentPlaylist = "chill";
 let currentSongIndex = -1;
 let isPlaying = false;
 let isShuffle = false;
@@ -47,29 +49,207 @@ let playbackInterval = null;
 let currentPlaybackTime = 0;
 let totalDuration = 0;
 let isDraggingProgress = false;
-let isDraggingVolume   = false;
-let currentAudioFile   = null;
+let isDraggingVolume = false;
+let currentAudioFile = null;
+let currentView = 'home';
+let db = null;
+let recentPlaylists = [];
 
 const $ = id => document.getElementById(id);
 
-document.getElementById('sidebarDate').textContent = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+// ─── IndexedDB ───────────────────────────────────────────────
 
-function formatTime(s) {
-    if (isNaN(s)) return "0:00";
-    const m = Math.floor(s/60), sec = Math.floor(s%60);
-    return `${m}:${sec.toString().padStart(2,"0")}`;
+function getDB() {
+    if (db) return Promise.resolve(db);
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open('LumiToneDB', 1);
+        req.onupgradeneeded = e => {
+            const d = e.target.result;
+            if (!d.objectStoreNames.contains('files'))
+                d.createObjectStore('files');
+        };
+        req.onsuccess = e => { db = e.target.result; resolve(db); };
+        req.onerror = e => reject(e.target.error);
+    });
 }
 
-function renderSongList(filter="") {
-    const songs = playlists[currentPlaylist].songs;
+function dbStore(key, file) {
+    return getDB().then(d => new Promise((resolve, reject) => {
+        const tx = d.transaction('files', 'readwrite');
+        tx.objectStore('files').put(file, key);
+        tx.oncomplete = () => resolve();
+        tx.onerror = e => reject(e.target.error);
+    }));
+}
+
+function dbGet(key) {
+    return getDB().then(d => new Promise((resolve, reject) => {
+        const tx = d.transaction('files', 'readonly');
+        const req = tx.objectStore('files').get(key);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = e => reject(e.target.error);
+    }));
+}
+
+function dbDelete(key) {
+    return getDB().then(d => new Promise((resolve, reject) => {
+        const tx = d.transaction('files', 'readwrite');
+        tx.objectStore('files').delete(key);
+        tx.oncomplete = () => resolve();
+        tx.onerror = e => reject(e.target.error);
+    }));
+}
+
+// ─── State persistence ───────────────────────────────────────
+
+function saveState() {
+    const custom = {};
+    for (const key of Object.keys(playlists)) {
+        if (DEFAULT_KEYS.includes(key)) continue;
+        const pl = playlists[key];
+        custom[key] = {
+            name: pl.name, emoji: pl.emoji, color: pl.color, sub: pl.sub,
+            songs: pl.songs.map(s => {
+                const { file, ...rest } = s;
+                return rest;
+            })
+        };
+    }
+    try {
+        localStorage.setItem('lumi-playlists', JSON.stringify(custom));
+        localStorage.setItem('lumi-favorites', JSON.stringify([...favorites].map(id => String(id))));
+        localStorage.setItem('lumi-volume', String(volume));
+        localStorage.setItem('lumi-repeat', String(repeatMode));
+        localStorage.setItem('lumi-shuffle', String(isShuffle));
+        localStorage.setItem('lumi-current-playlist', currentPlaylist);
+        localStorage.setItem('lumi-recent-playlists', JSON.stringify(recentPlaylists));
+    } catch (e) {}
+}
+
+async function loadState() {
+    try {
+        const raw = localStorage.getItem('lumi-playlists');
+        if (raw) {
+            const custom = JSON.parse(raw);
+            for (const [key, pl] of Object.entries(custom)) {
+                const songs = [];
+                for (const [idx, s] of pl.songs.entries()) {
+                    const fk = `file-${key}-${s.id}`;
+                    const file = await dbGet(fk);
+                    songs.push(file ? { ...s, file, fileKey: fk } : { ...s });
+                }
+                playlists[key] = { ...pl, songs };
+            }
+        }
+        const favArr = JSON.parse(localStorage.getItem('lumi-favorites') || '[]');
+        const vol = parseFloat(localStorage.getItem('lumi-volume'));
+        const rep = parseInt(localStorage.getItem('lumi-repeat'));
+        const shuf = localStorage.getItem('lumi-shuffle') === 'true';
+        const lastPl = localStorage.getItem('lumi-current-playlist');
+
+        favorites = new Set(favArr.map(id => String(id)));
+        if (!isNaN(vol)) volume = Math.max(0, Math.min(1, vol));
+        if (!isNaN(rep)) repeatMode = rep % 3;
+        isShuffle = shuf;
+
+        const allKeys = [...DEFAULT_KEYS, ...Object.keys(playlists)];
+        if (lastPl && allKeys.includes(lastPl)) currentPlaylist = lastPl;
+
+        const recentRaw = localStorage.getItem('lumi-recent-playlists');
+        if (recentRaw) {
+            const parsed = JSON.parse(recentRaw);
+            if (Array.isArray(parsed)) recentPlaylists = parsed.filter(k => typeof k === 'string');
+        }
+    } catch (e) {
+        console.warn('Failed to load state:', e);
+    }
+}
+
+// ─── Date ────────────────────────────────────────────────────
+
+function setDate() {
+    const el = document.getElementById('sidebarDate');
+    if (el) el.textContent = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+// ─── Formatting ──────────────────────────────────────────────
+
+function formatTime(s) {
+    if (isNaN(s) || s === undefined || s === null) return "0:00";
+    const m = Math.floor(s / 60), sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+}
+
+// ─── Featured Strip ──────────────────────────────────────────
+
+function renderFeaturedStrip() {
+    const strip = $('featuredStrip');
+    if (!strip) return;
+    let keys = recentPlaylists.filter(k => playlists[k]).slice(0, 3);
+    if (keys.length < 3) {
+        for (const k of DEFAULT_KEYS) {
+            if (!keys.includes(k)) keys.push(k);
+            if (keys.length >= 3) break;
+        }
+    }
+    strip.innerHTML = keys.map((key, i) => {
+        const pl = playlists[key];
+        const num = String(i + 1).padStart(3, '0');
+        return `
+        <div class="feat-card ${key === currentPlaylist ? 'feat-active' : ''}" data-playlist="${key}" data-emoji="${pl.emoji}">
+            <div class="feat-eyebrow">// Playlist · ${num}</div>
+            <div class="feat-title">${pl.name}</div>
+            <div class="feat-sub">${pl.sub}</div>
+        </div>`;
+    }).join('');
+}
+
+function recordPlaylistPlay(key) {
+    if (!playlists[key]) return;
+    const idx = recentPlaylists.indexOf(key);
+    if (idx > -1) recentPlaylists.splice(idx, 1);
+    recentPlaylists.unshift(key);
+}
+
+// ─── View switching ──────────────────────────────────────────
+
+function switchView(view) {
+    currentView = view;
+    document.querySelectorAll('.nav-item[data-view]').forEach(n => n.classList.remove('active'));
+    const activeNav = document.querySelector(`.nav-item[data-view="${view}"]`);
+    if (activeNav) activeNav.classList.add('active');
+
+    const strip = $('featuredStrip');
+    if (strip) strip.style.display = view === 'home' ? '' : 'none';
+
+    const h = $('extraColHeader');
+    if (view === 'home') {
+        if (h) h.textContent = 'Duration';
+    } else {
+        if (h) h.textContent = 'Playlist';
+    }
+
+    renderSongList($('searchInput').value);
+}
+
+// ─── Song List Rendering ─────────────────────────────────────
+
+function renderSongList(filter = "") {
+    if (currentView === 'home') renderHomeSongs(filter);
+    else if (currentView === 'library') renderLibrarySongs(filter);
+    else if (currentView === 'favorites') renderFavoritesSongs(filter);
+}
+
+function renderHomeSongs(filter) {
+    const pl = playlists[currentPlaylist];
+    if (!pl) return;
+    const songs = pl.songs;
     const filtered = filter
         ? songs.filter(s => s.title.toLowerCase().includes(filter.toLowerCase()) || s.artist.toLowerCase().includes(filter.toLowerCase()))
         : songs;
 
-    $('secTitle').textContent = playlists[currentPlaylist].name.toUpperCase() + ' // TRACKLIST';
+    $('secTitle').textContent = pl.name.toUpperCase() + ' // TRACKLIST';
     $('secCount').textContent = filtered.length + ' Tracks';
-
-    const pl = playlists[currentPlaylist];
     $('pageTitle').textContent = pl.name.toUpperCase();
     $('pageSub').textContent = pl.sub;
 
@@ -83,11 +263,11 @@ function renderSongList(filter="") {
     $('songList').innerHTML = filtered.map(song => {
         const origIdx = songs.indexOf(song);
         const isActive = origIdx === currentSongIndex;
-        const isLiked  = favorites.has(song.id);
-        const isCustom = !['chill', 'workout', 'focus'].includes(currentPlaylist);
+        const isLiked = favorites.has(String(song.id));
+        const isCustom = !DEFAULT_KEYS.includes(currentPlaylist);
         const numDisplay = isActive && isPlaying ? '▶' : String(origIdx + 1).padStart(2, '0');
         return `
-        <tr class="${isActive ? 'song-active' : ''}" data-index="${origIdx}">
+        <tr class="${isActive ? 'song-active' : ''}" data-index="${origIdx}" data-playlist="${currentPlaylist}">
             <td><span class="song-num-cell ${isActive && isPlaying ? 'playing' : ''}">${numDisplay}</span></td>
             <td>
                 <span class="song-title-strong">${song.title}</span>
@@ -103,10 +283,127 @@ function renderSongList(filter="") {
             </td>
         </tr>`;
     }).join('');
-
 }
 
-function playSong(index) {
+function renderLibrarySongs(filter) {
+    const allTracks = [];
+    Object.entries(playlists).forEach(([plKey, pl]) => {
+        pl.songs.forEach((song, idx) => {
+            allTracks.push({ ...song, playlistKey: plKey, songIndex: idx });
+        });
+    });
+
+    const filtered = filter
+        ? allTracks.filter(s =>
+            s.title.toLowerCase().includes(filter.toLowerCase()) ||
+            s.artist.toLowerCase().includes(filter.toLowerCase()) ||
+            (playlists[s.playlistKey]?.name || '').toLowerCase().includes(filter.toLowerCase()))
+        : allTracks;
+
+    $('secTitle').textContent = 'LIBRARY // ALL TRACKS';
+    $('secCount').textContent = filtered.length + ' Tracks';
+    $('pageTitle').textContent = 'LIBRARY';
+    $('pageSub').textContent = 'Every track across all playlists';
+
+    if (filtered.length === 0) {
+        $('songList').innerHTML = '';
+        $('emptyState').style.display = 'block';
+        return;
+    }
+    $('emptyState').style.display = 'none';
+
+    $('songList').innerHTML = filtered.map((song, idx) => {
+        const isActive = song.playlistKey === currentPlaylist && song.songIndex === currentSongIndex;
+        const isLiked = favorites.has(String(song.id));
+        const numDisplay = isActive && isPlaying ? '▶' : String(idx + 1).padStart(2, '0');
+        return `
+        <tr class="${isActive ? 'song-active' : ''}" data-playlist="${song.playlistKey}" data-index="${song.songIndex}">
+            <td><span class="song-num-cell ${isActive && isPlaying ? 'playing' : ''}">${numDisplay}</span></td>
+            <td>
+                <span class="song-title-strong">${song.title}</span>
+                <span class="song-artist-sm">${song.artist}</span>
+            </td>
+            <td><span class="song-dur">${playlists[song.playlistKey]?.name || song.playlistKey}</span></td>
+            <td>
+                ${isActive ? `<span class="badge badge-acid">${isPlaying ? '◉ PLAYING' : '◎ PAUSED'}</span>` : '<span class="badge badge-neutral">—</span>'}
+            </td>
+            <td>
+                <button class="like-btn-row ${isLiked ? 'liked' : ''}" data-song-id="${song.id}">♥</button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function renderFavoritesSongs(filter) {
+    const favTracks = [];
+    Object.entries(playlists).forEach(([plKey, pl]) => {
+        pl.songs.forEach((song, idx) => {
+            if (favorites.has(String(song.id))) {
+                favTracks.push({ ...song, playlistKey: plKey, songIndex: idx });
+            }
+        });
+    });
+
+    const filtered = filter
+        ? favTracks.filter(s =>
+            s.title.toLowerCase().includes(filter.toLowerCase()) ||
+            s.artist.toLowerCase().includes(filter.toLowerCase()) ||
+            (playlists[s.playlistKey]?.name || '').toLowerCase().includes(filter.toLowerCase()))
+        : favTracks;
+
+    $('secTitle').textContent = 'FAVORITES // LIKED TRACKS';
+    $('secCount').textContent = filtered.length + ' Tracks';
+    $('pageTitle').textContent = 'FAVORITES';
+    $('pageSub').textContent = 'Your liked tracks';
+
+    if (filtered.length === 0) {
+        $('songList').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--muted);font-style:italic;">— No favorites yet. Like a track to see it here. —</td></tr>';
+        $('emptyState').style.display = 'none';
+        return;
+    }
+    $('emptyState').style.display = 'none';
+
+    $('songList').innerHTML = filtered.map((song, idx) => {
+        const isActive = song.playlistKey === currentPlaylist && song.songIndex === currentSongIndex;
+        const numDisplay = isActive && isPlaying ? '▶' : String(idx + 1).padStart(2, '0');
+        return `
+        <tr class="${isActive ? 'song-active' : ''}" data-playlist="${song.playlistKey}" data-index="${song.songIndex}">
+            <td><span class="song-num-cell ${isActive && isPlaying ? 'playing' : ''}">${numDisplay}</span></td>
+            <td>
+                <span class="song-title-strong">${song.title}</span>
+                <span class="song-artist-sm">${song.artist}</span>
+            </td>
+            <td><span class="song-dur">${playlists[song.playlistKey]?.name || song.playlistKey}</span></td>
+            <td>
+                ${isActive ? `<span class="badge badge-acid">${isPlaying ? '◉ PLAYING' : '◎ PAUSED'}</span>` : '<span class="badge badge-neutral">—</span>'}
+            </td>
+            <td>
+                <button class="like-btn-row liked" data-song-id="${song.id}">♥</button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+// ─── Playback ────────────────────────────────────────────────
+
+function playSong(index, playlistKey) {
+    if (playlistKey && playlistKey !== currentPlaylist) {
+        audioPlayer.pause();
+        if (currentAudioFile) {
+            URL.revokeObjectURL(audioPlayer.src);
+            audioPlayer.src = '';
+            currentAudioFile = null;
+        }
+        clearInterval(playbackInterval);
+        currentPlaylist = playlistKey;
+        currentSongIndex = -1;
+        recordPlaylistPlay(playlistKey);
+        renderPlaylistNav();
+        renderFeaturedStrip();
+        saveState();
+        if (currentView !== 'home') switchView('home');
+    }
+
     const songs = playlists[currentPlaylist].songs;
     if (index < 0 || index >= songs.length) return;
     currentSongIndex = index;
@@ -136,14 +433,14 @@ function playRealAudio(file, song) {
     audioPlayer.src = url;
     audioPlayer.volume = isMuted ? 0 : volume;
     audioPlayer.play().catch(e => console.log('Play error:', e));
-    
+
     audioPlayer.onloadedmetadata = () => {
         totalDuration = audioPlayer.duration;
         $('totalTime').textContent = formatTime(totalDuration);
         song.duration = formatTime(totalDuration);
         renderSongList($('searchInput').value);
     };
-    
+
     audioPlayer.ontimeupdate = () => {
         if (!isDraggingProgress) {
             currentPlaybackTime = audioPlayer.currentTime;
@@ -151,12 +448,19 @@ function playRealAudio(file, song) {
             $('progressFill').style.width = `${(currentPlaybackTime / totalDuration) * 100}%`;
         }
     };
-    
+
     audioPlayer.onended = handleEnd;
 }
 
 function simulatePlayback(durStr) {
     clearInterval(playbackInterval);
+    if (!durStr || durStr === '--:--') {
+        totalDuration = 0;
+        $('totalTime').textContent = '--:--';
+        $('currentTime').textContent = '0:00';
+        $('progressFill').style.width = '0%';
+        return;
+    }
     const parts = durStr.split(':');
     totalDuration = parseInt(parts[0]) * 60 + parseInt(parts[1]);
     currentPlaybackTime = 0;
@@ -190,6 +494,36 @@ function handleEnd() {
     }
 }
 
+function playNext() {
+    const songs = playlists[currentPlaylist].songs;
+    if (songs.length === 0) return;
+    let next;
+    if (isShuffle) {
+        do { next = Math.floor(Math.random() * songs.length); }
+        while (next === currentSongIndex && songs.length > 1);
+    } else {
+        next = (currentSongIndex + 1) % songs.length;
+    }
+    playSong(next);
+}
+
+function playPrev() {
+    const songs = playlists[currentPlaylist].songs;
+    if (songs.length === 0) return;
+    if (currentPlaybackTime > 3) {
+        currentPlaybackTime = 0;
+        if (currentAudioFile) {
+            audioPlayer.currentTime = 0;
+        } else {
+            simulatePlayback(songs[currentSongIndex]?.duration);
+        }
+        return;
+    }
+    playSong((currentSongIndex - 1 + songs.length) % songs.length);
+}
+
+// ─── File handling ───────────────────────────────────────────
+
 async function handleFolderSelect(e) {
     const files = Array.from(e.target.files);
     const audioFiles = files.filter(f => {
@@ -207,26 +541,37 @@ async function handleFolderSelect(e) {
     playlistName = playlistName.trim() || 'My Playlist';
 
     const playlistKey = 'custom-' + Date.now();
-    
-    playlists[playlistKey] = {
-        name: playlistName.trim(), emoji: "📂", color: "#a855f7", sub: `${audioFiles.length} tracks`,
-        songs: audioFiles.map((file, idx) => ({
-            id: playlistKey + '-' + idx,
+
+    const songs = [];
+    for (const [idx, file] of audioFiles.entries()) {
+        const songId = playlistKey + '-' + idx;
+        const fk = `file-${playlistKey}-${songId}`;
+        await dbStore(fk, file);
+        songs.push({
+            id: songId,
             title: file.name.replace(/\.[^/.]+$/, ''),
             artist: 'Unknown Artist',
             duration: '--:--',
-            file: file
-        }))
+            file: file,
+            fileKey: fk
+        });
+    }
+
+    playlists[playlistKey] = {
+        name: playlistName, emoji: "📂", color: "#a855f7", sub: `${audioFiles.length} tracks`,
+        songs: songs
     };
 
     renderPlaylistNav();
+    renderFeaturedStrip();
     switchPlaylist(playlistKey);
-    
-    $('tickerText').innerHTML = `&nbsp;&nbsp;✦ LumiTone &nbsp;✦&nbsp; ${audioFiles.length} TRACKS &nbsp;✦&nbsp; ${playlistName.trim().toUpperCase()} &nbsp;✦&nbsp;`;
+    saveState();
+
+    $('tickerText').innerHTML = `&nbsp;&nbsp;✦ LumiTone &nbsp;✦&nbsp; ${audioFiles.length} TRACKS &nbsp;✦&nbsp; ${playlistName.toUpperCase()} &nbsp;✦&nbsp;`;
     e.target.value = '';
 }
 
-function handleAddTracks(e) {
+async function handleAddTracks(e) {
     const files = Array.from(e.target.files);
     const audioFiles = files.filter(f => {
         const ext = '.' + f.name.split('.').pop().toLowerCase();
@@ -236,26 +581,39 @@ function handleAddTracks(e) {
 
     const pl = playlists[currentPlaylist];
     const startId = Date.now();
-    const newSongs = audioFiles.map((file, idx) => ({
-        id: startId + idx,
-        title: file.name.replace(/\.[^/.]+$/, ''),
-        artist: 'Unknown Artist',
-        duration: '--:--',
-        file: file
-    }));
-    pl.songs.push(...newSongs);
+    for (const [idx, file] of audioFiles.entries()) {
+        const songId = startId + idx;
+        const fk = `file-${currentPlaylist}-${songId}`;
+        await dbStore(fk, file);
+        pl.songs.push({
+            id: songId,
+            title: file.name.replace(/\.[^/.]+$/, ''),
+            artist: 'Unknown Artist',
+            duration: '--:--',
+            file: file,
+            fileKey: fk
+        });
+    }
     pl.sub = `${pl.songs.length} tracks`;
     renderSongList($('searchInput').value);
+    saveState();
     e.target.value = '';
 }
 
 async function handleDeletePlaylist(key) {
-    if (['chill', 'workout', 'focus'].includes(key)) return;
+    if (DEFAULT_KEYS.includes(key)) return;
     if (!(await showConfirmModal(`Delete "${playlists[key].name}"?`))) return;
+
+    const deletePromises = playlists[key].songs
+        .filter(s => s.fileKey)
+        .map(s => dbDelete(s.fileKey));
+    await Promise.all(deletePromises);
 
     const isCurrent = currentPlaylist === key;
     delete playlists[key];
     renderPlaylistNav();
+    renderFeaturedStrip();
+    saveState();
 
     if (isCurrent) {
         const keys = Object.keys(playlists);
@@ -268,7 +626,8 @@ async function handleDeleteTrack(index) {
     const song = songs[index];
     if (!(await showConfirmModal(`Delete "${song.title}"?`))) return;
 
-    const wasPlaying = currentSongIndex === index && isPlaying;
+    if (song.fileKey) await dbDelete(song.fileKey);
+
     songs.splice(index, 1);
 
     if (currentSongIndex === index) {
@@ -293,6 +652,7 @@ async function handleDeleteTrack(index) {
         currentSongIndex--;
     }
     renderSongList($('searchInput').value);
+    saveState();
 }
 
 async function handleRenamePlaylist(key) {
@@ -302,11 +662,15 @@ async function handleRenamePlaylist(key) {
 
     pl.name = newName;
     renderPlaylistNav();
+    renderFeaturedStrip();
     if (key === currentPlaylist) {
         $('pageTitle').textContent = newName.toUpperCase();
         $('secTitle').textContent = newName.toUpperCase() + ' // TRACKLIST';
     }
+    saveState();
 }
+
+// ─── Playback controls ──────────────────────────────────────
 
 function togglePlay() {
     if (currentSongIndex === -1) { playSong(0); return; }
@@ -325,59 +689,39 @@ function togglePlay() {
 }
 
 function updatePlayBtn() {
-    $('playIcon').style.display  = isPlaying ? 'none'   : 'inline';
+    $('playIcon').style.display = isPlaying ? 'none' : 'inline';
     $('pauseIcon').style.display = isPlaying ? 'inline' : 'none';
-}
-
-function playNext() {
-    const songs = playlists[currentPlaylist].songs;
-    let next;
-    if (isShuffle) {
-        do { next = Math.floor(Math.random() * songs.length); }
-        while (next === currentSongIndex && songs.length > 1);
-    } else {
-        next = (currentSongIndex + 1) % songs.length;
-    }
-    playSong(next);
-}
-
-function playPrev() {
-    if (currentPlaybackTime > 3) {
-        currentPlaybackTime = 0;
-        if (currentAudioFile) {
-            audioPlayer.currentTime = 0;
-        } else {
-            simulatePlayback(playlists[currentPlaylist].songs[currentSongIndex].duration);
-        }
-        return;
-    }
-    const songs = playlists[currentPlaylist].songs;
-    playSong((currentSongIndex - 1 + songs.length) % songs.length);
 }
 
 function toggleShuffle() {
     isShuffle = !isShuffle;
     $('shuffleBtn').classList.toggle('active', isShuffle);
+    saveState();
 }
 
 function toggleRepeat() {
     repeatMode = (repeatMode + 1) % 3;
     $('repeatBtn').classList.toggle('active', repeatMode > 0);
     $('repeatBtn').textContent = repeatMode === 2 ? '↺¹' : '↺';
+    saveState();
 }
 
 function toggleFav(id) {
+    id = String(id);
     if (favorites.has(id)) favorites.delete(id);
     else favorites.add(id);
     updateLikeBtn();
     renderSongList($('searchInput').value);
+    saveState();
 }
 
 function updateLikeBtn() {
     if (currentSongIndex === -1) return;
-    const id = playlists[currentPlaylist].songs[currentSongIndex].id;
+    const id = String(playlists[currentPlaylist].songs[currentSongIndex].id);
     $('likeBtn').classList.toggle('liked', favorites.has(id));
 }
+
+// ─── Progress / Volume ───────────────────────────────────────
 
 function seekTo(e) {
     const rect = $('progressBar').getBoundingClientRect();
@@ -397,6 +741,7 @@ function setVolume(e) {
     isMuted = false;
     audioPlayer.volume = volume;
     updateVolIcon();
+    saveState();
 }
 
 function toggleMute() {
@@ -409,6 +754,8 @@ function updateVolIcon() {
     $('volBtn').textContent = (isMuted || volume === 0) ? 'MUTE' : 'VOL';
     $('volFill').style.background = (isMuted || volume === 0) ? '#444' : '#555';
 }
+
+// ─── Modals ──────────────────────────────────────────────────
 
 function showConfirmModal(msg) {
     return new Promise(resolve => {
@@ -468,6 +815,8 @@ function showRenameModal(currentName) {
     return showInputModal('Rename playlist:', currentName);
 }
 
+// ─── Playlist navigation ─────────────────────────────────────
+
 function switchPlaylist(key) {
     audioPlayer.pause();
     if (currentAudioFile) {
@@ -476,38 +825,33 @@ function switchPlaylist(key) {
     audioPlayer.src = '';
     currentAudioFile = null;
 
-    currentPlaylist  = key;
+    currentPlaylist = key;
     currentSongIndex = -1;
+    recordPlaylistPlay(key);
     clearInterval(playbackInterval);
     isPlaying = false;
     updatePlayBtn();
     $('albumArt').classList.remove('playing');
     $('vizBars').classList.remove('active');
     $('albumArt').textContent = playlists[key].emoji;
-    $('trackTitle').textContent  = 'SELECT A TRACK';
+    $('trackTitle').textContent = 'SELECT A TRACK';
     $('trackArtist').textContent = 'Awaiting input...';
     $('progressFill').style.width = '0%';
     $('currentTime').textContent = '0:00';
-    $('totalTime').textContent   = '0:00';
+    $('totalTime').textContent = '0:00';
 
     renderPlaylistNav();
-
-    // Update featured cards
-    document.querySelectorAll('.feat-card').forEach(el =>
-        el.classList.toggle('feat-active', el.dataset.playlist === key));
-
+    renderFeaturedStrip();
     renderSongList($('searchInput').value);
+    saveState();
 }
 
 function renderPlaylistNav() {
-    const defaultKeys = ['chill', 'workout', 'focus'];
-    const colors = { chill: 'var(--acid)', workout: 'var(--rust)', focus: '#5dca86' };
-
     $('plNav').innerHTML = Object.keys(playlists).map(key => {
         const pl = playlists[key];
-        const isDefault = defaultKeys.includes(key);
+        const isDefault = DEFAULT_KEYS.includes(key);
         const isActive = key === currentPlaylist;
-        const color = pl.color || colors[key] || '#666';
+        const color = pl.color || '#666';
 
         if (isDefault) {
             return `<button class="pl-item ${isActive ? 'active' : ''}" data-playlist="${key}">
@@ -525,38 +869,42 @@ function renderPlaylistNav() {
     }).join('');
 }
 
+// ─── Event wiring ────────────────────────────────────────────
+
 $('newPlaylistBtn').addEventListener('click', () => $('folderInput').click());
 $('folderInput').addEventListener('change', handleFolderSelect);
 $('addTracksBtn').addEventListener('click', () => $('addTracksInput').click());
 $('addTracksInput').addEventListener('change', handleAddTracks);
 
-// Wire events
-$('playBtn').addEventListener('click',    togglePlay);
-$('nextBtn').addEventListener('click',    playNext);
-$('prevBtn').addEventListener('click',    playPrev);
+$('playBtn').addEventListener('click', togglePlay);
+$('nextBtn').addEventListener('click', playNext);
+$('prevBtn').addEventListener('click', playPrev);
 $('shuffleBtn').addEventListener('click', toggleShuffle);
-$('repeatBtn').addEventListener('click',  toggleRepeat);
+$('repeatBtn').addEventListener('click', toggleRepeat);
 $('likeBtn').addEventListener('click', () => {
-    if (currentSongIndex !== -1) toggleFav(playlists[currentPlaylist].songs[currentSongIndex].id);
+    if (currentSongIndex !== -1) toggleFav(String(playlists[currentPlaylist].songs[currentSongIndex].id));
 });
 
 $('progressBar').addEventListener('mousedown', e => { isDraggingProgress = true; seekTo(e); });
-$('volBar').addEventListener('mousedown',      e => { isDraggingVolume   = true; setVolume(e); });
+$('volBar').addEventListener('mousedown', e => { isDraggingVolume = true; setVolume(e); });
 document.addEventListener('mousemove', e => {
     if (isDraggingProgress) seekTo(e);
-    if (isDraggingVolume)   setVolume(e);
+    if (isDraggingVolume) setVolume(e);
 });
 document.addEventListener('mouseup', () => { isDraggingProgress = false; isDraggingVolume = false; });
-$('volBtn').addEventListener('click',      toggleMute);
+$('volBtn').addEventListener('click', toggleMute);
 $('searchInput').addEventListener('input', e => renderSongList(e.target.value));
 
 $('songList').addEventListener('click', e => {
     const delBtn = e.target.closest('.song-delete-btn');
     if (delBtn) { handleDeleteTrack(parseInt(delBtn.dataset.del)); return; }
     const likeBtn = e.target.closest('.like-btn-row');
-    if (likeBtn) { toggleFav(parseInt(likeBtn.dataset.songId)); return; }
+    if (likeBtn) { toggleFav(likeBtn.dataset.songId); return; }
     const tr = e.target.closest('tr');
-    if (tr && tr.dataset.index !== undefined) playSong(parseInt(tr.dataset.index));
+    if (tr && tr.dataset.index !== undefined) {
+        const plKey = tr.dataset.playlist || currentPlaylist;
+        playSong(parseInt(tr.dataset.index), plKey);
+    }
 });
 
 $('plNav').addEventListener('click', e => {
@@ -568,24 +916,54 @@ $('plNav').addEventListener('click', e => {
     if (plItem) switchPlaylist(plItem.dataset.playlist);
 });
 
-document.querySelectorAll('.feat-card').forEach(el =>
-    el.addEventListener('click', () => switchPlaylist(el.dataset.playlist)));
-document.querySelectorAll('.nav-item[data-view]').forEach(el =>
-    el.addEventListener('click', function() {
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        this.classList.add('active');
-    }));
-
-document.addEventListener('keydown', e => {
-    if (e.target === $('searchInput')) return;
-    if (e.code === 'Space')               { e.preventDefault(); togglePlay(); }
-    if (e.code === 'ArrowRight' && e.shiftKey) playNext();
-    if (e.code === 'ArrowLeft'  && e.shiftKey) playPrev();
-    if (e.code === 'KeyM')  toggleMute();
-    if (e.code === 'KeyS')  toggleShuffle();
-    if (e.code === 'KeyR')  toggleRepeat();
+// Featured cards clicks (delegated since they're dynamic)
+$('featuredStrip').addEventListener('click', e => {
+    const card = e.target.closest('.feat-card');
+    if (card) switchPlaylist(card.dataset.playlist);
 });
 
-// Init
-renderPlaylistNav();
-renderSongList();
+// Nav item clicks
+document.querySelectorAll('.nav-item[data-view]').forEach(el =>
+    el.addEventListener('click', function() {
+        switchView(this.dataset.view);
+    }));
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+    if (e.target === $('searchInput')) return;
+    if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+    if (e.code === 'ArrowRight' && e.shiftKey) playNext();
+    if (e.code === 'ArrowLeft' && e.shiftKey) playPrev();
+    if (e.code === 'KeyM') toggleMute();
+    if (e.code === 'KeyS') toggleShuffle();
+    if (e.code === 'KeyR') toggleRepeat();
+});
+
+// ─── Init ────────────────────────────────────────────────────
+
+async function init() {
+    setDate();
+
+    playlists = {};
+    for (const [key, val] of Object.entries(DEFAULT_PLAYLISTS)) {
+        playlists[key] = JSON.parse(JSON.stringify(val));
+    }
+
+    await loadState();
+
+    if (!playlists[currentPlaylist]) currentPlaylist = 'chill';
+
+    renderPlaylistNav();
+    renderFeaturedStrip();
+    switchView('home');
+    renderSongList($('searchInput').value);
+
+    $('shuffleBtn').classList.toggle('active', isShuffle);
+    $('repeatBtn').classList.toggle('active', repeatMode > 0);
+    $('repeatBtn').textContent = repeatMode === 2 ? '↺¹' : '↺';
+    audioPlayer.volume = isMuted ? 0 : volume;
+    $('volFill').style.width = `${volume * 100}%`;
+    updateVolIcon();
+}
+
+init();
