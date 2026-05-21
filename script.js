@@ -603,6 +603,76 @@ function showRename(current){
   });
 }
 
+function showSourcePicker(){
+  return new Promise(resolve=>{
+    const o=$('confirmOverlay');
+    o.innerHTML=`<div class="modal-box source-picker-box">
+      <div class="modal-msg">Add Track From</div>
+      <div class="source-picker-grid">
+        <button class="source-option" data-source="local">
+          <span class="source-icon">📁</span>
+          <span class="source-label">Local</span>
+          <span class="source-desc">Browse files</span>
+        </button>
+        <button class="source-option" data-source="youtube">
+          <span class="source-icon">▶</span>
+          <span class="source-label">YouTube</span>
+          <span class="source-desc">Download audio</span>
+        </button>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn" id="mc">Cancel</button>
+      </div>
+    </div>`;
+    o.style.display='flex';
+    const close=r=>{o.style.display='none';resolve(r);};
+    const kh=e=>{if(e.key==='Escape')close(null);};
+    document.addEventListener('keydown',kh);
+    o.onclick=e=>{if(e.target===o){document.removeEventListener('keydown',kh);close(null);}};
+    o.querySelectorAll('.source-option').forEach(btn=>{btn.onclick=()=>{document.removeEventListener('keydown',kh);close(btn.dataset.source);};});
+    $('mc').onclick=()=>{document.removeEventListener('keydown',kh);close(null);};
+  });
+}
+
+function showNewPlaylistPicker(){
+  return new Promise(resolve=>{
+    const o=$('confirmOverlay');
+    o.innerHTML=`<div class="modal-box source-picker-box">
+      <div class="modal-msg">New Playlist</div>
+      <div class="source-picker-grid">
+        <button class="source-option" data-source="empty">
+          <span class="source-icon">📄</span>
+          <span class="source-label">Empty</span>
+          <span class="source-desc">Create blank playlist</span>
+        </button>
+        <button class="source-option" data-source="songs">
+          <span class="source-icon">📁</span>
+          <span class="source-label">Add Songs</span>
+          <span class="source-desc">Select audio files</span>
+        </button>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn" id="mc">Cancel</button>
+      </div>
+    </div>`;
+    o.style.display='flex';
+    const close=r=>{o.style.display='none';resolve(r);};
+    const kh=e=>{if(e.key==='Escape')close(null);};
+    document.addEventListener('keydown',kh);
+    o.onclick=e=>{if(e.target===o){document.removeEventListener('keydown',kh);close(null);}};
+    o.querySelectorAll('.source-option').forEach(btn=>{btn.onclick=()=>{document.removeEventListener('keydown',kh);close(btn.dataset.source);};});
+    $('mc').onclick=()=>{document.removeEventListener('keydown',kh);close(null);};
+  });
+}
+
+async function handleCreateEmptyPlaylist(){
+  const name=await showInput('Playlist name:','My Playlist');
+  if(!name)return;
+  const key='custom-'+Date.now();
+  playlists[key]={name,emoji:'📂',color:'#D4522A',sub:'0 tracks',songs:[]};
+  renderPlaylistNav();renderFeatured();switchPlaylist(key);saveState();
+}
+
 async function handleYouTubeImport(){
   const url=await showInput('Paste YouTube URL:','');
   if(!url)return;
@@ -663,11 +733,18 @@ function updateNavBtns(){$('backBtn').disabled=!navHistory.length;$('forwardBtn'
 
 $('backBtn').addEventListener('click',goBack);
 $('forwardBtn').addEventListener('click',goForward);
-$('newPlaylistBtn').addEventListener('click',()=>$('folderInput').click());
+$('newPlaylistBtn').addEventListener('click',async()=>{
+  const src=await showNewPlaylistPicker();
+  if(src==='empty')handleCreateEmptyPlaylist();
+  else if(src==='songs')$('folderInput').click();
+});
 $('folderInput').addEventListener('change',handleFolderSelect);
-$('addTracksBtn').addEventListener('click',()=>$('addTracksInput').click());
+$('addTracksBtn').addEventListener('click',async()=>{
+  const src=await showSourcePicker();
+  if(src==='local')$('addTracksInput').click();
+  else if(src==='youtube')handleYouTubeImport();
+});
 $('addTracksInput').addEventListener('change',handleAddTracks);
-$('ytBtn').addEventListener('click',handleYouTubeImport);
 $('playBtn').addEventListener('click',togglePlay);
 $('nextBtn').addEventListener('click',playNext);
 $('prevBtn').addEventListener('click',playPrev);

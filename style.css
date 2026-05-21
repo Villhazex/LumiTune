@@ -820,6 +820,21 @@ nav{flex:1;padding:10px 0}
   font-size:9px;color:var(--text3);flex-shrink:0;
 }
 
+/* ── SOURCE PICKER ── */
+.source-picker-box{max-width:340px}
+.source-picker-grid{display:flex;gap:10px;margin-bottom:20px}
+.source-option{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  padding:18px 12px;border-radius:var(--mark-r);
+  background:var(--bg2);border:1px solid var(--border2);
+  cursor:pointer;transition:all 0.14s;
+  font-family:'DM Sans',sans-serif;color:var(--text2);
+}
+.source-option:hover{background:var(--bg3);border-color:var(--accent);color:var(--text)}
+.source-icon{font-size:22px;margin-bottom:6px}
+.source-label{font-size:13px;font-weight:500;color:var(--text)}
+.source-desc{font-size:10.5px;color:var(--text3);margin-top:2px}
+
 /* ── YOUTUBE IMPORT ── */
 .yt-info{display:flex;align-items:center;gap:14px;margin-bottom:18px;padding:12px;background:var(--bg2);border-radius:var(--mark-r)}
 .yt-thumb{width:80px;height:45px;border-radius:4px;object-fit:cover;flex-shrink:0;background:var(--ink)}
