@@ -29,7 +29,7 @@
 
   <!-- SIDEBAR -->
   <aside class="sidebar">
-    <div class="logo-area">
+    <div class="logo-area" id="logoArea">
       <div class="logo-mark">
         <svg viewBox="0 0 14 14"><rect x="1" y="5" width="3" height="7" rx="1"/><rect x="5" y="2" width="3" height="10" rx="1"/><rect x="9" y="4" width="3" height="8" rx="1"/></svg>
       </div>
@@ -78,23 +78,27 @@
 
     <!-- TOP BAR -->
     <div class="topbar">
-      <div class="topbar-nav">
-        <button class="nav-btn" id="backBtn">‹</button>
-        <button class="nav-btn" id="forwardBtn">›</button>
+      <div class="topbar-left">
+        <div class="topbar-nav">
+          <button class="nav-btn" id="backBtn">‹</button>
+          <button class="nav-btn" id="forwardBtn">›</button>
+        </div>
+        <div class="breadcrumb"><span id="breadcrumbTitle">Home</span> <span id="breadcrumbSub">Select a playlist to start</span></div>
       </div>
-      <div class="breadcrumb"><span id="breadcrumbTitle">Home</span> <span id="breadcrumbSub">Select a playlist to start</span></div>
       <div class="search-box" id="searchWrap">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4"/><path d="M10.5 10.5l2.5 2.5"/></svg>
         <input type="text" id="searchInput" placeholder="Search tracks or playlists...">
         <button class="search-clear" id="searchClear">×</button>
         <div class="search-dropdown" id="searchDropdown"></div>
       </div>
-      <button class="icon-btn" id="settingsBtn">⚙</button>
-      <button class="icon-btn" id="togglePanelBtn">☰</button>
+      <div class="topbar-right">
+        <button class="icon-btn" id="settingsBtn">⚙</button>
+        <button class="icon-btn" id="togglePanelBtn">☰</button>
+      </div>
     </div>
 
     <!-- NOW PLAYING HERO -->
-    <div class="now-playing-hero" id="heroSection" style="display:none">
+    <div class="now-playing-hero" id="heroSection">
       <div class="album-art-hero" id="heroArt">
         <span class="art-emoji" id="heroEmoji">♪</span>
         <div class="hero-wave"></div>

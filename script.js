@@ -122,16 +122,15 @@ function renderPlaylistGrid(){
   if(!featuredKeys){
     const all=Object.keys(playlists);
     for(let i=all.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[all[i],all[j]]=[all[j],all[i]];}
-    featuredKeys=all.slice(0,3);
+    featuredKeys=all.slice(0,5);
   }
   const keys=featuredKeys;
-  const ordinals=['01','02','03'];
   grid.innerHTML=keys.map((key,i)=>{
     const pl=playlists[key];
     const songs=playlistSongs(pl);
     return`<div class="playlist-card ${key===currentPlaylist?'active':''}" data-playlist="${key}">
       <svg class="card-folder" viewBox="0 0 36 30"><path class="folder-body" d="M0 6a3 3 0 0 1 3-3h10l3 4h17a3 3 0 0 1 3 3v17a3 3 0 0 1-3 3H3a3 3 0 0 1-3-3V6z"/></svg>
-      <div class="card-meta">PLAYLIST · ${ordinals[i]}</div>
+      <div class="card-meta">PLAYLIST · ${String(i+1).padStart(2,'0')}</div>
       <div class="card-name">${pl.name}</div>
       <div class="card-count">${songs.length} tracks</div>
     </div>`;
@@ -318,16 +317,15 @@ function renderPlaylists(filter){
 
 function updateHeroSection(){
   const hs=$('heroSection');
-  if(currentSongIndex<0||!playlists[currentPlaylist]||currentView==='library'||currentView==='favorites'||currentView==='playlists'||$('searchInput').value.trim()){
+  if(!playlists[currentPlaylist]||currentView==='library'||currentView==='favorites'||currentView==='playlists'||$('searchInput').value.trim()){
     hs.style.display='none';return;
   }
-  const song=playlists[currentPlaylist].songs[currentSongIndex];
-  if(!song){hs.style.display='none';return;}
   const pl=playlists[currentPlaylist];
+  const song=pl.songs[currentSongIndex];
   $('heroEmoji').textContent=pl.emoji;
-  $('heroTitle').textContent=song.title;
-  $('heroArtist').textContent=song.artist;
-  if(isPlaying){
+  $('heroTitle').textContent=song?song.title:'Select a track';
+  $('heroArtist').textContent=song?song.artist:'Pick a song to start listening';
+  if(song&&isPlaying){
     hs.classList.add('playing');
     $('heroPlayIcon').style.display='none';
     $('heroPauseIcon').style.display='';
@@ -1354,16 +1352,13 @@ const sl=$('songList');
         saveState();
       }
       dragTrackSource=null;
-      sl.querySelectorAll('.track-row').forEach(el=>el.classList.remove('dragging','drag-over-top','drag-over-bottom'));
+      sl.querySelectorAll('.track-row').forEach(el=>el.classList.remove('drag-over-top','drag-over-bottom'));
     }else if(evt==='dragend'){
       dragTrackSource=null;
       sl.querySelectorAll('.track-row').forEach(el=>el.classList.remove('dragging','drag-over-top','drag-over-bottom'));
     }
   });
 });
-
-
-
 $('playlistGrid').addEventListener('click',e=>{
   const card=e.target.closest('.playlist-card');if(card){recordNav();switchPlaylist(card.dataset.playlist);}
 });
@@ -1373,6 +1368,7 @@ $('viewAllPlaylists')?.addEventListener('click',()=>{
 
 document.querySelectorAll('.nav-item[data-view]').forEach(el=>
   el.addEventListener('click',function(){recordNav();switchView(this.dataset.view);}));
+$('logoArea').addEventListener('click',()=>{recordNav();switchView('home');});
 
 document.addEventListener('keydown',e=>{
   if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
