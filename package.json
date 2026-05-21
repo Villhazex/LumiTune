@@ -1,1 +1,1 @@
-{"name":"lumitune","version":"1.0.0","private":true,"main":"server.js","scripts":{"start":"node server.js"},"dependencies":{"express":"^4.22.2","yt-dlp-exec":"^1.0.2"}}
+{"name":"lumitune","version":"1.0.0","private":true,"main":"server.js","scripts":{"start":"node server.js"},"dependencies":{"express":"^4.22.2","open":"^11.0.0","yt-dlp-exec":"^1.0.2"}}

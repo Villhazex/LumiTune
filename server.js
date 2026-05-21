@@ -1,9 +1,16 @@
 const express=require('express');
 const {spawn,execFile}=require('child_process');
 const path=require('path');
+
+const open = (...args) =>
+  import("open").then(({ default: open }) => open(...args));
+
+
 const app=express();
 const PORT=3001;
 const BIN=path.join(require.resolve('yt-dlp-exec/package.json'),'..','bin','yt-dlp.exe');
+
+
 
 app.use((req,res,next)=>{res.header('Access-Control-Allow-Origin','*');next();});
 app.use(express.static(__dirname));
@@ -56,4 +63,11 @@ app.get('/api/download',async(req,res)=>{
   }catch(e){if(!res.headersSent)res.status(500).json({error:e.message});}
 });
 
-app.listen(PORT,()=>console.log(`LumiTune server running on http://localhost:${PORT}`));
+// app.listen(PORT,()=>console.log(`LumiTune server running on http://localhost:${PORT}`));
+app.listen(PORT, async () => {
+  const url = `http://localhost:${PORT}`;
+
+  console.log(`LumiTune server running on ${url}`);
+
+  await open(url);
+});
