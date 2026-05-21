@@ -377,6 +377,25 @@ nav { padding: 8px 0; flex: 1; }
     align-items: center;
 }
 
+.randomize-btn {
+    background: var(--ink);
+    color: var(--acid);
+    border: none;
+    cursor: pointer;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    font-family: 'Space Mono', monospace;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    transition: background 0.15s, color 0.15s;
+    margin-left: 2px;
+}
+.randomize-btn:hover {
+    background: var(--acid);
+    color: var(--ink);
+}
+
 /* ── SONG TABLE ── */
 .zine-table-wrap {
     border: 2px solid var(--wire);
@@ -665,14 +684,35 @@ tbody tr.song-active td:first-child { border-left: 4px solid var(--ink); }
 .vol-btn:hover { color: var(--acid); }
 .vol-bar {
     flex: 1;
-    height: 3px;
+    height: 8px;
     background: #2a2a2a;
     cursor: pointer;
+    position: relative;
+    border-radius: 4px;
 }
 .vol-fill {
     height: 100%;
-    background: #555;
-    transition: width 0.1s;
+    border-radius: 4px;
+    position: relative;
+}
+.vol-fill::after {
+    content: '';
+    position: absolute;
+    right: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--acid);
+    border: 2px solid var(--ink);
+    opacity: 0;
+    transition: opacity 0.15s;
+    pointer-events: none;
+}
+.vol-bar:hover .vol-fill::after,
+.vol-bar:active .vol-fill::after {
+    opacity: 1;
 }
 
 /* Empty state */

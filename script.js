@@ -1,43 +1,12 @@
 const audioExtensions = ['.mp3', '.wav', '.ogg', '.flac', '.m4a', '.aac'];
 
-const DEFAULT_KEYS = ['chill', 'workout', 'focus'];
+const DEFAULT_KEYS = [];
 
-const DEFAULT_PLAYLISTS = {
-    chill: {
-        name: "Chill Vibes", emoji: "🎵", color: "#d4f53c", sub: "Relax & unwind — FM 99.7",
-        songs: [
-            { id:1,  title:"Midnight Dreams",   artist:"Luna Wave",     duration:"3:45" },
-            { id:2,  title:"Ocean Breeze",       artist:"Coastal Beats", duration:"4:12" },
-            { id:3,  title:"Starlight Serenade", artist:"Night Sky",     duration:"3:28" },
-            { id:4,  title:"Gentle Rain",        artist:"Nature Sounds", duration:"5:01" },
-            { id:5,  title:"Sunset Glow",        artist:"Amber Light",   duration:"3:55" }
-        ]
-    },
-    workout: {
-        name: "Workout Mix", emoji: "⚡", color: "#c8422a", sub: "Get pumped up — FM 99.7",
-        songs: [
-            { id:6,  title:"Power Up",    artist:"Energy Boost", duration:"3:22" },
-            { id:7,  title:"Run Free",    artist:"Pulse Runner", duration:"4:05" },
-            { id:8,  title:"Beast Mode",  artist:"Iron Will",    duration:"3:48" },
-            { id:9,  title:"Adrenaline",  artist:"Max Power",    duration:"3:33" },
-            { id:10, title:"Unstoppable", artist:"Victory Lap",  duration:"4:18" }
-        ]
-    },
-    focus: {
-        name: "Deep Focus", emoji: "◎", color: "#5dca86", sub: "Concentrate better — FM 99.7",
-        songs: [
-            { id:11, title:"Concentration", artist:"Mind Flow",   duration:"6:15" },
-            { id:12, title:"Study Session", artist:"Brain Waves", duration:"5:42" },
-            { id:13, title:"Deep Work",     artist:"Focus Lab",   duration:"7:08" },
-            { id:14, title:"Clarity",       artist:"Zen Mode",    duration:"4:55" },
-            { id:15, title:"Flow State",    artist:"Alpha Waves", duration:"5:30" }
-        ]
-    }
-};
+const DEFAULT_PLAYLISTS = {};
 
 let playlists = {};
 let audioPlayer = new Audio();
-let currentPlaylist = "chill";
+let currentPlaylist = '';
 let currentSongIndex = -1;
 let isPlaying = false;
 let isShuffle = false;
@@ -152,7 +121,7 @@ async function loadState() {
         if (!isNaN(rep)) repeatMode = rep % 3;
         isShuffle = shuf;
 
-        const allKeys = [...DEFAULT_KEYS, ...Object.keys(playlists)];
+        const allKeys = Object.keys(playlists);
         if (lastPl && allKeys.includes(lastPl)) currentPlaylist = lastPl;
 
         const recentRaw = localStorage.getItem('lumi-recent-playlists');
@@ -397,13 +366,14 @@ function playSong(index, playlistKey) {
         clearInterval(playbackInterval);
         currentPlaylist = playlistKey;
         currentSongIndex = -1;
-        recordPlaylistPlay(playlistKey);
         renderPlaylistNav();
         renderFeaturedStrip();
         saveState();
         if (currentView !== 'home') switchView('home');
     }
 
+    recordPlaylistPlay(currentPlaylist);
+    if (!playlists[currentPlaylist]) return;
     const songs = playlists[currentPlaylist].songs;
     if (index < 0 || index >= songs.length) return;
     currentSongIndex = index;
@@ -616,8 +586,25 @@ async function handleDeletePlaylist(key) {
     saveState();
 
     if (isCurrent) {
+        audioPlayer.pause();
+        if (currentAudioFile) {
+            URL.revokeObjectURL(audioPlayer.src);
+            audioPlayer.src = '';
+            currentAudioFile = null;
+        }
+        clearInterval(playbackInterval);
+        currentSongIndex = -1;
+        isPlaying = false;
+        updatePlayBtn();
+        $('albumArt').classList.remove('playing');
+        $('vizBars').classList.remove('active');
+        $('trackTitle').textContent = 'SELECT A TRACK';
+        $('trackArtist').textContent = 'Awaiting input...';
+        $('progressFill').style.width = '0%';
+        $('currentTime').textContent = '0:00';
+        $('totalTime').textContent = '0:00';
         const keys = Object.keys(playlists);
-        switchPlaylist(keys[0] || 'chill');
+        if (keys.length > 0) switchPlaylist(keys[0]);
     }
 }
 
@@ -748,11 +735,16 @@ function toggleMute() {
     isMuted = !isMuted;
     audioPlayer.volume = isMuted ? 0 : volume;
     updateVolIcon();
+    saveState();
 }
 
 function updateVolIcon() {
-    $('volBtn').textContent = (isMuted || volume === 0) ? 'MUTE' : 'VOL';
-    $('volFill').style.background = (isMuted || volume === 0) ? '#444' : '#555';
+    const muted = isMuted || volume === 0;
+    $('volBtn').textContent = muted ? 'MUTE' : 'VOL';
+    $('volFill').style.background = muted ? '#444'
+        : volume > 0.5 ? 'var(--acid)'
+        : volume > 0.2 ? 'var(--rust)'
+        : '#666';
 }
 
 // ─── Modals ──────────────────────────────────────────────────
@@ -818,28 +810,7 @@ function showRenameModal(currentName) {
 // ─── Playlist navigation ─────────────────────────────────────
 
 function switchPlaylist(key) {
-    audioPlayer.pause();
-    if (currentAudioFile) {
-        URL.revokeObjectURL(audioPlayer.src);
-    }
-    audioPlayer.src = '';
-    currentAudioFile = null;
-
     currentPlaylist = key;
-    currentSongIndex = -1;
-    recordPlaylistPlay(key);
-    clearInterval(playbackInterval);
-    isPlaying = false;
-    updatePlayBtn();
-    $('albumArt').classList.remove('playing');
-    $('vizBars').classList.remove('active');
-    $('albumArt').textContent = playlists[key].emoji;
-    $('trackTitle').textContent = 'SELECT A TRACK';
-    $('trackArtist').textContent = 'Awaiting input...';
-    $('progressFill').style.width = '0%';
-    $('currentTime').textContent = '0:00';
-    $('totalTime').textContent = '0:00';
-
     renderPlaylistNav();
     renderFeaturedStrip();
     renderSongList($('searchInput').value);
@@ -869,6 +840,25 @@ function renderPlaylistNav() {
     }).join('');
 }
 
+function randomizePlaylist() {
+    const pl = playlists[currentPlaylist];
+    if (!pl || pl.songs.length < 2) return;
+
+    const currentSong = currentSongIndex >= 0 ? pl.songs[currentSongIndex] : null;
+
+    for (let i = pl.songs.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pl.songs[i], pl.songs[j]] = [pl.songs[j], pl.songs[i]];
+    }
+
+    if (currentSong) {
+        currentSongIndex = pl.songs.indexOf(currentSong);
+    }
+
+    renderSongList($('searchInput').value);
+    saveState();
+}
+
 // ─── Event wiring ────────────────────────────────────────────
 
 $('newPlaylistBtn').addEventListener('click', () => $('folderInput').click());
@@ -880,6 +870,7 @@ $('playBtn').addEventListener('click', togglePlay);
 $('nextBtn').addEventListener('click', playNext);
 $('prevBtn').addEventListener('click', playPrev);
 $('shuffleBtn').addEventListener('click', toggleShuffle);
+$('randomizeBtn').addEventListener('click', randomizePlaylist);
 $('repeatBtn').addEventListener('click', toggleRepeat);
 $('likeBtn').addEventListener('click', () => {
     if (currentSongIndex !== -1) toggleFav(String(playlists[currentPlaylist].songs[currentSongIndex].id));
@@ -951,7 +942,10 @@ async function init() {
 
     await loadState();
 
-    if (!playlists[currentPlaylist]) currentPlaylist = 'chill';
+    if (!playlists[currentPlaylist]) {
+        const keys = Object.keys(playlists);
+        currentPlaylist = keys.length > 0 ? keys[0] : '';
+    }
 
     renderPlaylistNav();
     renderFeaturedStrip();
