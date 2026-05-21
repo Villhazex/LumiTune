@@ -3,171 +3,272 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LumiTone</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<title>LumiTune</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="page-bg-label" id="pageBgLabel">MUSIC</div>
+<!-- MARQUEE -->
+<div class="marquee-bar">
+  <div class="marquee-inner" id="tickerText">
+    <span>LUMITUNE</span><span>·</span>
+    <span>AUDIO ENGINE READY</span><span>·</span>
+    <span>PLAY WHAT MATTERS</span><span>·</span>
+    <span>UPLOAD A PLAYLIST TO BEGIN</span><span>·</span>
+    <span>GOOD SOUND NEEDS NO EXPLANATION</span><span>·</span>
+    <span>LUMITUNE</span><span>·</span>
+    <span>AUDIO ENGINE READY</span><span>·</span>
+    <span>PLAY WHAT MATTERS</span><span>·</span>
+    <span>UPLOAD A PLAYLIST TO BEGIN</span><span>·</span>
+    <span>GOOD SOUND NEEDS NO EXPLANATION</span><span>·</span>
+  </div>
+</div>
 
-<!-- ═══ SIDEBAR ═══ -->
-<aside class="sidebar">
-  <div class="logo-zone">
-    <div class="logo-mark">
-      <div class="logo-glyph">
-        <svg viewBox="0 0 16 16"><path d="M4 2h8a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1zm4 2.5a.5.5 0 00-1 0V9a1.5 1.5 0 101 1.32V4.5z"/></svg>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo-area">
+      <div class="logo-mark">
+        <svg viewBox="0 0 14 14"><rect x="1" y="5" width="3" height="7" rx="1"/><rect x="5" y="2" width="3" height="10" rx="1"/><rect x="9" y="4" width="3" height="8" rx="1"/></svg>
       </div>
-      <div class="logo-name">LumiTone</div>
+      <div class="logo-name">LUMITUNE</div>
+      <div class="logo-sub">AUDIO PLAYER · V2</div>
     </div>
-    <div class="logo-sub">Audio Player · v2</div>
-  </div>
 
-  <nav>
-    <div class="nav-label">Discover</div>
-    <button class="nav-item active" data-view="home"><span class="nav-icon">⊞</span>Home</button>
-    <button class="nav-item" data-view="library"><span class="nav-icon">◫</span>Library</button>
-    <button class="nav-item" data-view="favorites"><span class="nav-icon">◇</span>Favourites</button>
-    <button class="nav-item" data-view="playlists"><span class="nav-icon">⊟</span>Playlists</button>
-
-    <div class="nav-sep"></div>
-    <div class="nav-label">Playlists</div>
-    <button class="nav-item" id="newPlaylistBtn"><span class="nav-icon">＋</span>New Playlist</button>
-        <button class="nav-item" id="addTracksBtn"><span class="nav-icon">↑</span>Add Tracks</button>
-        <input type="file" id="addTracksInput" accept="audio/*" multiple style="display:none">
-        <input type="file" id="folderInput" accept="audio/*" multiple style="display:none">
-  </nav>
-
-    <div class="sidebar-footer">
-    <div class="sidebar-user">Listener</div>
-    <div class="sidebar-role">Active Session</div>
-    <div id="sidebarDate"></div>
-  </div>
-</aside>
-
-<!-- ═══ MAIN ═══ -->
-<main class="main">
-  <div class="ticker">
-    <span class="ticker-inner" id="tickerText">
-      · LUMITONE · AUDIO ENGINE READY · PLAY WHAT MATTERS · UPLOAD A PLAYLIST TO BEGIN · GOOD SOUND NEEDS NO EXPLANATION · LUMITONE · AUDIO ENGINE READY · PLAY WHAT MATTERS · UPLOAD A PLAYLIST TO BEGIN · 
-    </span>
-  </div>
-
-  <div class="topbar">
-    <div class="topbar-left">
-      <button class="nav-arrow" id="backBtn" title="Go back">←</button>
-      <button class="nav-arrow" id="forwardBtn" title="Go forward">→</button>
-      <span class="topbar-title" id="pageTitle">Home</span>
-      <span class="topbar-sep">/</span>
-      <span class="topbar-sub" id="pageSub">Select a playlist to start</span>
+    <div class="nav-section">
+      <div class="nav-section-label">Discover</div>
+      <button class="nav-item active" data-view="home">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zm0 4h12v2H2zm0 4h7v2H2z"/></svg>
+        Home
+      </button>
+      <button class="nav-item" data-view="library">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 2h8a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm1 2v8h6V4H5zm1 1h4v2H6V5zm0 3h4v1H6V8z"/></svg>
+        Library
+      </button>
+      <button class="nav-item" data-view="favorites">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5l1.8 3.7 4.1.6-3 2.9.7 4-3.6-1.9L4.4 12.7l.7-4-3-2.9 4.1-.6z"/></svg>
+        Favourites
+      </button>
+      <button class="nav-item" data-view="playlists">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10v2H3zm0 4h10v2H3zm0 4h6v2H3z"/></svg>
+        Playlists
+      </button>
     </div>
-    <div class="search-wrap" id="searchWrap">
-      <span class="search-icon">⌕</span>
-      <input type="text" id="searchInput" placeholder="Search tracks or playlists…">
-      <button class="search-clear" id="searchClear">×</button>
-      <div class="search-dropdown" id="searchDropdown"></div>
-    </div>
-    <div class="topbar-right">
-      <button class="topbar-btn" id="settingsBtn" title="Settings">⚙</button>
-    </div>
-  </div>
 
-  <div class="content-zone">
-    <div class="hero-section" id="heroSection" style="display:none">
-      <div class="hero-art" id="heroArt">
-        <span class="hero-emoji" id="heroEmoji">♪</span>
+    <div class="nav-section">
+      <div class="nav-section-label">Playlists</div>
+      <button class="nav-item" id="newPlaylistBtn">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+        New Playlist
+      </button>
+      <button class="nav-item" id="addTracksBtn">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2l6 8H2z"/></svg>
+        Add Tracks
+      </button>
+    </div>
+
+    <input type="file" id="addTracksInput" accept="audio/*" multiple style="display:none">
+    <input type="file" id="folderInput" accept="audio/*" multiple style="display:none">
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+      <div class="topbar-nav">
+        <button class="nav-btn" id="backBtn">‹</button>
+        <button class="nav-btn" id="forwardBtn">›</button>
+      </div>
+      <div class="breadcrumb"><span id="breadcrumbTitle">Home</span> <span id="breadcrumbSub">Select a playlist to start</span></div>
+      <div class="search-box" id="searchWrap">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4"/><path d="M10.5 10.5l2.5 2.5"/></svg>
+        <input type="text" id="searchInput" placeholder="Search tracks or playlists...">
+        <button class="search-clear" id="searchClear">×</button>
+        <div class="search-dropdown" id="searchDropdown"></div>
+      </div>
+      <button class="icon-btn" id="settingsBtn">⚙</button>
+      <button class="icon-btn" id="togglePanelBtn">☰</button>
+    </div>
+
+    <!-- NOW PLAYING HERO -->
+    <div class="now-playing-hero" id="heroSection" style="display:none">
+      <div class="album-art-hero" id="heroArt">
+        <span class="art-emoji" id="heroEmoji">♪</span>
         <div class="hero-wave"></div>
       </div>
-      <div class="hero-info">
-        <div class="hero-label">NOW PLAYING</div>
-        <div class="hero-title" id="heroTitle">Select a track</div>
-        <div class="hero-artist" id="heroArtist">Awaiting input</div>
-        <div class="hero-progress">
-          <div class="hero-prog-track" id="heroProgBar">
-            <div class="hero-prog-fill" id="heroProgFill" style="width:0%"></div>
-          </div>
-          <div class="hero-times">
-            <span id="heroCurrentTime">0:00</span>
-            <span id="heroTotalTime">0:00</span>
+      <div class="track-info">
+        <div class="now-playing-label">Now Playing</div>
+        <div class="track-title-hero" id="heroTitle">Select a track</div>
+        <div class="track-artist-hero" id="heroArtist">Awaiting input</div>
+        <div class="progress-area">
+          <div class="progress-bar-wrap" id="heroProgBar"><div class="progress-bar-fill" id="heroProgFill"></div></div>
+          <div class="progress-times"><span id="heroCurrentTime">0:00</span><span id="heroTotalTime">0:00</span></div>
+          <div class="controls">
+            <button class="ctrl-btn" id="heroShuffleBtn" title="Shuffle">⇌</button>
+            <button class="ctrl-btn" id="heroPrevBtn">⏮</button>
+            <button class="ctrl-play" id="heroPlayBtn"><span id="heroPlayIcon">▶</span><span id="heroPauseIcon" style="display:none">⏸</span></button>
+            <button class="ctrl-btn" id="heroNextBtn">⏭</button>
+            <button class="ctrl-btn" id="heroRepeatBtn" title="Repeat">↺</button>
           </div>
         </div>
-        <div class="hero-controls">
-          <button class="hero-btn" id="heroPrevBtn">⏮</button>
-          <button class="hero-btn hero-play-btn" id="heroPlayBtn"><span id="heroPlayIcon">▶</span><span id="heroPauseIcon" style="display:none">⏸</span></button>
-          <button class="hero-btn" id="heroNextBtn">⏭</button>
-        </div>
+      </div>
+      <div class="hero-right">
+        <div class="vol-label" id="heroVolLabel">VOL 72</div>
+        <input type="range" class="vol-slider" id="heroVolSlider" min="0" max="100" value="72">
       </div>
     </div>
 
-    <div class="featured-strip" id="featuredStrip"></div>
+    <!-- PLAYLISTS -->
+    <div class="section-header" id="playlistSectionHeader" style="display:none">
+      <div class="section-title">Playlists</div>
+      <div class="section-action" id="viewAllPlaylists">View all →</div>
+    </div>
+    <div class="playlist-grid" id="playlistGrid"></div>
 
-    <div class="sec-head">
-      <span class="sec-title" id="secTitle">Tracklist</span>
-      <span class="sec-count" id="secCount">0 tracks</span>
-      <span class="sec-spacer"></span>
-      <button class="randomize-btn" id="randomizeBtn">⇌ Shuffle order</button>
+    <!-- TRACK SECTION HEADER -->
+    <div class="section-header">
+      <div class="section-title"><span id="secTitle">Tracklist</span> <span class="badge-count" id="secCount">0 tracks</span></div>
+      <button class="section-action" id="randomizeBtn">⇌ SHUFFLE ORDER</button>
     </div>
 
-    <div class="track-list">
-      <div class="track-header" id="trackHeader">
-        <div>#</div>
-        <div>Title</div>
-        <div id="extraColHeader">Duration</div>
-        <div></div>
+    <!-- TRACK LIST -->
+    <div class="track-list-wrap">
+      <div class="track-list-header" id="trackHeader">
+        <span>#</span>
+        <span class="sortable" id="sortTitle">Title</span>
+        <span>Album</span>
+        <span class="sortable" id="sortDuration" style="text-align:right">Duration</span>
+        <span></span>
+        <span></span>
       </div>
       <div id="songList"></div>
     </div>
     <div class="empty-state" id="emptyState" style="display:none">— no tracks match —</div>
-  </div>
-</main>
+  </main>
 
-<!-- ═══ PLAYER ═══ -->
-<div class="player-bar">
-  <div class="now-playing">
-    <div class="album-art" id="albumArt">
-      <span class="album-emoji">♪</span>
-      <div class="wave"></div>
+  <!-- RIGHT PANEL -->
+  <aside class="right-panel">
+    <div class="panel-tabs">
+      <button class="panel-tab active" onclick="switchTab('lyrics', this)">Lyrics</button>
+      <button class="panel-tab" onclick="switchTab('queue', this)">Up Next</button>
+      <button class="panel-tab" onclick="switchTab('stats', this)">Stats</button>
     </div>
-    <div class="track-info">
-      <div class="t-bar-title" id="trackTitle">Select a track</div>
-      <div class="t-bar-artist" id="trackArtist">Awaiting input</div>
+
+    <div id="tab-lyrics" class="lyrics-panel">
+      <div class="lyrics-title">Now Playing — Lyrics</div>
+      <div class="lyric-line">Under the pale grey sky, we walked</div>
+      <div class="lyric-line">A melody carried by the wind</div>
+      <div class="lyric-line active">I still remember that day we shared</div>
+      <div class="lyric-line">A tune that echoed through the haze</div>
+      <div class="lyric-line">Words unspoken, yet understood</div>
+      <div class="lyric-line lyric-sep">— Chorus —</div>
+      <div class="lyric-line">Beyond the dreams we chased so far</div>
+      <div class="lyric-line">A light was waiting, just for us</div>
+      <div class="lyric-line">The sky was stained with tears and hope</div>
+      <div class="lyric-line">Yet it remained a brilliant blue</div>
     </div>
-    <button class="like-main" id="likeBtn">◇</button>
+
+    <div id="tab-queue" class="up-next-panel" style="display:none">
+      <div class="up-next-header">Queue · <span id="queueCount">0 tracks</span></div>
+      <div id="upNextList"></div>
+      <div class="up-next-empty" id="upNextEmpty">— queue is empty —</div>
+      <button class="queue-clear" id="upNextClear" style="display:none">Clear queue</button>
+    </div>
+
+    <div id="tab-stats" class="stats-panel" style="display:none">
+      <div class="stat-block">
+        <div class="stat-label">Listening Streak</div>
+        <div class="stat-value">12 <span class="stat-unit">days</span></div>
+        <div class="stat-sub">↑ +3 from last week</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-label">Total Play Time</div>
+        <div class="stat-value">48 <span class="stat-unit">hrs</span></div>
+        <div class="stat-sub">This month</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-label">Top Genre</div>
+        <div class="stat-value stat-value-sm">J-Pop / Anime</div>
+        <div class="stat-sub">Based on 87 plays</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-label">Genre breakdown</div>
+        <div class="top-genres">
+          <div class="genre-row">
+            <div class="genre-name">J-Pop</div>
+            <div class="genre-bar-bg"><div class="genre-bar-fill" style="width:78%"></div></div>
+            <div class="genre-pct">78%</div>
+          </div>
+          <div class="genre-row">
+            <div class="genre-name">Anime</div>
+            <div class="genre-bar-bg"><div class="genre-bar-fill" style="width:55%"></div></div>
+            <div class="genre-pct">55%</div>
+          </div>
+          <div class="genre-row">
+            <div class="genre-name">Vocaloid</div>
+            <div class="genre-bar-bg"><div class="genre-bar-fill" style="width:32%"></div></div>
+            <div class="genre-pct">32%</div>
+          </div>
+          <div class="genre-row">
+            <div class="genre-name">Holo</div>
+            <div class="genre-bar-bg"><div class="genre-bar-fill" style="width:18%"></div></div>
+            <div class="genre-pct">18%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar">
+  <div class="bottom-left">
+    <div class="bottom-album-art" id="albumArt">
+      <span class="art-emoji">♪</span>
+      <div class="wave-inner"></div>
+    </div>
+    <div class="bottom-track-info">
+      <div class="bottom-track-title" id="trackTitle">Select a track</div>
+      <div class="bottom-track-artist" id="trackArtist">Awaiting input</div>
+    </div>
+    <button class="bottom-like" id="likeBtn">◇</button>
   </div>
 
-  <div class="player-controls">
-    <div class="ctrl-btns">
-      <button class="ctrl-btn" id="shuffleBtn" title="Shuffle">⇌</button>
-      <button class="ctrl-btn" id="prevBtn" title="Prev">⏮</button>
-      <button class="ctrl-btn play-btn" id="playBtn">
+  <div class="bottom-center">
+    <div class="bottom-ctrls">
+      <button class="bottom-ctrl-btn" id="shuffleBtn" title="Shuffle">⇌</button>
+      <button class="bottom-ctrl-btn" id="prevBtn" title="Prev">⏮</button>
+      <button class="bottom-ctrl-btn bottom-play-btn" id="playBtn">
         <span id="playIcon">▶</span>
         <span id="pauseIcon" style="display:none">⏸</span>
       </button>
-      <button class="ctrl-btn" id="nextBtn" title="Next">⏭</button>
-      <button class="ctrl-btn" id="repeatBtn" title="Repeat">↺</button>
+      <button class="bottom-ctrl-btn" id="nextBtn" title="Next">⏭</button>
+      <button class="bottom-ctrl-btn" id="repeatBtn" title="Repeat">↺</button>
       <div class="viz-bars" id="vizBars">
         <div class="viz-bar"></div><div class="viz-bar"></div>
         <div class="viz-bar"></div><div class="viz-bar"></div>
         <div class="viz-bar"></div>
       </div>
     </div>
-    <div class="progress-wrap">
-      <span class="time-lbl" id="currentTime">0:00</span>
-      <div class="prog-track" id="progressBar">
-        <div class="prog-fill" id="progressFill" style="width:0%"></div>
+    <div class="bottom-progress">
+      <span class="bottom-time" id="currentTime">0:00</span>
+      <div class="bottom-prog-track" id="progressBar">
+        <div class="bottom-prog-fill" id="progressFill" style="width:0%"></div>
       </div>
-      <span class="time-lbl" id="totalTime">0:00</span>
+      <span class="bottom-time" id="totalTime">0:00</span>
     </div>
   </div>
 
-  <div class="vol-wrap">
-    <button class="vol-btn" id="volBtn">vol</button>
-    <div class="vol-track" id="volBar">
-      <div class="vol-fill" id="volFill" style="width:70%"></div>
+  <div class="bottom-right">
+    <button class="bottom-vol-btn" id="volBtn">vol</button>
+    <div class="bottom-vol-track" id="volBar">
+      <div class="bottom-vol-fill" id="volFill" style="width:70%"></div>
     </div>
-    <button class="fs-btn" id="fullscreenBtn" title="Fullscreen">⛶</button>
-    <button class="ctrl-btn queue-btn" id="queueBtn" title="Queue">☰ <span class="queue-badge" id="queueBadge" style="display:none">0</span></button>
+    <button class="bottom-util-btn" id="fullscreenBtn" title="Fullscreen">⛶</button>
   </div>
 </div>
 
