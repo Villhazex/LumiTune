@@ -74,6 +74,32 @@
   </div>
 
   <div class="content-zone">
+    <div class="hero-section" id="heroSection" style="display:none">
+      <div class="hero-art" id="heroArt">
+        <span class="hero-emoji" id="heroEmoji">♪</span>
+        <div class="hero-wave"></div>
+      </div>
+      <div class="hero-info">
+        <div class="hero-label">NOW PLAYING</div>
+        <div class="hero-title" id="heroTitle">Select a track</div>
+        <div class="hero-artist" id="heroArtist">Awaiting input</div>
+        <div class="hero-progress">
+          <div class="hero-prog-track" id="heroProgBar">
+            <div class="hero-prog-fill" id="heroProgFill" style="width:0%"></div>
+          </div>
+          <div class="hero-times">
+            <span id="heroCurrentTime">0:00</span>
+            <span id="heroTotalTime">0:00</span>
+          </div>
+        </div>
+        <div class="hero-controls">
+          <button class="hero-btn" id="heroPrevBtn">⏮</button>
+          <button class="hero-btn hero-play-btn" id="heroPlayBtn"><span id="heroPlayIcon">▶</span><span id="heroPauseIcon" style="display:none">⏸</span></button>
+          <button class="hero-btn" id="heroNextBtn">⏭</button>
+        </div>
+      </div>
+    </div>
+
     <div class="featured-strip" id="featuredStrip"></div>
 
     <div class="sec-head">
@@ -88,7 +114,6 @@
         <div>#</div>
         <div>Title</div>
         <div id="extraColHeader">Duration</div>
-        <div>Status</div>
         <div></div>
       </div>
       <div id="songList"></div>
