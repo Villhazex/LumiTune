@@ -39,7 +39,7 @@
         <input type="file" id="folderInput" accept="audio/*" multiple style="display:none">
   </nav>
 
-  <div class="sidebar-footer">
+    <div class="sidebar-footer">
     <div class="sidebar-user">Listener</div>
     <div class="sidebar-role">Active Session</div>
     <div id="sidebarDate"></div>
@@ -68,7 +68,9 @@
       <button class="search-clear" id="searchClear">×</button>
       <div class="search-dropdown" id="searchDropdown"></div>
     </div>
-    <div class="topbar-right"></div>
+    <div class="topbar-right">
+      <button class="topbar-btn" id="settingsBtn" title="Settings">⚙</button>
+    </div>
   </div>
 
   <div class="content-zone">
@@ -140,6 +142,7 @@
       <div class="vol-fill" id="volFill" style="width:70%"></div>
     </div>
     <button class="fs-btn" id="fullscreenBtn" title="Fullscreen">⛶</button>
+    <button class="ctrl-btn queue-btn" id="queueBtn" title="Queue">☰ <span class="queue-badge" id="queueBadge" style="display:none">0</span></button>
   </div>
 </div>
 
