@@ -632,6 +632,7 @@ body {
 .up-next-panel { flex: 1; overflow-y: auto; padding: 16px; }
 .up-next-panel::-webkit-scrollbar { width: 3px; }
 .up-next-panel::-webkit-scrollbar-thumb { background: var(--border); }
+.up-next-panel.drag-over { outline: 2px dashed var(--accent); outline-offset: -2px; background: rgba(232,119,58,0.05); }
 
 .up-next-header {
   padding: 0 4px 12px; border-bottom: 1px solid var(--border-soft); margin-bottom: 10px;
@@ -894,6 +895,14 @@ body {
   font-family: 'Syne', sans-serif;
 }
 .queue-btn-wrap { position: relative; }
+
+/* ── UP NEXT SIDEBAR DRAG ── */
+#upNextList .queue-item { cursor: grab; user-select: none; }
+#upNextList .queue-item:active { cursor: grabbing; }
+#upNextList .queue-item.dragging { opacity: 0.4; }
+#upNextList .queue-item.drag-over-top { border-top: 2px solid var(--accent); }
+#upNextList .queue-item.drag-over-bottom { border-bottom: 2px solid var(--accent); }
+.queue-drag-handle { cursor: grab; color: var(--text-dim); font-size: 14px; flex-shrink: 0; padding: 0 6px 0 0; line-height: 1; }
 
 /* ── MODAL ── */
 .modal-overlay {

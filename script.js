@@ -1011,6 +1011,7 @@ function switchTab(name, el){
   });
   document.querySelectorAll('.panel-tab').forEach(t=>t.classList.remove('active'));
   if(el)el.classList.add('active');
+  if(name==='stats')updateStats();
 }
 
 function updateUpNext(){
@@ -1023,7 +1024,8 @@ function updateUpNext(){
     const pl=playlists[item.playlistKey];
     const song=pl?.songs[item.songIndex];
     if(!song)return'';
-    return`<div class="queue-item ${item.playlistKey===currentPlaylist&&item.songIndex===currentSongIndex?'active':''}" data-qi="${i}">
+    return`<div class="queue-item ${item.playlistKey===currentPlaylist&&item.songIndex===currentSongIndex?'active':''}" draggable="true" data-qi="${i}">
+      <span class="queue-drag-handle">≡</span>
       <span class="queue-num ${item.playlistKey===currentPlaylist&&item.songIndex===currentSongIndex?'active':''}">${i+1}</span>
       <div class="queue-thumb"><svg viewBox="0 0 16 16"><path d="M2 3h8l2 3h2v8H2z" fill="currentColor"/></svg></div>
       <div class="queue-info">
@@ -1033,6 +1035,59 @@ function updateUpNext(){
       <button class="queue-del" data-qdel="${i}">×</button>
     </div>`;
   }).join('');
+}
+
+/* ── STATS PANEL ── */
+function updateStats(){
+  const panel=$('tab-stats');if(!panel)return;
+  const totalPls=Object.keys(playlists).length;
+  let totalTracks=0;
+  const artistCount={};
+  const plSizes=[];
+  Object.entries(playlists).forEach(([key,pl])=>{
+    const len=pl.songs.length;
+    totalTracks+=len;
+    plSizes.push({name:pl.name,emoji:pl.emoji||'📂',count:len});
+    pl.songs.forEach(s=>{
+      const a=s.artist||'Unknown';
+      artistCount[a]=(artistCount[a]||0)+1;
+    });
+  });
+  plSizes.sort((a,b)=>b.count-a.count);
+  const topArtists=Object.entries(artistCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const maxPl=plSizes.length?plSizes[0].count:1;
+  const maxArt=topArtists.length?topArtists[0][1]:1;
+  const nowPl=currentPlaylist&&playlists[currentPlaylist]?playlists[currentPlaylist].name:'—';
+  const nowSong=currentSongIndex>=0&&playlists[currentPlaylist]?playlists[currentPlaylist].songs[currentSongIndex]:null;
+  const favoritesCount=favorites.size;
+
+  panel.innerHTML=`
+<div class="stat-block">
+  <div class="stat-label">Library Overview</div>
+  <div class="stat-value">${totalPls} <span class="stat-unit">playlists</span></div>
+  <div class="stat-sub">${totalTracks} total tracks · ${favoritesCount} favorites · ${queue.length} in queue</div>
+</div>
+<div class="stat-block">
+  <div class="stat-label">Now Playing</div>
+  <div class="stat-value stat-value-sm">${nowSong?esc(nowSong.title):'Nothing playing'}</div>
+  <div class="stat-sub">${nowSong?esc(nowSong.artist)+' · '+esc(nowPl):'Pick a song to start'}</div>
+</div>
+<div class="stat-block">
+  <div class="stat-label">Playlist Breakdown</div>
+  ${plSizes.map(p=>`<div class="genre-row">
+    <div class="genre-name">${esc(p.emoji)} ${esc(p.name)}</div>
+    <div class="genre-bar-bg"><div class="genre-bar-fill" style="width:${(p.count/maxPl*100).toFixed(1)}%"></div></div>
+    <div class="genre-pct">${p.count}</div>
+  </div>`).join('')}
+</div>
+<div class="stat-block">
+  <div class="stat-label">Top Artists</div>
+  ${topArtists.length?topArtists.map(([name,count])=>`<div class="genre-row">
+    <div class="genre-name">${esc(name)}</div>
+    <div class="genre-bar-bg"><div class="genre-bar-fill" style="width:${(count/maxArt*100).toFixed(1)}%"></div></div>
+    <div class="genre-pct">${count}</div>
+  </div>`).join(''):'<div style="color:var(--text-dim);font-size:11px">No tracks yet</div>'}
+</div>`;
 }
 
 $('upNextClear')?.addEventListener('click',()=>{clearQueue();updateUpNext();});
@@ -1050,6 +1105,44 @@ $('upNextList')?.addEventListener('click',e=>{
     const q=queue[qi];
     if(q)playSong(q.songIndex,q.playlistKey);
   }
+});
+
+/* ── Up Next panel drag reorder ── */
+let upNextDragSrc=null;
+const uq=$('upNextList');
+uq.addEventListener('dragstart',e=>{
+  const item=e.target.closest('.queue-item');if(!item)return;
+  upNextDragSrc=parseInt(item.dataset.qi);
+  item.classList.add('dragging');
+  e.dataTransfer.effectAllowed='move';
+  e.dataTransfer.setData('text/plain',JSON.stringify({qi:upNextDragSrc}));
+});
+uq.addEventListener('dragover',e=>{
+  if(upNextDragSrc===null)return;
+  e.preventDefault();e.dataTransfer.dropEffect='move';
+  uq.querySelectorAll('.queue-item').forEach(el=>el.classList.remove('drag-over-top','drag-over-bottom'));
+  const target=e.target.closest('.queue-item');if(!target)return;
+  const rect=target.getBoundingClientRect();
+  if(e.clientY<rect.top+rect.height/2)target.classList.add('drag-over-top');
+  else target.classList.add('drag-over-bottom');
+});
+uq.addEventListener('drop',e=>{
+  if(upNextDragSrc===null)return;
+  e.preventDefault();
+  const target=e.target.closest('.queue-item');if(!target)return;
+  const targetIdx=parseInt(target.dataset.qi);
+  if(targetIdx!==upNextDragSrc){
+    const overTop=target.classList.contains('drag-over-top');
+    const [item]=queue.splice(upNextDragSrc,1);
+    queue.splice(overTop?targetIdx:targetIdx+1,0,item);
+    updateUpNext();updateQueueUI();
+  }
+  upNextDragSrc=null;
+  uq.querySelectorAll('.queue-item').forEach(el=>el.classList.remove('dragging','drag-over-top','drag-over-bottom'));
+});
+uq.addEventListener('dragend',()=>{
+  upNextDragSrc=null;
+  uq.querySelectorAll('.queue-item').forEach(el=>el.classList.remove('dragging','drag-over-top','drag-over-bottom'));
 });
 
 $('backBtn').addEventListener('click',goBack);
@@ -1114,7 +1207,7 @@ document.addEventListener('mouseup',()=>{isDraggingProgress=false;isDraggingVolu
         dragSourceIdx=parseInt(item.dataset.qi);
         item.classList.add('dragging');
         e.dataTransfer.effectAllowed='move';
-        e.dataTransfer.setData('text/plain',dragSourceIdx);
+        e.dataTransfer.setData('text/plain',JSON.stringify({qi:dragSourceIdx}));
       }else if(evt==='dragover'){
         if(dragSourceIdx===null)return;
         e.preventDefault();
@@ -1325,10 +1418,11 @@ const sl=$('songList');
     const plKey=row.dataset.playlist;
     if(plKey!==currentPlaylist)return;
     if(evt==='dragstart'){
-      dragTrackSource=parseInt(row.dataset.index);
+      const idx=parseInt(row.dataset.index);
+      dragTrackSource=idx;
       row.classList.add('dragging');
-      e.dataTransfer.effectAllowed='move';
-      e.dataTransfer.setData('text/plain',dragTrackSource);
+      e.dataTransfer.effectAllowed='all';
+      e.dataTransfer.setData('text/plain',JSON.stringify({plKey,index:idx}));
     }else if(evt==='dragover'){
       if(dragTrackSource===null)return;
       e.preventDefault();
@@ -1359,6 +1453,26 @@ const sl=$('songList');
     }
   });
 });
+/* ── Drag from track list to Up Next panel ── */
+let upNextDragCount=0;
+const unp=$('tab-queue');
+if(unp){
+  unp.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='copy';});
+  unp.addEventListener('dragenter',()=>{upNextDragCount++;unp.classList.add('drag-over');});
+  unp.addEventListener('dragleave',()=>{upNextDragCount--;if(upNextDragCount<=0){upNextDragCount=0;unp.classList.remove('drag-over');}});
+  unp.addEventListener('drop',e=>{
+    e.preventDefault();upNextDragCount=0;unp.classList.remove('drag-over');
+    const raw=e.dataTransfer.getData('text/plain');
+    if(!raw)return;
+    try{
+      const d=JSON.parse(raw);
+      if(d.plKey&&typeof d.index==='number')addToQueue(d.plKey,d.index);
+    }catch{
+      const idx=parseInt(raw);
+      if(!isNaN(idx)&&currentPlaylist)addToQueue(currentPlaylist,idx);
+    }
+  });
+}
 $('playlistGrid').addEventListener('click',e=>{
   const card=e.target.closest('.playlist-card');if(card){recordNav();switchPlaylist(card.dataset.playlist);}
 });
