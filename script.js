@@ -116,10 +116,15 @@ function playlistSongs(pl){
   return Array.isArray(pl?.songs)?pl.songs:[];
 }
 
+let featuredKeys=null;
 function renderPlaylistGrid(){
   const grid=$('playlistGrid');if(!grid)return;
-  let keys=recentPlaylists.filter(k=>playlists[k]).slice(0,3);
-  if(keys.length<3)for(const k of DEFAULT_KEYS){if(!keys.includes(k))keys.push(k);if(keys.length>=3)break;}
+  if(!featuredKeys){
+    const all=Object.keys(playlists);
+    for(let i=all.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[all[i],all[j]]=[all[j],all[i]];}
+    featuredKeys=all.slice(0,3);
+  }
+  const keys=featuredKeys;
   const ordinals=['01','02','03'];
   grid.innerHTML=keys.map((key,i)=>{
     const pl=playlists[key];
@@ -299,7 +304,7 @@ function renderPlaylists(filter){
     const isDefault=DEFAULT_KEYS.includes(key);
     const songs=playlistSongs(pl);
     const name=pl?.name||'Untitled Playlist';
-    return`<div class="playlist-card ${key===currentPlaylist?'active':''}" data-playlist="${esc(key)}" role="button" tabindex="0" title="${esc(name)}">
+    return`<div class="playlist-card" data-playlist="${esc(key)}" role="button" tabindex="0" title="${esc(name)}">
       ${isDefault?'':`<div style="position:absolute;top:8px;right:8px;display:flex;gap:3px;z-index:2;opacity:0;transition:opacity 0.14s;">
         <button class="ctrl-btn" style="width:22px;height:22px;font-size:10px;background:var(--surface2);border:1px solid var(--border-soft);border-radius:4px;" data-rename="${esc(key)}" title="Rename">✎</button>
         <button class="ctrl-btn" style="width:22px;height:22px;font-size:10px;background:var(--surface2);border:1px solid var(--border-soft);border-radius:4px;" data-delete="${esc(key)}" title="Delete">×</button>
