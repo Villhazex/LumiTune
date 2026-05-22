@@ -155,6 +155,7 @@
 
   <!-- RIGHT PANEL -->
   <aside class="right-panel">
+    <div class="resize-handle" id="resizeHandle"></div>
     <div class="panel-tabs">
       <button class="panel-tab active" onclick="switchTab('lyrics', this)">Lyrics</button>
       <button class="panel-tab" onclick="switchTab('queue', this)">Up Next</button>
@@ -163,16 +164,9 @@
 
     <div id="tab-lyrics" class="lyrics-panel">
       <div class="lyrics-title">Now Playing — Lyrics</div>
-      <div class="lyric-line">Under the pale grey sky, we walked</div>
-      <div class="lyric-line">A melody carried by the wind</div>
-      <div class="lyric-line active">I still remember that day we shared</div>
-      <div class="lyric-line">A tune that echoed through the haze</div>
-      <div class="lyric-line">Words unspoken, yet understood</div>
-      <div class="lyric-line lyric-sep">— Chorus —</div>
-      <div class="lyric-line">Beyond the dreams we chased so far</div>
-      <div class="lyric-line">A light was waiting, just for us</div>
-      <div class="lyric-line">The sky was stained with tears and hope</div>
-      <div class="lyric-line">Yet it remained a brilliant blue</div>
+      <div class="lyrics-content" id="lyricsContent">
+        <div class="lyrics-placeholder">Select a track to see lyrics</div>
+      </div>
     </div>
 
     <div id="tab-queue" class="up-next-panel" style="display:none">
@@ -239,7 +233,7 @@
       <div class="bottom-track-title" id="trackTitle">Select a track</div>
       <div class="bottom-track-artist" id="trackArtist">Awaiting input</div>
     </div>
-    <button class="bottom-like" id="likeBtn">◇</button>
+    <button class="bottom-like" id="likeBtn">☆</button>
   </div>
 
   <div class="bottom-center">
@@ -278,6 +272,9 @@
 
 <div class="modal-overlay" id="confirmOverlay" style="display:none"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/kuroshiro@1.1.2/dist/kuroshiro.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/kuroshiro-analyzer-kuromoji@1.1.0/dist/kuroshiro-analyzer-kuromoji.min.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

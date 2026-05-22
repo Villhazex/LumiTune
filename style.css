@@ -571,8 +571,32 @@ body {
   letter-spacing: 0.08em; text-transform: uppercase;
 }
 
+/* ── RESIZE HANDLE ── */
+.resize-handle {
+  position: absolute;
+  left: -3px;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  z-index: 10;
+  background: transparent;
+  transition: background 0.15s;
+}
+.resize-handle::after {
+  content: '';
+  position: absolute;
+  left: -3px;
+  right: -3px;
+  top: 0;
+  bottom: 0;
+}
+.resize-handle:hover { background: rgba(255,255,255,0.08); }
+.resize-handle.active { background: var(--accent); }
+
 /* ── RIGHT PANEL ── */
 .right-panel {
+  position: relative;
   background: var(--surface);
   border-left: 1px solid var(--border-soft);
   display: flex;
@@ -616,17 +640,103 @@ body {
   letter-spacing: 0.15em; text-transform: uppercase;
   color: var(--text-dim); margin-bottom: 16px;
 }
+.lyrics-content {
+  min-height: 100px;
+}
 .lyric-line {
   font-size: 14px;
-  line-height: 1.8;
-  color: var(--text-dim);
-  margin-bottom: 2px;
-  transition: all 0.3s;
+  line-height: 1.9;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  padding: 2px 0;
+  transition: all 0.4s ease;
   cursor: pointer;
 }
-.lyric-line.active { color: var(--accent2); font-size: 13px; }
+.lyric-line.active {
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  transform: translateX(4px);
+}
+.lyric-line.active .lyric-original { color: var(--text); font-weight: 600; }
+.lyric-line.active .lyric-romaji { opacity: 0.85; }
+.lyric-line.past {
+  color: var(--text-dim);
+  font-size: 13px;
+}
+.lyric-line.past .lyric-original { color: var(--text-dim); font-size: 13px; }
+.lyric-line.past .lyric-romaji { opacity: 0.35; }
 .lyric-line:hover { color: var(--text-muted); }
+
+.lyric-original { transition: all 0.3s ease; }
+.lyric-romaji {
+  font-size: 11px;
+  line-height: 1.4;
+  opacity: 0.55;
+  color: var(--text-dim);
+  margin-bottom: 2px;
+  transition: all 0.3s ease;
+}
 .lyric-sep { margin-top: 14px; color: var(--accent); opacity: 0.5; }
+
+.lyrics-actions {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.lyrics-add-btn {
+  padding: 10px 16px;
+  border-radius: 7px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid var(--border-soft);
+  background: var(--surface2);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+.lyrics-add-btn:hover {
+  border-color: var(--text-dim);
+  color: var(--text);
+  background: var(--surface);
+}
+.lyrics-add-btn.primary {
+  background: var(--accent);
+  color: #0e0c0a;
+  border-color: var(--accent);
+  font-weight: 500;
+}
+.lyrics-add-btn.primary:hover { opacity: 0.88; }
+
+.lyrics-placeholder {
+  color: var(--text-dim);
+  font-size: 13px;
+  font-style: italic;
+  padding: 20px 0;
+  text-align: center;
+}
+.lyrics-loading {
+  color: var(--text-dim);
+  font-size: 13px;
+  padding: 20px 0;
+  text-align: center;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+.lyrics-none {
+  color: var(--text-dim);
+  font-size: 13px;
+  font-style: italic;
+  padding: 20px 0;
+  text-align: center;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
 
 /* Up Next */
 .up-next-panel { flex: 1; overflow-y: auto; padding: 16px; }
@@ -948,6 +1058,24 @@ body {
   transition: border-color 0.15s;
 }
 .modal-input:focus { border-color: var(--accent); }
+.modal-textarea {
+  display: block; width: 100%; resize: vertical;
+  background: var(--surface2); border: 1px solid var(--border-soft);
+  border-radius: 8px; padding: 12px 16px;
+  font-family: 'DM Mono', monospace; font-size: 12px;
+  color: var(--text); outline: none; min-height: 180px;
+  transition: border-color 0.15s; margin-bottom: 8px;
+  line-height: 1.7;
+}
+.modal-textarea:focus { border-color: var(--accent); }
+.modal-hint {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin-bottom: 16px;
+  opacity: 0.7;
+}
 
 .picker-box { max-width: 400px; }
 .picker-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; max-height: 320px; overflow-y: auto; }
