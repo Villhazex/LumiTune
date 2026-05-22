@@ -517,7 +517,7 @@ body {
 .track-list-wrap { padding: 0 28px 12px; }
 .track-list-header {
   display: grid;
-  grid-template-columns: 32px 1fr 80px 60px auto;
+  grid-template-columns: 32px 1fr 80px auto;
   gap: 10px;
   font-size: 11px; color: var(--text-dim);
   letter-spacing: 0.12em; text-transform: uppercase;
@@ -525,13 +525,10 @@ body {
   border-bottom: 1px solid var(--border-soft);
   margin-bottom: 6px;
 }
-.track-list-header span { display: flex; align-items: center; }
-.track-list-header .sortable { cursor: pointer; user-select: none; }
-.track-list-header .sortable:hover { color: var(--text-muted); }
 
 .track-row {
   display: grid;
-  grid-template-columns: 32px 1fr 80px 60px auto;
+  grid-template-columns: 32px 1fr 80px auto;
   gap: 10px;
   align-items: center;
   padding: 10px 12px;
@@ -588,7 +585,6 @@ body {
 .t-title { font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .t-artist { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
 .t-extra { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.t-status { display: flex; align-items: center; }
 .t-actions { display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
 .t-actions button {
   background: none; border: none; color: var(--text-dim);
@@ -1384,6 +1380,6 @@ body {
   .bottom-left { justify-content: center; }
   .bottom-right { display: none; }
   .metadata-grid { grid-template-columns: 1fr; }
-  .track-list-header, .track-row { grid-template-columns: 24px 1fr 50px auto; }
+  .track-list-header, .track-row { grid-template-columns: 24px 1fr auto; }
   .track-list-header span:nth-child(3), .track-row .track-album { display: none; }
 }

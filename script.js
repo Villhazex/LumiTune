@@ -842,17 +842,16 @@ function makeRow(song,origIdx,isActive,isLiked,plKey,showDel,extra){
   const num=isActive&&isPlaying?'▶':String(origIdx+1).padStart(2,'0');
   const ref=songRefKey(plKey,origIdx);
   const bulk=currentView==='tools'?`<input type="checkbox" class="bulk-check" data-bulk="${esc(ref)}" ${bulkSelected.has(ref)?'checked':''}> `:'';
-  const status=isActive
+  const statusBadge=isActive
     ?`<span class="badge ${isPlaying?'badge-playing':'badge-paused'}"><span class="badge-dot"></span>${isPlaying?'Playing':'Paused'}</span>`
     :'';
   return`<div class="track-row ${isActive?'active':''}" draggable="true" data-index="${origIdx}" data-playlist="${plKey}">
     <div class="t-num ${isActive&&isPlaying?'playing':''}">${bulk}${num}</div>
     <div class="t-info">
       <span class="t-title">${song.title}</span>
-      <span class="t-artist">${song.artist}</span>
+      <span class="t-artist">${statusBadge}${statusBadge?' ':''}${song.artist}</span>
     </div>
     <div class="t-extra">${extra}</div>
-    <div class="t-status">${status}</div>
     <div class="t-actions">
       <button class="like-btn ${isLiked?'liked':''}" data-song-id="${song.id}">${isLiked?'★':'☆'}</button>
       <button class="queue-btn-row" data-qadd="${origIdx}" data-qpl="${plKey}" title="Add to queue">↓</button>
