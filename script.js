@@ -29,6 +29,8 @@ let sortAsc=true;
 let playlistsViewMode='grid';
 let queue=[];
 let libraryOrder=null;
+let totalPlayTime=0;
+let lastTrackedPos=0;
 
 const $=id=>document.getElementById(id);
 const YT_SERVER='http://localhost:3001';
@@ -62,6 +64,7 @@ function saveState(){
     localStorage.setItem('lumi-cur',currentPlaylist);
     localStorage.setItem('lumi-rec',JSON.stringify(recentPlaylists));
     localStorage.setItem('lumi-src',JSON.stringify(recentSearches));
+    localStorage.setItem('lumi-pt',String(totalPlayTime));
   }catch(e){}
 }
 async function loadState(){
@@ -94,6 +97,7 @@ async function loadState(){
     if(Array.isArray(rec))recentPlaylists=rec.filter(k=>typeof k==='string');
     const src=JSON.parse(localStorage.getItem('lumi-src')||'[]');
     if(Array.isArray(src))recentSearches=src.filter(s=>typeof s==='string');
+    totalPlayTime=parseFloat(localStorage.getItem('lumi-pt')||'0');
   }catch(e){console.warn(e);}
 }
 
@@ -102,6 +106,40 @@ function fmt(s){
   return`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
 }
 
+function formatPlaytime(s){
+  if(isNaN(s)||s==null||s<1)return'0 mins';
+  const days=Math.floor(s/86400);
+  const hrs=Math.floor((s%86400)/3600);
+  const mins=Math.floor((s%3600)/60);
+  if(days>0)return`${days}d ${hrs}h ${mins}m`;
+  if(hrs>0)return`${hrs}h ${mins}m`;
+  return`${mins} mins`;
+}
+function monthKey(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+}
+function getMonthPlays(){
+  try{return JSON.parse(localStorage.getItem('lumi-plays-'+monthKey())||'{}');}catch(e){return{};}
+}
+function saveMonthPlays(data){
+  try{localStorage.setItem('lumi-plays-'+monthKey(),JSON.stringify(data));}catch(e){}
+}
+function incrementPlayCount(id){
+  const sid=String(id);
+  const data=getMonthPlays();
+  data[sid]=(data[sid]||0)+1;
+  saveMonthPlays(data);
+}
+function findSongById(id){
+  const sid=String(id);
+  for(const pl of Object.values(playlists)){
+    for(const song of pl.songs){
+      if(String(song.id)===sid)return song;
+    }
+  }
+  return null;
+}
 function esc(value){
   return String(value??'').replace(/[&<>"']/g,ch=>({
     '&':'&amp;',
@@ -359,6 +397,7 @@ function playSong(index,playlistKey){
   if(index<0||index>=songs.length)return;
   currentSongIndex=index;
   const song=songs[index];
+  incrementPlayCount(song.id);
   $('trackTitle').textContent=song.title;
   $('trackArtist').textContent=song.artist;
   const aa=$('albumArt');
@@ -367,6 +406,7 @@ function playSong(index,playlistKey){
   isPlaying=true;updatePlayBtn();
   aa.classList.add('playing');
   $('vizBars').classList.add('active');
+  lastTrackedPos=0;
   updateHeroSection();
   renderSongList($('searchInput').value);
   if(song.file)playReal(song.file,song);else simPlay(song.duration);
@@ -378,7 +418,7 @@ function playReal(file,song){
   audioPlayer.volume=isMuted?0:volume;
   audioPlayer.play().catch(()=>{});
   audioPlayer.onloadedmetadata=()=>{totalDuration=audioPlayer.duration;$('totalTime').textContent=fmt(totalDuration);$('heroTotalTime').textContent=fmt(totalDuration);song.duration=fmt(totalDuration);renderSongList($('searchInput').value);};
-  audioPlayer.ontimeupdate=()=>{if(!isDraggingProgress){currentPlaybackTime=audioPlayer.currentTime;$('currentTime').textContent=fmt(currentPlaybackTime);$('progressFill').style.width=`${(currentPlaybackTime/totalDuration)*100}%`;updateHeroProgress();}};
+  audioPlayer.ontimeupdate=()=>{if(!isDraggingProgress){currentPlaybackTime=audioPlayer.currentTime;if(isPlaying){const delta=currentPlaybackTime-lastTrackedPos;if(delta>0&&delta<5){totalPlayTime+=delta;}}lastTrackedPos=currentPlaybackTime;$('currentTime').textContent=fmt(currentPlaybackTime);$('progressFill').style.width=`${(currentPlaybackTime/totalDuration)*100}%`;updateHeroProgress();}};
   audioPlayer.onended=handleEnd;
 }
 
@@ -390,7 +430,7 @@ function simPlay(durStr){
   currentPlaybackTime=0;
   $('totalTime').textContent=durStr;$('currentTime').textContent='0:00';$('progressFill').style.width='0%';updateHeroProgress();
   playbackInterval=setInterval(()=>{
-    if(isPlaying){currentPlaybackTime+=0.1;if(currentPlaybackTime>=totalDuration){$('currentTime').textContent=fmt(totalDuration);$('progressFill').style.width='100%';updateHeroProgress();handleEnd();return;}
+    if(isPlaying){currentPlaybackTime+=0.1;totalPlayTime+=0.1;if(currentPlaybackTime>=totalDuration){$('currentTime').textContent=fmt(totalDuration);$('progressFill').style.width='100%';updateHeroProgress();handleEnd();return;}
     $('currentTime').textContent=fmt(currentPlaybackTime);$('progressFill').style.width=`${(currentPlaybackTime/totalDuration)*100}%`;updateHeroProgress();
 }},100);
 }
@@ -531,7 +571,7 @@ function togglePlay(){
   if(currentSongIndex===-1){if(Object.keys(playlists).length)playSong(0);return;}
   isPlaying=!isPlaying;updatePlayBtn();
   if(isPlaying){$('albumArt').classList.add('playing');$('vizBars').classList.add('active');if(currentAudioFile)audioPlayer.play();}
-  else{$('albumArt').classList.remove('playing');$('vizBars').classList.remove('active');if(currentAudioFile)audioPlayer.pause();}
+  else{$('albumArt').classList.remove('playing');$('vizBars').classList.remove('active');if(currentAudioFile)audioPlayer.pause();localStorage.setItem('lumi-pt',String(totalPlayTime));}
   updateHeroSection();renderSongList($('searchInput').value);
 }
 function updatePlayBtn(){
@@ -563,6 +603,7 @@ function seekTo(e){
   const hf=$('heroProgFill');if(hf)hf.style.width=`${pct*100}%`;
   const hc=$('heroCurrentTime');if(hc)hc.textContent=fmt(currentPlaybackTime);
   if(currentAudioFile)audioPlayer.currentTime=currentPlaybackTime;
+  lastTrackedPos=currentPlaybackTime;
 }
 function seekHero(e){
   const el=$('heroProgBar');if(!el)return;
@@ -574,6 +615,7 @@ function seekHero(e){
   $('progressFill').style.width=`${pct*100}%`;
   $('currentTime').textContent=fmt(currentPlaybackTime);
   if(currentAudioFile)audioPlayer.currentTime=currentPlaybackTime;
+  lastTrackedPos=currentPlaybackTime;
 }
 function setVol(e){
   const rect=$('volBar').getBoundingClientRect();
@@ -1043,23 +1085,23 @@ function updateStats(){
   const totalPls=Object.keys(playlists).length;
   let totalTracks=0;
   const artistCount={};
-  const plSizes=[];
   Object.entries(playlists).forEach(([key,pl])=>{
     const len=pl.songs.length;
     totalTracks+=len;
-    plSizes.push({name:pl.name,emoji:pl.emoji||'📂',count:len});
     pl.songs.forEach(s=>{
       const a=s.artist||'Unknown';
       artistCount[a]=(artistCount[a]||0)+1;
     });
   });
-  plSizes.sort((a,b)=>b.count-a.count);
   const topArtists=Object.entries(artistCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  const maxPl=plSizes.length?plSizes[0].count:1;
   const maxArt=topArtists.length?topArtists[0][1]:1;
-  const nowPl=currentPlaylist&&playlists[currentPlaylist]?playlists[currentPlaylist].name:'—';
-  const nowSong=currentSongIndex>=0&&playlists[currentPlaylist]?playlists[currentPlaylist].songs[currentSongIndex]:null;
   const favoritesCount=favorites.size;
+  const monthPlays=getMonthPlays();
+  const sortedPlays=Object.entries(monthPlays).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const maxPlay=sortedPlays.length?sortedPlays[0][1]:1;
+  const monthNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const now=new Date();
+  const monthLabel=monthNames[now.getMonth()]+' '+now.getFullYear();
 
   panel.innerHTML=`
 <div class="stat-block">
@@ -1068,17 +1110,22 @@ function updateStats(){
   <div class="stat-sub">${totalTracks} total tracks · ${favoritesCount} favorites · ${queue.length} in queue</div>
 </div>
 <div class="stat-block">
-  <div class="stat-label">Now Playing</div>
-  <div class="stat-value stat-value-sm">${nowSong?esc(nowSong.title):'Nothing playing'}</div>
-  <div class="stat-sub">${nowSong?esc(nowSong.artist)+' · '+esc(nowPl):'Pick a song to start'}</div>
+  <div class="stat-label">Total Playtime</div>
+  <div class="stat-value">${formatPlaytime(totalPlayTime)}</div>
+  <div class="stat-sub">All time listening</div>
 </div>
 <div class="stat-block">
-  <div class="stat-label">Playlist Breakdown</div>
-  ${plSizes.map(p=>`<div class="genre-row">
-    <div class="genre-name">${esc(p.emoji)} ${esc(p.name)}</div>
-    <div class="genre-bar-bg"><div class="genre-bar-fill" style="width:${(p.count/maxPl*100).toFixed(1)}%"></div></div>
-    <div class="genre-pct">${p.count}</div>
-  </div>`).join('')}
+  <div class="stat-label">Most Listened This Month</div>
+  <div class="stat-sub" style="margin-bottom:6px">${monthLabel}</div>
+  ${sortedPlays.length?sortedPlays.map(([id,count])=>{
+    const song=findSongById(id);
+    const label=song?esc(song.title):'Unknown';
+    const artist=song?esc(song.artist):'';
+    return `<div class="genre-row" style="display:flex;justify-content:space-between;align-items:flex-start">
+    <div class="genre-name" style="width:auto;flex-shrink:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${label}${artist?'<br><span style="font-size:10px;color:var(--text-dim)">'+artist+'</span>':''}</div>
+    <div class="genre-pct" style="flex-shrink:0;margin-left:8px">${count}</div>
+  </div>`;
+  }).join(''):'<div style="color:var(--text-dim);font-size:11px">No plays yet this month</div>'}
 </div>
 <div class="stat-block">
   <div class="stat-label">Top Artists</div>
@@ -1389,6 +1436,15 @@ $('searchDropdown').addEventListener('click',e=>{
     $('searchDropdown').classList.remove('show');
     return;
   }
+  if(type==='track'){
+    const pk=item.dataset.playlist;
+    const idx=parseInt(item.dataset.index);
+    if(playlists[pk]&&playlists[pk].songs[idx])playSong(idx,pk);
+    $('searchInput').value='';
+    $('searchClear').classList.remove('show');
+    $('searchDropdown').classList.remove('show');
+    return;
+  }
   const term=item.dataset.term||'';
   $('searchInput').value=term;
   $('searchClear').classList.toggle('show',!!term);
@@ -1514,3 +1570,4 @@ async function init(){
   updateNavBtns();
 }
 init();
+addEventListener('beforeunload',()=>{localStorage.setItem('lumi-pt',String(totalPlayTime));});
