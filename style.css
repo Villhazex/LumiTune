@@ -84,6 +84,19 @@ body {
   padding: 20px 0;
   overflow: hidden;
   overflow-y: auto;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.layout.sidebar-closed .sidebar {
+  transform: translateX(-100%);
+  visibility: hidden;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s 0.4s;
+}
+.layout.sidebar-closed {
+  grid-template-columns: 0 1fr var(--rpw);
+}
+.layout.panel-closed.sidebar-closed {
+  grid-template-columns: 0 1fr 0;
 }
 
 .logo-area {
@@ -143,6 +156,35 @@ body {
 .nav-item.active .nav-icon { opacity: 1; }
 
 .nav-section { margin-bottom: 20px; }
+
+/* ── BRUTALISM-COMPATIBLE ELEMENTS (hidden in default theme) ── */
+.logo-bars { display: none; }
+.nav-num { display: none; }
+
+/* Sidebar bottom — acts like a nav-section in default theme */
+.sidebar-bottom {
+  margin-top: auto;
+  border-top: 1px solid var(--border-soft);
+  padding-top: 8px;
+}
+.sidebar-action {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 20px;
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 2px solid transparent;
+  letter-spacing: 0.03em;
+  background: none;
+  border-right: none; border-top: none; border-bottom: none;
+  width: 100%; text-align: left;
+  font-family: 'DM Mono', monospace;
+}
+.sidebar-action:hover { color: var(--text); background: var(--surface2); }
+.sidebar-action svg { width: 16px; height: 16px; opacity: 0.7; flex-shrink: 0; }
+.sidebar-action:first-child { border-top: none; }
+.sa-icon { display: none; }
 
 /* ── MAIN ── */
 .main {
@@ -267,6 +309,22 @@ body {
   font-family: 'DM Mono', monospace;
 }
 .icon-btn:hover { color: var(--text); background: var(--surface3); border-color: var(--border); }
+
+.sidebar-toggle-btn {
+  width: 28px; height: 28px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  line-height: 1;
+}
+.sidebar-toggle-btn:hover { color: var(--text); background: var(--surface2); border-color: var(--border-soft); }
+.layout.sidebar-closed .sidebar-toggle-btn { transform: rotate(180deg); }
 
 /* ── NOW PLAYING HERO ── */
 .now-playing-hero {
@@ -1496,3 +1554,5 @@ body {
   .track-list-header, .track-row { grid-template-columns: 24px 1fr auto; }
   .track-list-header span:nth-child(3), .track-row .track-album { display: none; }
 }
+
+

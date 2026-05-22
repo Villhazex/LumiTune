@@ -47,7 +47,7 @@ let lyricsHasRomaji=false;
 let lyricsShowEdit=false;
 
 let currentTheme='default';
-const availableThemes=['default','retro','zine','neurophism','synthwave'];
+const availableThemes=['default','retro','zine','neurophism','synthwave','brutalism'];
 
 let currentLyricOffset=0;
 let currentLyricOffsetSongId=null;
@@ -71,7 +71,7 @@ function getLyricOffset(songId){
 function adjustLyricOffset(delta,songId){
   if(songId===null)return;
   const current=getLyricOffset(songId);
-  const newOffset=Math.max(-10,Math.min(10,current+delta));
+  const newOffset=Math.max(-30,Math.min(30,current+delta));
   saveLyricOffset(songId,newOffset);
   currentLyricOffset=newOffset;
   updateLyricOffsetUI();
@@ -1224,8 +1224,16 @@ function playSong(index,playlistKey){
   if(!playlists[currentPlaylist])return;
   const songs=playlists[currentPlaylist].songs;
   if(index<0||index>=songs.length)return;
-  currentSongIndex=index;
-  const song=songs[index];
+
+  if(index>0&&currentView==='home'&&!$('searchInput').value){
+    const above=songs.splice(0,index);
+    songs.push(...above);
+    currentSongIndex=0;
+  }else{
+    currentSongIndex=index;
+  }
+
+  const song=songs[currentSongIndex];
   incrementPlayCount(song.id);
   $('trackTitle').textContent=song.title;
   $('trackArtist').textContent=song.artist;
@@ -1238,8 +1246,28 @@ function playSong(index,playlistKey){
   lastTrackedPos=0;
   updateHeroSection();
   renderSongList($('searchInput').value);
+
   if(song.file)playReal(song.file,song);else simPlay(song.duration);
   fetchLyricsForSong(song);
+
+  requestAnimationFrame(()=>{
+    const rows=$('songList')?.querySelectorAll('.track-row');
+    if(rows&&rows.length){
+      rows.forEach((row,i)=>{
+        row.animate([
+          { transform: 'translateY(80px)', opacity: 0.15 },
+          { transform: 'translateY(-3px)', opacity: 1, offset: 0.5 },
+          { transform: 'translateY(1px)', offset: 0.75 },
+          { transform: 'translateY(0)', opacity: 1 }
+        ],{
+          duration:2000,
+          delay:i*25,
+          easing:'cubic-bezier(0.22,1,0.36,1)',
+          fill:'forwards'
+        });
+      });
+    }
+  });
 }
 let lyricsSongId=null;
 let lastLyricsSong=null;
@@ -1396,7 +1424,7 @@ function playReal(file,song){
   audioPlayer.src=URL.createObjectURL(file);
   audioPlayer.volume=isMuted?0:volume;
   audioPlayer.play().catch(()=>{});
-  audioPlayer.onloadedmetadata=()=>{totalDuration=audioPlayer.duration;$('totalTime').textContent=fmt(totalDuration);$('heroTotalTime').textContent=fmt(totalDuration);song.duration=fmt(totalDuration);renderSongList($('searchInput').value);};
+  audioPlayer.onloadedmetadata=()=>{totalDuration=audioPlayer.duration;$('totalTime').textContent=fmt(totalDuration);$('heroTotalTime').textContent=fmt(totalDuration);song.duration=fmt(totalDuration);const activeRow=$('songList')?.querySelector('.track-row.active');if(activeRow){const extra=activeRow.querySelector('.t-extra');if(extra)extra.textContent=song.duration;}};
   audioPlayer.ontimeupdate=()=>{if(!isDraggingProgress){currentPlaybackTime=audioPlayer.currentTime;if(isPlaying){const delta=currentPlaybackTime-lastTrackedPos;if(delta>0&&delta<5){totalPlayTime+=delta;}}lastTrackedPos=currentPlaybackTime;updateLyricHighlight(currentPlaybackTime);$('currentTime').textContent=fmt(currentPlaybackTime);$('progressFill').style.width=`${(currentPlaybackTime/totalDuration)*100}%`;updateHeroProgress();}};
   audioPlayer.onended=handleEnd;
 }
@@ -1969,7 +1997,7 @@ function showSettingsModal(){
         const themeOpts=availableThemes.map(t=>{
           const active=t===currentTheme;
           const label=t.charAt(0).toUpperCase()+t.slice(1);
-          const swatch={default:'#0e0c0a',retro:'#f2e8d5',zine:'#1a1612',neurophism:'#e0dbd5',synthwave:'#0a0014'}[t]||'#888';
+          const swatch={default:'#0e0c0a',retro:'#f2e8d5',zine:'#1a1612',neurophism:'#e0dbd5',synthwave:'#0a0014',brutalism:'#0A0A0A'}[t]||'#888';
           return`<button class="theme-option${active?' active':''}" data-theme="${t}">
             <span class="theme-option-swatch" style="background:${swatch}"></span>
             <span class="theme-option-label">${label}</span>
@@ -2608,6 +2636,7 @@ document.addEventListener('mouseup',()=>{isDraggingProgress=false;isDraggingVolu
   $('sortTitle')?.addEventListener('click',()=>toggleSort('title'));
   $('sortDuration')?.addEventListener('click',()=>toggleSort('duration'));
   $('settingsBtn').addEventListener('click',showSettingsModal);
+  $('settingsSideBtn')?.addEventListener('click',showSettingsModal);
   $('togglePanelBtn').addEventListener('click',()=>{
     const layout=document.querySelector('.layout');
     const closed=layout.classList.toggle('panel-closed');
@@ -2616,6 +2645,9 @@ document.addEventListener('mouseup',()=>{isDraggingProgress=false;isDraggingVolu
       const tab=document.querySelector('.panel-tab:nth-child(2)');
       if(tab)switchTab('queue',tab);
     }
+  });
+  $('toggleSidebarBtn').addEventListener('click',()=>{
+    document.querySelector('.layout').classList.toggle('sidebar-closed');
   });
 function addRecentSearch(term){
   term=term.trim();

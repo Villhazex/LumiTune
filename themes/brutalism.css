@@ -1,0 +1,1454 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;500;700&family=Anton&display=swap');
+
+[data-theme="brutalism"] {
+  --bg: #0A0A0A;
+  --surface: #1A1A1A;
+  --surface2: #333;
+  --surface3: #3a3a3a;
+  --accent: #FF4E00;
+  --accent2: #FFD000;
+  --accent-dim: rgba(255,78,0,0.25);
+  --text: #F2EFE8;
+  --text-muted: #999;
+  --text-dim: #777;
+  --text3: #888;
+  --border: 2px solid #F2EFE8;
+  --border-soft: 1px solid #F2EFE8;
+}
+
+body[data-theme="brutalism"] {
+  font-family: 'IBM Plex Mono', monospace;
+  background: var(--bg);
+  color: var(--text);
+  cursor: crosshair;
+}
+
+/* ── SCROLLBAR ── */
+body[data-theme="brutalism"] ::-webkit-scrollbar { width: 4px; }
+body[data-theme="brutalism"] ::-webkit-scrollbar-track { background: transparent; }
+body[data-theme="brutalism"] ::-webkit-scrollbar-thumb { background: #333; border-radius: 0; }
+
+/* ── MARQUEE ── */
+body[data-theme="brutalism"] .marquee-bar {
+  background: var(--accent);
+  color: var(--bg);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.22em;
+  padding: 5px 0;
+  text-transform: none;
+  border-bottom: var(--border);
+}
+body[data-theme="brutalism"] .marquee-inner {
+  animation: brut-tick 18s linear infinite;
+}
+@keyframes brut-tick { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+body[data-theme="brutalism"] .marquee-inner span { padding: 0 20px; color: var(--bg); }
+body[data-theme="brutalism"] .marquee-inner span:nth-child(even) { color: rgba(0,0,0,0.5); }
+
+/* ── SIDEBAR ── */
+body[data-theme="brutalism"] .sidebar {
+  background: var(--bg);
+  border-right: var(--border);
+  padding: 0;
+  overflow: hidden;
+}
+body[data-theme="brutalism"] .sidebar::-webkit-scrollbar { display: none; }
+
+body[data-theme="brutalism"] .logo-area {
+  padding: 16px 14px 14px;
+  border-bottom: var(--border);
+  background: var(--text);
+  margin-bottom: 0;
+  cursor: default;
+}
+body[data-theme="brutalism"] .logo-mark {
+  width: auto; height: auto;
+  background: none;
+  border-radius: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  margin-bottom: 6px;
+}
+body[data-theme="brutalism"] .logo-mark svg { display: none; }
+body[data-theme="brutalism"] .logo-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  margin-bottom: 6px;
+}
+body[data-theme="brutalism"] .logo-bar {
+  background: var(--bg);
+  border-radius: 1px;
+  width: 5px;
+}
+body[data-theme="brutalism"] .logo-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 26px;
+  letter-spacing: 0.1em;
+  color: var(--bg);
+  line-height: 1;
+  font-weight: 400;
+}
+body[data-theme="brutalism"] .logo-sub {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--bg);
+  opacity: 0.5;
+  margin-top: 2px;
+  font-weight: 500;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+body[data-theme="brutalism"] .nav-section-label {
+  font-size: 9px;
+  letter-spacing: 0.25em;
+  color: #888;
+  padding: 10px 14px 5px;
+  text-transform: uppercase;
+  border-bottom: 1px solid #2A2A2A;
+}
+body[data-theme="brutalism"] .nav-section-label::before {
+  content: '— ';
+}
+
+body[data-theme="brutalism"] .nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #999;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  border-left: none;
+  border-radius: 0;
+  border-bottom: 1px solid #2A2A2A;
+  transition: none;
+}
+body[data-theme="brutalism"] .nav-item:hover {
+  background: #3a3a3a;
+  color: var(--text);
+  border-left: none;
+}
+body[data-theme="brutalism"] .nav-item.active {
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 700;
+  border-left: none;
+}
+body[data-theme="brutalism"] .nav-item svg,
+body[data-theme="brutalism"] .nav-item .nav-icon {
+  display: none;
+}
+body[data-theme="brutalism"] .nav-item .nav-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid rgba(255,255,255,0.12);
+  flex-shrink: 0;
+  color: #777;
+}
+body[data-theme="brutalism"] .nav-item.active .nav-num {
+  color: var(--bg);
+  border-right-color: rgba(0,0,0,0.2);
+}
+body[data-theme="brutalism"] .nav-item:hover .nav-num { color: #aaa; }
+body[data-theme="brutalism"] .nav-item .nav-text { padding: 0 10px; text-transform: uppercase; }
+
+body[data-theme="brutalism"] .nav-section { margin-bottom: 0; }
+
+body[data-theme="brutalism"] .sidebar-bottom {
+  margin-top: auto;
+  border-top: var(--border);
+  padding-top: 0;
+}
+
+/* Sidebar bottom actions */
+body[data-theme="brutalism"] .sidebar-action svg { display: none; }
+body[data-theme="brutalism"] .sidebar-action {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-bottom: 1px solid #2A2A2A;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #999;
+  transition: none;
+  padding: 0;
+}
+body[data-theme="brutalism"] .sidebar-action:hover { background: #3a3a3a; color: var(--text); }
+body[data-theme="brutalism"] .sidebar-action:hover .sa-icon { background: var(--accent); color: var(--bg); }
+body[data-theme="brutalism"] .sa-icon {
+  width: 36px; height: 36px;
+  background: #2A2A2A;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  border-right: 1px solid #2A2A2A;
+  flex-shrink: 0;
+  transition: none;
+}
+body[data-theme="brutalism"] .sa-text { padding: 0 10px; text-transform: uppercase; letter-spacing: 0.1em; }
+
+/* ── TOPBAR ── */
+body[data-theme="brutalism"] .topbar {
+  display: flex;
+  align-items: stretch;
+  padding: 0;
+  border-bottom: var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 10;
+  height: 48px;
+  gap: 0;
+}
+body[data-theme="brutalism"] .topbar-left {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  border-right: var(--border);
+  gap: 10px;
+  flex-shrink: 0;
+}
+body[data-theme="brutalism"] .topbar-nav { display: flex; gap: 0; }
+body[data-theme="brutalism"] .nav-btn {
+  background: none;
+  border: 1px solid var(--text);
+  color: #999;
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: 'IBM Plex Mono', monospace;
+  border-radius: 0;
+  transition: none;
+}
+body[data-theme="brutalism"] .nav-btn:hover { background: var(--text); color: var(--bg); }
+body[data-theme="brutalism"] .nav-btn:disabled { opacity: 0.3; }
+body[data-theme="brutalism"] .breadcrumb {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.12em;
+  color: var(--text);
+  white-space: nowrap;
+  font-weight: 400;
+}
+body[data-theme="brutalism"] .breadcrumb span {
+  font-size: 9px;
+  color: #888;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-left: 6px;
+}
+
+body[data-theme="brutalism"] .topbar .search-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 10px;
+  border-right: var(--border);
+  background: none;
+  border-radius: 0;
+  border: none;
+}
+body[data-theme="brutalism"] .search-box input {
+  flex: 1;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--text);
+  outline: none;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--text);
+  padding: 4px 0;
+  letter-spacing: 0.06em;
+  border-radius: 0;
+}
+body[data-theme="brutalism"] .search-box input::placeholder { color: #666; }
+body[data-theme="brutalism"] .search-box:focus-within { border-color: transparent; background: none; }
+body[data-theme="brutalism"] .search-box input:focus { border-bottom-color: var(--accent); }
+body[data-theme="brutalism"] .search-box svg { display: none; }
+body[data-theme="brutalism"] .search-box::before {
+  content: 'SEARCH//';
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  color: #777;
+  letter-spacing: 0.1em;
+  flex-shrink: 0;
+}
+
+body[data-theme="brutalism"] .topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 8px;
+}
+body[data-theme="brutalism"] .icon-btn {
+  width: 34px;
+  height: 34px;
+  background: none;
+  border: 1px solid var(--text);
+  color: #999;
+  cursor: pointer;
+  font-size: 15px;
+  font-family: 'IBM Plex Mono', monospace;
+  display: flex; align-items: center; justify-content: center;
+  transition: none;
+  border-radius: 0;
+  padding: 0;
+}
+body[data-theme="brutalism"] .icon-btn:first-child { border-right: none; }
+body[data-theme="brutalism"] .icon-btn:hover { background: var(--text); color: var(--bg); }
+body[data-theme="brutalism"] .icon-btn:active { background: var(--accent); color: var(--bg); }
+
+/* ── NOW PLAYING HERO ── */
+body[data-theme="brutalism"] .now-playing-hero {
+  display: grid;
+  grid-template-columns: 100px 1fr auto;
+  gap: 0;
+  align-items: stretch;
+  padding: 0;
+  background: none;
+  border-bottom: var(--border);
+  position: relative;
+  overflow: hidden;
+}
+body[data-theme="brutalism"] .now-playing-hero::before { display: none; }
+
+body[data-theme="brutalism"] .album-art-hero {
+  width: 100px; height: 100px;
+  background: var(--surface2);
+  border-right: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 0;
+  border: none;
+  flex-shrink: 0;
+}
+body[data-theme="brutalism"] .album-art-hero.playing { border-color: transparent; }
+body[data-theme="brutalism"] .album-art-hero::after { display: none; }
+body[data-theme="brutalism"] .album-art-hero .art-emoji { position: static; z-index: auto; }
+body[data-theme="brutalism"] .album-art-hero .hero-wave { display: none; }
+body[data-theme="brutalism"] .album-art-hero::before {
+  content: 'NOW';
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+  z-index: 1;
+}
+
+body[data-theme="brutalism"] .track-info {
+  padding: 14px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  justify-content: center;
+  min-width: 0;
+}
+body[data-theme="brutalism"] .now-playing-label {
+  font-size: 11px;
+  color: var(--accent);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 0;
+}
+body[data-theme="brutalism"] .track-title-hero {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  letter-spacing: 0.04em;
+  line-height: 0.95;
+  color: var(--text);
+  text-transform: uppercase;
+  font-weight: 400;
+  margin-bottom: 0;
+}
+body[data-theme="brutalism"] .track-artist-hero {
+  font-size: 11px;
+  color: var(--accent);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+body[data-theme="brutalism"] .progress-area {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-width: none;
+}
+body[data-theme="brutalism"] .progress-bar-wrap {
+  width: 100%;
+  height: 6px;
+  background: var(--surface3);
+  cursor: pointer;
+  position: relative;
+  border-radius: 0;
+}
+body[data-theme="brutalism"] .progress-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 0;
+  pointer-events: none;
+}
+body[data-theme="brutalism"] .progress-bar-fill::after { display: none; }
+body[data-theme="brutalism"] .progress-times {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #555;
+  letter-spacing: 0.08em;
+}
+
+body[data-theme="brutalism"] .controls {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-top: 4px;
+}
+body[data-theme="brutalism"] .ctrl-btn {
+  background: none;
+  border: 1px solid #999;
+  color: #999;
+  width: 32px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: 'IBM Plex Mono', monospace;
+  margin-right: -1px;
+  transition: none;
+  border-radius: 0;
+}
+body[data-theme="brutalism"] .ctrl-btn:hover { background: #3a3a3a; color: var(--text); }
+body[data-theme="brutalism"] .ctrl-btn.active { color: var(--accent); border-color: var(--accent); z-index: 1; }
+body[data-theme="brutalism"] .ctrl-play {
+  background: var(--accent) !important;
+  color: var(--bg) !important;
+  border-color: var(--accent) !important;
+  width: 42px !important;
+  font-size: 14px !important;
+  font-weight: 700;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+body[data-theme="brutalism"] .ctrl-play:hover { background: #CC3E00 !important; opacity: 1 !important; }
+
+body[data-theme="brutalism"] .hero-right {
+  border-left: var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  gap: 8px;
+  flex-shrink: 0;
+}
+body[data-theme="brutalism"] .hero-right .vol-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: #888;
+  writing-mode: vertical-lr;
+  transform: rotate(180deg);
+}
+body[data-theme="brutalism"] .vol-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  width: 4px;
+  height: 80px;
+  background: var(--surface3);
+  outline: none;
+  cursor: pointer;
+  border-radius: 0;
+}
+body[data-theme="brutalism"] .vol-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 4px;
+  height: 56px;
+  background: var(--text);
+  border-radius: 0;
+  cursor: pointer;
+}
+
+/* ── SECTION HEADER ── */
+body[data-theme="brutalism"] .section-header {
+  display: flex;
+  align-items: stretch;
+  padding: 0;
+  border-bottom: 1px solid var(--text);
+}
+body[data-theme="brutalism"] .section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.22em;
+  color: #888;
+  padding: 8px 16px;
+  border-right: 1px solid var(--text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 400;
+  text-transform: capitalize;
+}
+body[data-theme="brutalism"] .section-title .badge-count {
+  background: var(--accent);
+  color: var(--bg);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 0;
+}
+body[data-theme="brutalism"] .section-action {
+  margin-left: auto;
+  background: none;
+  border: none;
+  border-left: 1px solid var(--text);
+  color: #888;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0 14px;
+  cursor: pointer;
+  transition: none;
+}
+body[data-theme="brutalism"] .section-action:hover { background: #3a3a3a; color: var(--text); opacity: 1; }
+
+/* ── PLAYLIST GRID ── */
+body[data-theme="brutalism"] .playlist-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0;
+  padding: 0;
+  border-bottom: var(--border);
+}
+body[data-theme="brutalism"] .playlist-card {
+  border-right: 1px solid var(--text);
+  border-top: 1px solid var(--text);
+  border-bottom: 1px solid var(--text);
+  padding: 12px;
+  cursor: pointer;
+  transition: none;
+  position: relative;
+  background: var(--bg);
+  border-radius: 0;
+  border-left: none;
+}
+body[data-theme="brutalism"] .playlist-card:last-child { border-right: none; }
+body[data-theme="brutalism"] .playlist-card:hover { border-right-color: transparent; background: #3a3a3a; transform: none; }
+body[data-theme="brutalism"] .playlist-card.active { background: var(--accent); border-color: transparent; }
+body[data-theme="brutalism"] .playlist-card::before { display: none; }
+body[data-theme="brutalism"] .playlist-card .card-meta {
+  font-size: 8px;
+  color: #888;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+body[data-theme="brutalism"] .playlist-card.active .card-meta,
+body[data-theme="brutalism"] .playlist-card.active .card-count { color: rgba(0,0,0,0.6); }
+body[data-theme="brutalism"] .playlist-card.active .card-name { color: var(--bg); }
+body[data-theme="brutalism"] .playlist-card .card-folder { display: none; }
+body[data-theme="brutalism"] .playlist-card .card-icon {
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: #888;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+body[data-theme="brutalism"] .playlist-card .card-icon-box {
+  width: 18px; height: 16px;
+  border: 1px solid #888;
+  position: relative;
+}
+body[data-theme="brutalism"] .playlist-card .card-icon-box::before {
+  content: '';
+  position: absolute;
+  top: -4px; left: 3px;
+  width: 10px; height: 4px;
+  background: #888;
+}
+body[data-theme="brutalism"] .playlist-card.active .card-icon-box,
+body[data-theme="brutalism"] .playlist-card.active .card-icon-box::before { border-color: rgba(0,0,0,0.4); background: rgba(0,0,0,0.4); }
+body[data-theme="brutalism"] .card-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  color: var(--text);
+  font-weight: 400;
+}
+body[data-theme="brutalism"] .card-count {
+  font-size: 9px;
+  color: #888;
+  margin-top: 2px;
+  letter-spacing: 0.08em;
+}
+
+/* ── TRACK LIST ── */
+body[data-theme="brutalism"] .track-list-wrap { padding: 0; }
+body[data-theme="brutalism"] .track-list-header {
+  display: grid;
+  grid-template-columns: 40px 1fr 120px 60px auto;
+  gap: 0;
+  border-bottom: 1px solid var(--text);
+  padding: 0;
+  margin-bottom: 0;
+}
+body[data-theme="brutalism"] .track-list-header span {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #777;
+  padding: 7px 12px;
+  border-right: 1px solid #2A2A2A;
+}
+body[data-theme="brutalism"] .track-list-header span:last-child { border-right: none; }
+
+body[data-theme="brutalism"] .track-row {
+  display: grid;
+  grid-template-columns: 40px 1fr 120px 60px auto;
+  align-items: center;
+  border-bottom: 1px solid #2A2A2A;
+  border-top: 1px solid #2A2A2A;
+  cursor: pointer;
+  transition: none;
+  min-height: 44px;
+  padding: 0;
+  border-radius: 0;
+  gap: 0;
+}
+body[data-theme="brutalism"] .track-row:first-child { border-top: none; }
+body[data-theme="brutalism"] .track-row:hover { background: #3a3a3a; }
+body[data-theme="brutalism"] .track-row.active { background: var(--surface); border-bottom-color: var(--accent); border-top-color: var(--accent); }
+
+body[data-theme="brutalism"] .track-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  color: #666;
+  text-align: center;
+  padding: 0 8px;
+  border-right: 1px solid #2A2A2A;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+body[data-theme="brutalism"] .track-row:hover .track-num { color: var(--accent); }
+body[data-theme="brutalism"] .track-row.active .track-num { color: var(--accent); }
+
+body[data-theme="brutalism"] .track-name-col {
+  padding: 8px 12px;
+  min-width: 0;
+  border-right: 1px solid #2A2A2A;
+}
+body[data-theme="brutalism"] .track-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.02em;
+}
+body[data-theme="brutalism"] .track-row.active .track-name { color: var(--accent); }
+body[data-theme="brutalism"] .track-sub {
+  font-size: 10px;
+  color: #888;
+  margin-top: 2px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body[data-theme="brutalism"] .track-album {
+  font-size: 11px;
+  color: #888;
+  padding: 0 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.04em;
+  border-right: 1px solid #2A2A2A;
+}
+body[data-theme="brutalism"] .track-dur {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: #888;
+  text-align: center;
+  padding: 0 8px;
+  letter-spacing: 0.04em;
+  border-right: 1px solid #2A2A2A;
+}
+body[data-theme="brutalism"] .track-actions {
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  gap: 0;
+}
+body[data-theme="brutalism"] .track-actions button {
+  background: none;
+  border: none;
+  color: #777;
+  cursor: pointer;
+  font-size: 13px;
+  width: 28px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'IBM Plex Mono', monospace;
+  transition: none;
+  padding: 0;
+  border-radius: 0;
+}
+body[data-theme="brutalism"] .track-actions button:hover { color: var(--accent); background: var(--accent-dim); }
+body[data-theme="brutalism"] .track-actions .like-btn { font-size: 16px; }
+body[data-theme="brutalism"] .track-actions .like-btn.liked { color: #FF3030; }
+body[data-theme="brutalism"] .edit-track-btn {
+  font-size: 11px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+body[data-theme="brutalism"] .del-btn:hover { color: #FF3030 !important; background: rgba(255,48,48,0.1) !important; }
+
+body[data-theme="brutalism"] .badge-playing {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: var(--accent);
+  color: var(--bg);
+  padding: 2px 7px;
+  font-weight: 700;
+  margin-left: 8px;
+  border: none;
+  border-radius: 0;
+}
+body[data-theme="brutalism"] .badge-dot {
+  width: 4px; height: 4px;
+  background: var(--bg);
+  border-radius: 50%;
+  animation: brut-bdot 1s ease-in-out infinite;
+}
+@keyframes brut-bdot { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+/* ── RIGHT PANEL ── */
+body[data-theme="brutalism"] .right-panel {
+  background: var(--bg);
+  border-left: var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+body[data-theme="brutalism"] .panel-tabs {
+  display: flex;
+  border-bottom: var(--border);
+  flex-shrink: 0;
+}
+body[data-theme="brutalism"] .panel-tab {
+  flex: 1;
+  padding: 0;
+  height: 38px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  letter-spacing: 0.18em;
+  color: #888;
+  border: none;
+  border-right: 1px solid var(--text);
+  background: none;
+  cursor: pointer;
+  transition: none;
+  border-bottom: none;
+  text-transform: uppercase;
+}
+body[data-theme="brutalism"] .panel-tab:last-child { border-right: none; }
+body[data-theme="brutalism"] .panel-tab:hover { background: #3a3a3a; color: #aaa; }
+body[data-theme="brutalism"] .panel-tab.active { background: var(--text); color: var(--bg); border-bottom: none; }
+
+/* ── LYRICS ── */
+body[data-theme="brutalism"] .lyrics-panel {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+body[data-theme="brutalism"] .lyrics-panel::-webkit-scrollbar { display: none; }
+
+body[data-theme="brutalism"] .lyrics-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  color: #888;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 400;
+}
+body[data-theme="brutalism"] .lyrics-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #222;
+}
+
+body[data-theme="brutalism"] .lyric-line {
+  font-size: 13px;
+  line-height: 1.85;
+  color: #777;
+  padding: 1px 0;
+  cursor: pointer;
+  transition: none;
+  letter-spacing: 0.03em;
+  margin-bottom: 0;
+}
+body[data-theme="brutalism"] .lyric-line:hover { color: #aaa; }
+body[data-theme="brutalism"] .lyric-line.active {
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border-left: 3px solid var(--accent);
+  padding-left: 8px;
+  transform: none;
+}
+body[data-theme="brutalism"] .lyric-line.past { color: #555; font-size: 12px; }
+body[data-theme="brutalism"] .lyric-line .lyric-original,
+body[data-theme="brutalism"] .lyric-line .lyric-romaji { transition: none; }
+
+body[data-theme="brutalism"] .lyrics-offset-controls {
+  background: var(--surface);
+  border: 1px solid #555;
+  border-radius: 0;
+  padding: 7px 10px;
+  margin-bottom: 18px;
+}
+body[data-theme="brutalism"] .offset-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--accent);
+  font-weight: 500;
+}
+body[data-theme="brutalism"] .offset-btn {
+  background: none; border: 1px solid #555;
+  color: #888; cursor: pointer;
+  font-size: 13px; border-radius: 0;
+  font-family: 'IBM Plex Mono', monospace;
+}
+body[data-theme="brutalism"] .offset-btn:hover { border-color: var(--accent); color: var(--text); background: var(--accent-dim); }
+
+/* ── UP NEXT ── */
+body[data-theme="brutalism"] .up-next-panel {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+body[data-theme="brutalism"] .up-next-panel::-webkit-scrollbar { display: none; }
+
+body[data-theme="brutalism"] .up-next-header {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--text);
+  padding: 8px 14px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: #888;
+  font-weight: 400;
+  text-transform: uppercase;
+  margin-bottom: 0;
+}
+
+body[data-theme="brutalism"] .queue-item {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border-bottom: 1px solid #2A2A2A;
+  cursor: pointer;
+  transition: none;
+  padding: 0;
+  border-radius: 0;
+}
+body[data-theme="brutalism"] .queue-item:hover { background: #3a3a3a; }
+body[data-theme="brutalism"] .queue-item.active { background: var(--surface); }
+body[data-theme="brutalism"] .queue-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  color: #666;
+  width: 32px;
+  height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  border-right: 1px solid #2A2A2A;
+  flex-shrink: 0;
+}
+body[data-theme="brutalism"] .queue-num.active { color: var(--accent); }
+body[data-theme="brutalism"] .queue-thumb { display: none; }
+body[data-theme="brutalism"] .queue-info {
+  flex: 1;
+  padding: 8px 10px;
+  min-width: 0;
+}
+body[data-theme="brutalism"] .queue-name {
+  font-size: 11px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.02em;
+}
+body[data-theme="brutalism"] .queue-name.active { color: var(--accent); }
+body[data-theme="brutalism"] .queue-sub { font-size: 10px; color: #888; margin-top: 2px; }
+body[data-theme="brutalism"] .queue-dur { font-size: 10px; color: #777; padding: 0 8px; flex-shrink: 0; }
+body[data-theme="brutalism"] .queue-del {
+  background: none;
+  border: none;
+  border-left: 1px solid #2A2A2A;
+  color: #666;
+  width: 28px;
+  height: 48px;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'IBM Plex Mono', monospace;
+  transition: none;
+  flex-shrink: 0;
+  padding: 0;
+  border-radius: 0;
+}
+body[data-theme="brutalism"] .queue-del:hover { background: #3A0000; color: #FF6060; }
+
+body[data-theme="brutalism"] .queue-clear {
+  background: none;
+  border: none;
+  border-top: 1px solid #2A2A2A;
+  color: #777;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: none;
+  width: 100%;
+}
+body[data-theme="brutalism"] .queue-clear:hover { background: #3A0000; color: #FF6060; }
+
+/* ── STATS ── */
+body[data-theme="brutalism"] .stats-panel {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+body[data-theme="brutalism"] .stats-panel::-webkit-scrollbar { display: none; }
+
+body[data-theme="brutalism"] .stat-block {
+  border-bottom: 1px solid var(--text);
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border-radius: 0;
+  margin-bottom: 0;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+}
+body[data-theme="brutalism"] .stat-label {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: #888;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+body[data-theme="brutalism"] .stat-value {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 30px;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  line-height: 1;
+  font-weight: 400;
+}
+body[data-theme="brutalism"] .stat-value .stat-unit {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: #888;
+  margin-left: 4px;
+}
+body[data-theme="brutalism"] .stat-sub {
+  font-size: 9px;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+
+body[data-theme="brutalism"] .top-genres { margin-top: 8px; }
+body[data-theme="brutalism"] .genre-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 7px;
+}
+body[data-theme="brutalism"] .genre-name { font-size: 9px; color: #888; width: 54px; flex-shrink: 0; letter-spacing: 0.06em; text-transform: uppercase; }
+body[data-theme="brutalism"] .genre-bar-bg { flex: 1; height: 4px; background: #2A2A2A; border-radius: 0; }
+body[data-theme="brutalism"] .genre-bar-fill { height: 100%; background: var(--text); border-radius: 0; }
+body[data-theme="brutalism"] .genre-pct { font-size: 9px; color: #777; width: 24px; text-align: right; }
+
+/* ── BOTTOM BAR ── */
+body[data-theme="brutalism"] .bottom-bar {
+  height: 60px;
+  background: var(--surface);
+  border-top: var(--border);
+  display: grid;
+  grid-template-columns: 260px 1fr 200px;
+  align-items: stretch;
+  flex-shrink: 0;
+  padding: 0;
+  gap: 0;
+}
+
+body[data-theme="brutalism"] .bottom-left {
+  display: flex;
+  align-items: center;
+  border-right: var(--border);
+  gap: 0;
+}
+body[data-theme="brutalism"] .bottom-album-art {
+  width: 60px;
+  height: 60px;
+  background: #222;
+  border-right: 1px solid var(--text);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  border-radius: 0;
+  border: none;
+}
+body[data-theme="brutalism"] .bottom-album-art.playing { border-color: transparent; background: var(--surface2); }
+body[data-theme="brutalism"] .bottom-album-art .wave-inner { display: none; }
+body[data-theme="brutalism"] .bottom-album-art .art-emoji { position: static; }
+body[data-theme="brutalism"] .bottom-track-info {
+  flex: 1;
+  padding: 0 10px;
+  min-width: 0;
+}
+body[data-theme="brutalism"] .bottom-track-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.02em;
+}
+body[data-theme="brutalism"] .bottom-track-artist {
+  font-size: 10px;
+  color: #888;
+  margin-top: 2px;
+  letter-spacing: 0.04em;
+}
+body[data-theme="brutalism"] .bottom-like {
+  background: none;
+  border: none;
+  border-left: 1px solid var(--text);
+  color: #777;
+  width: 42px;
+  height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: none;
+  padding: 0;
+}
+body[data-theme="brutalism"] .bottom-like:hover { color: #FF6060; background: rgba(255,96,96,0.06); }
+body[data-theme="brutalism"] .bottom-like.liked { color: #FF6060; }
+
+body[data-theme="brutalism"] .bottom-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-right: var(--border);
+  gap: 0;
+}
+body[data-theme="brutalism"] .bottom-ctrls {
+  display: flex;
+  align-items: stretch;
+  height: 32px;
+  border-bottom: 1px solid #2A2A2A;
+  width: 100%;
+  justify-content: center;
+  gap: 0;
+}
+body[data-theme="brutalism"] .bottom-ctrl-btn {
+  background: none;
+  border: none;
+  border-right: 1px solid #2A2A2A;
+  color: #888;
+  width: 40px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: 'IBM Plex Mono', monospace;
+  transition: none;
+  height: 32px;
+  border-radius: 0;
+}
+body[data-theme="brutalism"] .bottom-ctrl-btn:last-child { border-right: none; }
+body[data-theme="brutalism"] .bottom-ctrl-btn:hover { background: #3a3a3a; color: var(--text); }
+body[data-theme="brutalism"] .bottom-ctrl-btn.active { color: var(--accent); }
+body[data-theme="brutalism"] .bottom-play-btn {
+  background: var(--accent) !important;
+  color: var(--bg) !important;
+  width: 48px !important;
+  font-size: 14px !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+}
+body[data-theme="brutalism"] .bottom-play-btn:hover { background: #CC3E00 !important; color: var(--bg) !important; opacity: 1 !important; }
+
+body[data-theme="brutalism"] .bottom-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0 14px;
+  height: 28px;
+}
+body[data-theme="brutalism"] .bottom-time {
+  font-size: 10px;
+  color: #777;
+  letter-spacing: 0.04em;
+  min-width: 28px;
+  text-align: center;
+}
+body[data-theme="brutalism"] .bottom-prog-track {
+  flex: 1;
+  height: 4px;
+  background: #2A2A2A;
+  cursor: pointer;
+  position: relative;
+  border-radius: 0;
+}
+body[data-theme="brutalism"] .bottom-prog-track:hover { height: 4px; }
+body[data-theme="brutalism"] .bottom-prog-fill {
+  height: 100%;
+  background: var(--text);
+  pointer-events: none;
+  border-radius: 0;
+}
+body[data-theme="brutalism"] .bottom-prog-fill::after { display: none; }
+body[data-theme="brutalism"] .bottom-prog-track:hover .bottom-prog-fill::after { display: none; }
+
+body[data-theme="brutalism"] .bottom-right {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  justify-content: flex-end;
+}
+body[data-theme="brutalism"] .bottom-vol-btn {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: #777;
+  padding: 0 10px;
+  border-right: 1px solid #2A2A2A;
+  height: 100%;
+  display: flex; align-items: center;
+  background: none;
+  border-top: none;
+  border-bottom: none;
+  border-left: none;
+  border-radius: 0;
+  text-transform: uppercase;
+}
+body[data-theme="brutalism"] .bottom-vol-btn:hover { color: var(--text); border-color: #2A2A2A; }
+body[data-theme="brutalism"] .bottom-vol-track {
+  flex: 1;
+  height: 4px;
+  background: #2A2A2A;
+  cursor: pointer;
+  margin: 0 10px;
+  position: relative;
+  min-width: 80px;
+  border-radius: 0;
+}
+body[data-theme="brutalism"] .bottom-vol-track:hover { height: 4px; }
+body[data-theme="brutalism"] .bottom-vol-fill {
+  height: 100%;
+  background: var(--text);
+  border-radius: 0;
+}
+body[data-theme="brutalism"] .bottom-vol-fill::after { display: none; }
+body[data-theme="brutalism"] .bottom-util-btn {
+  background: none;
+  border: none;
+  border-left: 1px solid #2A2A2A;
+  color: #777;
+  width: 40px; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: 'IBM Plex Mono', monospace;
+  transition: none;
+  border-radius: 0;
+  padding: 0;
+}
+body[data-theme="brutalism"] .bottom-util-btn:hover { background: #3a3a3a; color: var(--text); }
+
+/* ── VIZ BARS ── */
+body[data-theme="brutalism"] .viz-bars { height: 16px; display: flex; align-items: flex-end; gap: 2px; margin-left: 2px; }
+body[data-theme="brutalism"] .viz-bar { width: 3px; background: var(--accent); border-radius: 1px; animation: brut-vu 0.7s ease-in-out infinite alternate; }
+body[data-theme="brutalism"] .viz-bar:nth-child(1) { animation-delay: 0s; }
+body[data-theme="brutalism"] .viz-bar:nth-child(2) { animation-delay: 0.2s; }
+body[data-theme="brutalism"] .viz-bar:nth-child(3) { animation-delay: 0.1s; }
+@keyframes brut-vu { from{height:3px} to{height:10px} }
+
+/* ── MODALS ── */
+body[data-theme="brutalism"] .modal-overlay {
+  backdrop-filter: none;
+  background: rgba(0,0,0,0.85);
+}
+body[data-theme="brutalism"] .modal-box {
+  background: var(--bg);
+  border: var(--border);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 28px;
+}
+body[data-theme="brutalism"] .modal-msg {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--text);
+  margin-bottom: 18px;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
+}
+body[data-theme="brutalism"] .modal-btn {
+  padding: 10px 18px;
+  border-radius: 0;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: none;
+  border: 1px solid #777;
+  background: none;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+body[data-theme="brutalism"] .modal-btn:hover { border-color: var(--text); color: var(--text); }
+body[data-theme="brutalism"] .modal-ok {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+  font-weight: 700;
+}
+body[data-theme="brutalism"] .modal-ok:hover { background: #CC3E00; color: var(--bg); border-color: #CC3E00; }
+body[data-theme="brutalism"] .modal-input,
+body[data-theme="brutalism"] .modal-textarea {
+  background: var(--surface);
+  border: 1px solid #555;
+  border-radius: 0;
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--text);
+  outline: none;
+}
+body[data-theme="brutalism"] .modal-input:focus,
+body[data-theme="brutalism"] .modal-textarea:focus { border-color: var(--accent); }
+body[data-theme="brutalism"] .modal-hint {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: #888;
+}
+
+/* ── SETTINGS PAGE ── */
+body[data-theme="brutalism"] .settings-page {
+  background: var(--bg);
+  border: var(--border);
+  border-radius: 0;
+}
+body[data-theme="brutalism"] .settings-page-header {
+  border-bottom: var(--border);
+  padding: 18px 24px;
+}
+body[data-theme="brutalism"] .settings-page-header .modal-msg { margin-bottom: 0; }
+body[data-theme="brutalism"] .settings-sidebar {
+  border-right: var(--border);
+  background: var(--bg);
+  padding: 8px 0;
+}
+body[data-theme="brutalism"] .settings-nav-item {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  border-left: 2px solid transparent;
+  color: #888;
+  padding: 10px 20px;
+  border-radius: 0;
+}
+body[data-theme="brutalism"] .settings-nav-item:hover { background: #3a3a3a; color: var(--text); }
+body[data-theme="brutalism"] .settings-nav-item.active {
+  color: var(--accent);
+  border-left-color: var(--accent);
+  background: var(--accent-dim);
+}
+body[data-theme="brutalism"] .settings-content { background: var(--bg); padding: 24px; }
+body[data-theme="brutalism"] .settings-section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--text);
+  letter-spacing: 0.08em;
+}
+body[data-theme="brutalism"] .settings-section-desc {
+  font-size: 12px;
+  color: #888;
+}
+body[data-theme="brutalism"] .setting-group { border-top-color: #2A2A2A; }
+body[data-theme="brutalism"] .setting-row-label span { color: var(--text); }
+body[data-theme="brutalism"] .setting-row-label small { color: #888; }
+body[data-theme="brutalism"] .setting-btn {
+  font-family: 'IBM Plex Mono', monospace;
+  border: 1px solid #555;
+  background: none;
+  color: #888;
+  border-radius: 0;
+  padding: 8px 16px;
+}
+body[data-theme="brutalism"] .setting-btn:hover { border-color: #777; color: var(--text); }
+body[data-theme="brutalism"] .setting-btn.primary {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+  font-weight: 700;
+}
+body[data-theme="brutalism"] .setting-btn.primary:hover { background: #CC3E00; opacity: 1; }
+body[data-theme="brutalism"] .setting-btn.active {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+body[data-theme="brutalism"] .theme-option {
+  background: var(--surface);
+  border: 1px solid #555;
+  border-radius: 0;
+  font-family: 'IBM Plex Mono', monospace;
+  color: #888;
+  padding: 12px 16px;
+}
+body[data-theme="brutalism"] .theme-option:hover { border-color: #777; color: var(--text); background: #3a3a3a; }
+body[data-theme="brutalism"] .theme-option.active { border-color: var(--accent); color: var(--text); background: var(--accent-dim); }
+body[data-theme="brutalism"] .theme-option-swatch { border-radius: 0; border: 1px solid #555; }
+
+/* ── TOAST ── */
+body[data-theme="brutalism"] .toast-notif {
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  color: var(--text);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* ── EMPTY STATE ── */
+body[data-theme="brutalism"] .empty-state {
+  padding: 60px 20px;
+  text-align: center;
+  font-size: 11px;
+  color: #555;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  border-bottom: 1px solid #2A2A2A;
+}
+
+/* ── SHORTCUTS MODAL ── */
+body[data-theme="brutalism"] .shortcuts-modal { background: var(--bg); border: var(--border); border-radius: 0; }
+body[data-theme="brutalism"] .shortcuts-cat-label {
+  font-family: 'IBM Plex Mono', monospace;
+  color: #888;
+  font-size: 9px;
+}
+body[data-theme="brutalism"] .shortcut-label { font-family: 'IBM Plex Mono', monospace; color: var(--text); font-size: 12px; }
+body[data-theme="brutalism"] .shortcut-keys {
+  font-family: 'IBM Plex Mono', monospace;
+  background: var(--surface);
+  border: 1px solid #555;
+  color: var(--accent);
+  border-radius: 0;
+}
+
+/* ── SOURCE PICKER ── */
+body[data-theme="brutalism"] .source-option {
+  background: var(--surface);
+  border: 1px solid #555;
+  border-radius: 0;
+  font-family: 'IBM Plex Mono', monospace;
+  color: #888;
+}
+body[data-theme="brutalism"] .source-option:hover { border-color: var(--accent); color: var(--text); }
+body[data-theme="brutalism"] .source-label { font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: var(--text); letter-spacing: 0.08em; }
+
+/* ── COLLECTION / TOOL TABS ── */
+body[data-theme="brutalism"] .tool-tab,
+body[data-theme="brutalism"] .bulk-btn {
+  border: 1px solid #555;
+  background: none;
+  color: #888;
+  border-radius: 0;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+body[data-theme="brutalism"] .tool-tab.active,
+body[data-theme="brutalism"] .bulk-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--text); }
+body[data-theme="brutalism"] .tool-tab span { color: var(--accent); }
+body[data-theme="brutalism"] .bulk-btn.danger:hover:not(:disabled) { border-color: #FF6060; color: #FF6060; }
+
+/* ── RESIZE HANDLE ── */
+body[data-theme="brutalism"] .resize-handle:hover { background: rgba(255,255,255,0.12); }
+body[data-theme="brutalism"] .resize-handle.active { background: var(--accent); }

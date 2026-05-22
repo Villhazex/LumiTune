@@ -32,6 +32,13 @@
     <div class="logo-area" id="logoArea">
       <div class="logo-mark">
         <svg viewBox="0 0 14 14"><rect x="1" y="5" width="3" height="7" rx="1"/><rect x="5" y="2" width="3" height="10" rx="1"/><rect x="9" y="4" width="3" height="8" rx="1"/></svg>
+        <div class="logo-bars">
+          <div class="logo-bar" style="height:18px"></div>
+          <div class="logo-bar" style="height:26px"></div>
+          <div class="logo-bar" style="height:22px"></div>
+          <div class="logo-bar" style="height:30px"></div>
+          <div class="logo-bar" style="height:14px"></div>
+        </div>
       </div>
       <div class="logo-name">LUMITUNE</div>
       <div class="logo-sub">AUDIO PLAYER · V2</div>
@@ -41,45 +48,51 @@
        <div class="nav-section-label">Discover</div>
        <button class="nav-item active" data-view="home">
          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zm0 4h12v2H2zm0 4h7v2H2z"/></svg>
-         Home
+         <span class="nav-num">01</span><span class="nav-text">Home</span>
        </button>
        <button class="nav-item" data-view="library">
          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 2h8a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm1 2v8h6V4H5zm1 1h4v2H6V5zm0 3h4v1H6V8z"/></svg>
-         Library
+         <span class="nav-num">02</span><span class="nav-text">Library</span>
        </button>
        <button class="nav-item" data-view="artists">
          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-5 6a5 5 0 0 1 10 0H3z"/></svg>
-         Artists
+         <span class="nav-num">03</span><span class="nav-text">Artists</span>
        </button>
        <button class="nav-item" data-view="albums">
          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/></svg>
-         Albums
+         <span class="nav-num">04</span><span class="nav-text">Albums</span>
        </button>
        <button class="nav-item" data-view="tools">
          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zm2 4h8v2H4zm-2 4h12v2H2z"/></svg>
-         Tools
+         <span class="nav-num">05</span><span class="nav-text">Tools</span>
        </button>
         <button class="nav-item" data-view="favorites">
           <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5l1.8 3.7 4.1.6-3 2.9.7 4-3.6-1.9L4.4 12.7l.7-4-3-2.9 4.1-.6z"/></svg>
-          Favourites
+          <span class="nav-num">06</span><span class="nav-text">Favourites</span>
         </button>
         <button class="nav-item" data-view="playlists">
           <svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10v2H3zm0 4h10v2H3zm0 4h6v2H3z"/></svg>
-          Playlists
+          <span class="nav-num">07</span><span class="nav-text">Playlists</span>
         </button>
       </div>
 
-      <div class="nav-section">
-        <div class="nav-section-label">Actions</div>
-        <button class="nav-item" id="newPlaylistBtn">
-          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
-          New Playlist
-        </button>
-        <button class="nav-item" id="addTracksBtn">
-          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2l6 8H2z"/></svg>
-          Add Tracks
-        </button>
-      </div>
+    <div class="sidebar-bottom">
+      <button class="sidebar-action" id="newPlaylistBtn">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg>
+        <span class="sa-icon">+</span>
+        <span class="sa-text">New Playlist</span>
+      </button>
+      <button class="sidebar-action" id="addTracksBtn">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2l6 8H2z"/></svg>
+        <span class="sa-icon">↑</span>
+        <span class="sa-text">Add Tracks</span>
+      </button>
+      <button class="sidebar-action" id="settingsSideBtn">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="8" cy="8" r="2.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.5 1.5M11.5 11.5L13 13M3 13l1.5-1.5M11.5 4.5L13 3"/></svg>
+        <span class="sa-icon">⚙</span>
+        <span class="sa-text">Settings</span>
+      </button>
+    </div>
 
     <input type="file" id="addTracksInput" accept="audio/*" multiple style="display:none">
     <input type="file" id="folderInput" accept="audio/*" multiple style="display:none">
@@ -91,6 +104,7 @@
     <!-- TOP BAR -->
     <div class="topbar">
       <div class="topbar-left">
+        <button class="sidebar-toggle-btn" id="toggleSidebarBtn" title="Toggle sidebar">◀</button>
         <div class="topbar-nav">
           <button class="nav-btn" id="backBtn">‹</button>
           <button class="nav-btn" id="forwardBtn">›</button>
