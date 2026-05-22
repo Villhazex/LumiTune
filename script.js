@@ -250,7 +250,7 @@ function showShortcutsModal(){
       </div>
     </div>`;
     o.style.display='flex';
-    const close=()=>{o.style.display='none';resolve();};
+    const close=()=>{document.removeEventListener('keydown',kh,true);o.style.display='none';resolve();};
     $('closeShortcuts').onclick=close;
     function bindRowHandlers(){
       o.querySelectorAll('.shortcut-edit').forEach(btn=>{
@@ -1383,6 +1383,7 @@ async function fetchLyricsForSong(song){
 }
 
 function playReal(file,song){
+  clearInterval(playbackInterval);
   currentAudioFile=file;
   audioPlayer.src=URL.createObjectURL(file);
   audioPlayer.volume=isMuted?0:volume;
@@ -1396,6 +1397,7 @@ function simPlay(durStr){
   clearInterval(playbackInterval);
   if(!durStr||durStr==='--:--'){totalDuration=0;$('totalTime').textContent='--:--';$('currentTime').textContent='0:00';$('progressFill').style.width='0%';updateHeroProgress();return;}
   const p=durStr.split(':');
+  if(p.length<2||isNaN(parseInt(p[0]))||isNaN(parseInt(p[1]))){totalDuration=0;$('currentTime').textContent='0:00';$('progressFill').style.width='0%';updateHeroProgress();return;}
   totalDuration=parseInt(p[0])*60+parseInt(p[1]);
   currentPlaybackTime=0;
   $('totalTime').textContent=durStr;$('currentTime').textContent='0:00';$('progressFill').style.width='0%';updateHeroProgress();
@@ -1923,15 +1925,17 @@ function showSettingsModal(){
     </div>
   </div>`;
   o.style.display='flex';
-  const close=()=>{o.style.display='none'};
+  if(o._skh)document.removeEventListener('keydown',o._skh);
   const kh=e=>{if(e.key==='Escape')close()};
+  o._skh=kh;
   document.addEventListener('keydown',kh);
-  o.onclick=e=>{if(e.target===o){document.removeEventListener('keydown',kh);close();}};
-  $('settingsExport').onclick=()=>{document.removeEventListener('keydown',kh);close();exportPlaylists();};
+  const close=()=>{if(o._skh){document.removeEventListener('keydown',o._skh);o._skh=null;}o.style.display='none'};
+  o.onclick=e=>{if(e.target===o)close();};
+  $('settingsExport').onclick=()=>{close();exportPlaylists();};
   $('settingsImport').onclick=()=>{
     const inp=document.createElement('input');
     inp.type='file';inp.accept='.json';inp.style.display='none';
-    inp.addEventListener('change',async e=>{document.removeEventListener('keydown',kh);close();await importPlaylists(e);});
+    inp.addEventListener('change',async e=>{close();await importPlaylists(e);});
     document.body.appendChild(inp);
     inp.click();
     setTimeout(()=>document.body.removeChild(inp),1000);
@@ -1941,8 +1945,8 @@ function showSettingsModal(){
     const lbl=$('settingsLyricModeLabel');
     if(lbl)lbl.textContent=lyricsMode==='romaji'?'Romaji':'Japanese';
   };
-  $('settingsShortcuts').onclick=()=>{document.removeEventListener('keydown',kh);close();showShortcutsModal();};
-  $('mc').onclick=()=>{document.removeEventListener('keydown',kh);close();};
+  $('settingsShortcuts').onclick=()=>{close();showShortcutsModal();};
+  $('mc').onclick=()=>{close();};
 }
 
 async function handleCreateEmptyPlaylist(){
@@ -2124,14 +2128,16 @@ function renderQueue(){
     </div>`;
   }
   o.style.display='flex';
-  const close=()=>{o.style.display='none'};
+  if(o._qkh)document.removeEventListener('keydown',o._qkh);
   const kh=e=>{if(e.key==='Escape')close()};
+  o._qkh=kh;
   document.addEventListener('keydown',kh);
-  o.onclick=e=>{if(e.target===o){document.removeEventListener('keydown',kh);close();}};
+  const close=()=>{if(o._qkh){document.removeEventListener('keydown',o._qkh);o._qkh=null;}o.style.display='none'};
+  o.onclick=e=>{if(e.target===o)close();};
   const mc=$('mc');
-  if(mc)mc.onclick=()=>{document.removeEventListener('keydown',kh);close();};
+  if(mc)mc.onclick=()=>{close();};
   const qc=$('queueClear');
-  if(qc)qc.onclick=()=>{document.removeEventListener('keydown',kh);clearQueue();close();};
+  if(qc)qc.onclick=()=>{close();clearQueue();};
   o.querySelectorAll('.queue-del').forEach(btn=>{btn.onclick=()=>{const idx=parseInt(btn.dataset.qdel);removeFromQueue(idx);if(!queue.length)close();};});
 }
 
@@ -2146,14 +2152,17 @@ function recordNav(){
   navFuture=[];
   updateNavBtns();
 }
+function makeNavState(){
+  return {view:currentView,playlist:currentPlaylist,artist:selectedArtist,album:selectedAlbum,smart:selectedSmart};
+}
 function goBack(){
   if(!navHistory.length)return;
-  navFuture.push({view:currentView,playlist:currentPlaylist});
+  navFuture.push(makeNavState());
   const s=navHistory.pop();applyNavState(s);
 }
 function goForward(){
   if(!navFuture.length)return;
-  navHistory.push({view:currentView,playlist:currentPlaylist});
+  navHistory.push(makeNavState());
   const s=navFuture.pop();applyNavState(s);
 }
 function applyNavState(s){
