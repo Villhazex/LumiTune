@@ -68,7 +68,7 @@ function getLyricOffset(songId){
 function adjustLyricOffset(delta,songId){
   if(songId===null)return;
   const current=getLyricOffset(songId);
-  const newOffset=Math.max(-2,Math.min(2,current+delta));
+  const newOffset=Math.max(-10,Math.min(10,current+delta));
   saveLyricOffset(songId,newOffset);
   currentLyricOffset=newOffset;
   updateLyricOffsetUI();
@@ -676,10 +676,12 @@ async function renderLyrics(data,showEdit){
       if(romajiData&&romajiData.length){
         lyricLines=romajiData;
         renderLyricLines(romajiData,showEdit);
+        updateLyricOffsetUI();
         return;
       }
       lyricLines=parsed;
       renderLyricLines(parsed,showEdit);
+      updateLyricOffsetUI();
       return;
     }
   }
