@@ -1,0 +1,17 @@
+/* LumiTune — Dark theme (default) */
+[data-theme="dark"],
+:root {
+  --bg: #0e0c0a;
+  --surface: #161410;
+  --surface2: #1e1b17;
+  --surface3: #252118;
+  --accent: #e8773a;
+  --accent2: #f0a060;
+  --accent-dim: rgba(232,119,58,0.15);
+  --text: #f0ebe4;
+  --text-muted: #7a7060;
+  --text-dim: #4a4438;
+  --text3: #5a5548;
+  --border: rgba(232,119,58,0.12);
+  --border-soft: rgba(255,255,255,0.05);
+}

@@ -46,6 +46,9 @@ let lyricsMode='romaji';
 let lyricsHasRomaji=false;
 let lyricsShowEdit=false;
 
+let currentTheme='dark';
+const availableThemes=['dark','light','retro'];
+
 let currentLyricOffset=0;
 let currentLyricOffsetSongId=null;
 
@@ -1898,35 +1901,198 @@ function showNewPlaylistPicker(){
   });
 }
 
+function loadThemeCSS(theme){
+  const id='lumi-theme-css';
+  const existing=document.getElementById(id);
+  if(existing)existing.remove();
+  const link=document.createElement('link');
+  link.rel='stylesheet';
+  link.href=`themes/${theme}.css`;
+  link.id=id;
+  document.head.appendChild(link);
+}
+
+function applyTheme(theme){
+  currentTheme=theme;
+  document.body.dataset.theme=theme;
+  localStorage.setItem('lumi-theme',theme);
+  loadThemeCSS(theme);
+}
+
 function showSettingsModal(){
   const o=$('confirmOverlay');
-  const modeLabel=lyricsMode==='romaji'?'Romaji':'Japanese';
-  o.innerHTML=`<div class="modal-box source-picker-box settings-box">
-    <div class="modal-msg">Settings</div>
-    <div class="source-picker-grid settings-grid">
-      <button class="source-option" id="settingsExport">
-        <span class="source-icon">⬇</span>
-        <span class="source-label">Export</span>
-        <span class="source-desc">Backup playlists to JSON</span>
-      </button>
-      <button class="source-option" id="settingsImport">
-        <span class="source-icon">⬆</span>
-        <span class="source-label">Import</span>
-        <span class="source-desc">Restore from backup</span>
-      </button>
-      <button class="source-option" id="settingsLyricMode">
-         <span class="source-icon">♪</span>
-         <span class="source-label">Lyric Display</span>
-         <span class="source-desc" id="settingsLyricModeLabel">${modeLabel}</span>
-       </button>
-       <button class="source-option" id="settingsShortcuts">
-         <span class="source-icon">⌨</span>
-         <span class="source-label">Shortcuts</span>
-         <span class="source-desc">View & customize keys</span>
-       </button>
-     </div>
-    <div class="modal-actions">
+  let currentSection='general';
+
+  const sections={
+    general:{
+      label:'General',icon:'⚙',
+      render(){
+        return`<div class="settings-section-title">General</div>
+          <div class="settings-section-desc">Import and export your playlist data</div>
+          <div class="setting-group">
+            <div class="setting-row">
+              <div class="setting-row-label">
+                <span>Export Playlists</span>
+                <small>Backup all playlists to a JSON file</small>
+              </div>
+              <div class="setting-row-control">
+                <button class="setting-btn" id="sExport">⬇ Export</button>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-row-label">
+                <span>Import Playlists</span>
+                <small>Restore playlists from a JSON backup</small>
+              </div>
+              <div class="setting-row-control">
+                <button class="setting-btn" id="sImport">⬆ Import</button>
+              </div>
+            </div>
+          </div>`;
+      },
+      bind(){
+        $('sExport').onclick=()=>{close();exportPlaylists();};
+        $('sImport').onclick=()=>{
+          const inp=document.createElement('input');
+          inp.type='file';inp.accept='.json';inp.style.display='none';
+          inp.addEventListener('change',async e=>{close();await importPlaylists(e);});
+          document.body.appendChild(inp);
+          inp.click();
+          setTimeout(()=>document.body.removeChild(inp),1000);
+        };
+      }
+    },
+    appearance:{
+      label:'Appearance',
+      icon:'<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M2.9 2.9l1.4 1.4M11.7 11.7l1.4 1.4M2.9 13.1l1.4-1.4M11.7 4.3l1.4-1.4"/></svg>',
+      render(){
+        const themeOpts=availableThemes.map(t=>{
+          const active=t===currentTheme;
+          const label=t.charAt(0).toUpperCase()+t.slice(1);
+          const swatch={dark:'#0e0c0a',light:'#f5f0eb',retro:'#f2e8d5'}[t]||'#888';
+          return`<button class="theme-option${active?' active':''}" data-theme="${t}">
+            <span class="theme-option-swatch" style="background:${swatch}"></span>
+            <span class="theme-option-label">${label}</span>
+            ${active?'<span class="theme-option-check">✓</span>':''}
+          </button>`;
+        }).join('');
+        return`<div class="settings-section-title">Appearance</div>
+          <div class="settings-section-desc">Customize the look and feel of LumiTune</div>
+          <div class="setting-group">
+            <div class="setting-row">
+              <div class="setting-row-label">
+                <span>Theme</span>
+                <small>Select your preferred theme</small>
+              </div>
+            </div>
+            <div class="theme-list">${themeOpts}</div>
+          </div>`;
+      },
+      bind(){
+        o.querySelectorAll('.theme-option').forEach(el=>{
+          el.onclick=()=>{
+            const theme=el.dataset.theme;
+            applyTheme(theme);
+            renderContent('appearance');
+          };
+        });
+      }
+    },
+    lyrics:{
+      label:'Lyrics',icon:'♪',
+      render(){
+        const modeLabel=lyricsMode==='romaji'?'Romaji':'Japanese';
+        return`<div class="settings-section-title">Lyrics</div>
+          <div class="settings-section-desc">Configure how lyrics are displayed</div>
+          <div class="setting-group">
+            <div class="setting-row">
+              <div class="setting-row-label">
+                <span>Display Mode</span>
+                <small>Show lyrics in Romaji or Japanese script</small>
+              </div>
+              <div class="setting-row-control">
+                <button class="setting-btn${lyricsMode==='romaji'?' active':''}" id="sLyricMode">${modeLabel}</button>
+              </div>
+            </div>
+          </div>`;
+      },
+      bind(){
+        $('sLyricMode').onclick=()=>{
+          toggleLyricsMode();
+          renderContent('lyrics');
+        };
+      }
+    },
+    shortcuts:{
+      label:'Shortcuts',icon:'⌨',
+      render(){
+        const shortcuts=getActiveShortcuts();
+        const categories={};
+        Object.entries(shortcuts).forEach(([key,sc])=>{
+          const cat=sc.category||'Other';
+          if(!categories[cat])categories[cat]=[];
+          categories[cat].push({key,...sc});
+        });
+        let listHtml='';
+        Object.entries(categories).forEach(([cat,items])=>{
+          listHtml+=`<div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.1em;margin:12px 0 4px">${esc(cat)}</div>`;
+          items.forEach(item=>{
+            listHtml+=`<div class="shortcuts-inline-row">
+              <span class="shortcuts-inline-label">${esc(item.label)}</span>
+              <span class="shortcuts-inline-keys">${esc(formatShortcut(item))}</span>
+            </div>`;
+          });
+        });
+        return`<div class="settings-section-title">Keyboard Shortcuts</div>
+          <div class="settings-section-desc">View available keyboard shortcuts</div>
+          <div class="setting-group">
+            <div class="shortcuts-inline-list">${listHtml}</div>
+            <button class="setting-btn primary" id="sCustomizeShortcuts">⌨ Customize Shortcuts</button>
+          </div>`;
+      },
+      bind(){
+        $('sCustomizeShortcuts').onclick=()=>{close();showShortcutsModal();};
+      }
+    },
+    about:{
+      label:'About',icon:'ℹ',
+      render(){
+        return`<div class="about-info">
+          <div class="about-name">LUMITUNE</div>
+          <div class="about-ver">Version 1.0.0</div>
+          <div class="about-desc">A sleek audio player with YouTube integration, lyrics support, and playlist management. Built with vanilla JavaScript, CSS, and Node.js.</div>
+        </div>`;
+      },
+      bind(){}
+    }
+  };
+
+  function renderContent(key){
+    currentSection=key;
+    const content=$('settingsContent');
+    if(!content)return;
+    content.innerHTML=sections[key].render();
+    if(sections[key].bind)sections[key].bind();
+    o.querySelectorAll('.settings-nav-item').forEach(el=>{
+      el.classList.toggle('active',el.dataset.section===key);
+    });
+  }
+
+  o.innerHTML=`<div class="modal-box settings-page">
+    <div class="settings-page-header">
+      <div class="modal-msg">Settings</div>
       <button class="modal-btn modal-ok" id="mc">Close</button>
+    </div>
+    <div class="settings-body">
+      <div class="settings-sidebar">
+        ${Object.entries(sections).map(([key,sec])=>`
+          <button class="settings-nav-item${key===currentSection?' active':''}" data-section="${key}">
+            <span class="settings-nav-icon">${sec.icon}</span>
+            <span>${sec.label}</span>
+          </button>
+        `).join('')}
+      </div>
+      <div class="settings-content" id="settingsContent">${sections[currentSection].render()}</div>
     </div>
   </div>`;
   o.style.display='flex';
@@ -1936,22 +2102,12 @@ function showSettingsModal(){
   document.addEventListener('keydown',kh);
   const close=()=>{if(o._skh){document.removeEventListener('keydown',o._skh);o._skh=null;}o.style.display='none'};
   o.onclick=e=>{if(e.target===o)close();};
-  $('settingsExport').onclick=()=>{close();exportPlaylists();};
-  $('settingsImport').onclick=()=>{
-    const inp=document.createElement('input');
-    inp.type='file';inp.accept='.json';inp.style.display='none';
-    inp.addEventListener('change',async e=>{close();await importPlaylists(e);});
-    document.body.appendChild(inp);
-    inp.click();
-    setTimeout(()=>document.body.removeChild(inp),1000);
-  };
-  $('settingsLyricMode').onclick=()=>{
-    toggleLyricsMode();
-    const lbl=$('settingsLyricModeLabel');
-    if(lbl)lbl.textContent=lyricsMode==='romaji'?'Romaji':'Japanese';
-  };
-  $('settingsShortcuts').onclick=()=>{close();showShortcutsModal();};
+
+  o.querySelectorAll('.settings-nav-item').forEach(el=>{
+    el.onclick=()=>renderContent(el.dataset.section);
+  });
   $('mc').onclick=()=>{close();};
+  if(sections[currentSection].bind)sections[currentSection].bind();
 }
 
 async function handleCreateEmptyPlaylist(){
@@ -2725,6 +2881,8 @@ async function init(){
   playlists={};
   for(const[k,v]of Object.entries(DEFAULT_PLAYLISTS))playlists[k]=JSON.parse(JSON.stringify(v));
   await loadState();
+  const savedTheme=localStorage.getItem('lumi-theme');
+  if(savedTheme&&availableThemes.includes(savedTheme))applyTheme(savedTheme);
   if(!playlists[currentPlaylist]){const keys=Object.keys(playlists);currentPlaylist=keys.length?keys[0]:'';}
   renderPlaylistNav();renderPlaylistGrid();switchView('home');
   renderSongList($('searchInput').value);

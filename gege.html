@@ -1,11 +1,13 @@
-:root {
-  --sw: 220px;
-  --ph: 72px;
-  --rpw: 300px;
-}
-
-/* Default dark theme (fallback) */
-:root {
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LumiTune</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<!-- <link rel="stylesheet" href="style.css"> -->
+<style>
+    :root {
   --bg: #0e0c0a;
   --surface: #161410;
   --surface2: #1e1b17;
@@ -19,6 +21,9 @@
   --text3: #5a5548;
   --border: rgba(232,119,58,0.12);
   --border-soft: rgba(255,255,255,0.05);
+  --sw: 220px;
+  --ph: 72px;
+  --rpw: 300px;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1375,112 +1380,6 @@ body {
 }
 .recording-cancel:hover { background: rgba(255,80,80,0.1); }
 
-/* ── SETTINGS PAGE (Notion-like) ── */
-.settings-page {
-  max-width: 680px; width: 94%; padding: 0;
-  height: min(80vh, 620px); display: flex; flex-direction: column;
-  overflow: hidden;
-}
-.settings-page-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 18px 24px; border-bottom: 1px solid var(--border-soft);
-  flex-shrink: 0;
-}
-.settings-page-header .modal-msg { margin-bottom: 0; }
-.settings-body {
-  display: flex; flex: 1; min-height: 0;
-}
-.settings-sidebar {
-  width: 200px; flex-shrink: 0;
-  border-right: 1px solid var(--border-soft);
-  padding: 8px 0; overflow-y: auto;
-}
-.settings-nav-item {
-  display: flex; align-items: center; gap: 10px;
-  width: 100%; padding: 10px 20px;
-  background: none; border: none; border-left: 2px solid transparent;
-  font-family: 'DM Mono', monospace; font-size: 13px;
-  color: var(--text-muted); cursor: pointer;
-  text-align: left; transition: all 0.14s;
-}
-.settings-nav-item:hover { color: var(--text); background: var(--surface2); }
-.settings-nav-item.active {
-  color: var(--accent); border-left-color: var(--accent);
-  background: var(--accent-dim);
-}
-.settings-nav-icon { font-size: 16px; width: 22px; text-align: center; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; }
-.settings-nav-icon svg { width: 16px; height: 16px; }
-.settings-content {
-  flex: 1; padding: 24px; overflow-y: auto; min-width: 0;
-}
-.settings-section-title {
-  font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700;
-  color: var(--text); margin-bottom: 4px;
-}
-.settings-section-desc {
-  font-size: 12px; color: var(--text-dim); margin-bottom: 20px;
-}
-.setting-group {
-  border-top: 1px solid var(--border-soft); padding-top: 16px;
-  margin-top: 8px;
-}
-.setting-group:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
-.setting-row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 0; gap: 16px;
-}
-.setting-row-label { flex: 1; min-width: 0; }
-.setting-row-label span { display: block; font-size: 13px; color: var(--text); font-weight: 500; }
-.setting-row-label small { display: block; font-size: 11px; color: var(--text-dim); margin-top: 2px; }
-.setting-row-control { flex-shrink: 0; }
-.setting-btn {
-  padding: 8px 16px; border-radius: 7px;
-  font-family: 'DM Mono', monospace; font-size: 12px;
-  cursor: pointer; transition: all 0.14s;
-  border: 1px solid var(--border-soft);
-  background: var(--surface2); color: var(--text-muted);
-  white-space: nowrap;
-}
-.setting-btn:hover { border-color: var(--text-dim); color: var(--text); }
-.setting-btn.primary { background: var(--accent); color: #0e0c0a; border-color: var(--accent); font-weight: 500; }
-.setting-btn.primary:hover { opacity: 0.88; }
-.setting-btn.small { padding: 5px 12px; font-size: 11px; }
-.setting-btn.active { background: var(--accent); color: #0e0c0a; border-color: var(--accent); }
-
-.theme-list { display: flex; flex-direction: column; gap: 6px; }
-.theme-option {
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px 16px; border-radius: 8px;
-  background: var(--surface2); border: 1px solid var(--border-soft);
-  cursor: pointer; transition: all 0.14s;
-  font-family: 'DM Mono', monospace; text-align: left; width: 100%;
-  color: var(--text-muted); font-size: 13px;
-}
-.theme-option:hover { border-color: var(--text-dim); color: var(--text); background: var(--surface); }
-.theme-option.active { border-color: var(--accent); color: var(--text); background: var(--accent-dim); }
-.theme-option-swatch {
-  width: 20px; height: 20px; border-radius: 50%;
-  border: 1px solid var(--border-soft); flex-shrink: 0;
-}
-.theme-option-label { flex: 1; }
-.theme-option-check { font-size: 14px; color: var(--accent); }
-
-.shortcuts-inline-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }
-.shortcuts-inline-row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 6px 0; gap: 12px;
-}
-.shortcuts-inline-label { font-size: 12px; color: var(--text-muted); }
-.shortcuts-inline-keys {
-  font-size: 11px; color: var(--accent); white-space: nowrap;
-  font-family: 'DM Mono', monospace; flex-shrink: 0;
-}
-
-.about-info { text-align: center; padding: 20px 0; }
-.about-info .about-name { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: 0.12em; }
-.about-info .about-ver { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
-.about-info .about-desc { font-size: 12px; color: var(--text-muted); margin-top: 16px; line-height: 1.6; max-width: 360px; margin-left: auto; margin-right: auto; }
-
 /* ── RESPONSIVE ── */
 @media(max-width:960px) {
   .right-panel { display: none; }
@@ -1496,3 +1395,297 @@ body {
   .track-list-header, .track-row { grid-template-columns: 24px 1fr auto; }
   .track-list-header span:nth-child(3), .track-row .track-album { display: none; }
 }
+
+</style>
+</head>
+<body>
+
+<!-- MARQUEE -->
+<div class="marquee-bar">
+  <div class="marquee-inner" id="tickerText">
+    <span>LUMITUNE</span><span>·</span>
+    <span>AUDIO ENGINE READY</span><span>·</span>
+    <span>PLAY WHAT MATTERS</span><span>·</span>
+    <span>UPLOAD A PLAYLIST TO BEGIN</span><span>·</span>
+    <span>GOOD SOUND NEEDS NO EXPLANATION</span><span>·</span>
+    <span>LUMITUNE</span><span>·</span>
+    <span>AUDIO ENGINE READY</span><span>·</span>
+    <span>PLAY WHAT MATTERS</span><span>·</span>
+    <span>UPLOAD A PLAYLIST TO BEGIN</span><span>·</span>
+    <span>GOOD SOUND NEEDS NO EXPLANATION</span><span>·</span>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo-area" id="logoArea">
+      <div class="logo-mark">
+        <svg viewBox="0 0 14 14"><rect x="1" y="5" width="3" height="7" rx="1"/><rect x="5" y="2" width="3" height="10" rx="1"/><rect x="9" y="4" width="3" height="8" rx="1"/></svg>
+      </div>
+      <div class="logo-name">LUMITUNE</div>
+      <div class="logo-sub">AUDIO PLAYER · V2</div>
+    </div>
+
+    <div class="nav-section">
+       <div class="nav-section-label">Discover</div>
+       <button class="nav-item active" data-view="home">
+         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zm0 4h12v2H2zm0 4h7v2H2z"/></svg>
+         Home
+       </button>
+       <button class="nav-item" data-view="library">
+         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 2h8a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm1 2v8h6V4H5zm1 1h4v2H6V5zm0 3h4v1H6V8z"/></svg>
+         Library
+       </button>
+       <button class="nav-item" data-view="artists">
+         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-5 6a5 5 0 0 1 10 0H3z"/></svg>
+         Artists
+       </button>
+       <button class="nav-item" data-view="albums">
+         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/></svg>
+         Albums
+       </button>
+       <button class="nav-item" data-view="tools">
+         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zm2 4h8v2H4zm-2 4h12v2H2z"/></svg>
+         Tools
+       </button>
+        <button class="nav-item" data-view="favorites">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5l1.8 3.7 4.1.6-3 2.9.7 4-3.6-1.9L4.4 12.7l.7-4-3-2.9 4.1-.6z"/></svg>
+          Favourites
+        </button>
+        <button class="nav-item" data-view="playlists">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10v2H3zm0 4h10v2H3zm0 4h6v2H3z"/></svg>
+          Playlists
+        </button>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-label">Actions</div>
+        <button class="nav-item" id="newPlaylistBtn">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+          New Playlist
+        </button>
+        <button class="nav-item" id="addTracksBtn">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2l6 8H2z"/></svg>
+          Add Tracks
+        </button>
+      </div>
+
+    <input type="file" id="addTracksInput" accept="audio/*" multiple style="display:none">
+    <input type="file" id="folderInput" accept="audio/*" multiple style="display:none">
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-nav">
+          <button class="nav-btn" id="backBtn">‹</button>
+          <button class="nav-btn" id="forwardBtn">›</button>
+        </div>
+        <div class="breadcrumb"><span id="breadcrumbTitle">Home</span> <span id="breadcrumbSub">Select a playlist to start</span></div>
+      </div>
+      <div class="search-box" id="searchWrap">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4"/><path d="M10.5 10.5l2.5 2.5"/></svg>
+        <input type="text" id="searchInput" placeholder="Search tracks or playlists...">
+        <button class="search-clear" id="searchClear">×</button>
+        <div class="search-dropdown" id="searchDropdown"></div>
+      </div>
+      <div class="topbar-right">
+        <button class="icon-btn" id="settingsBtn">⚙</button>
+        <button class="icon-btn" id="togglePanelBtn">☰</button>
+      </div>
+    </div>
+
+    <!-- NOW PLAYING HERO -->
+    <div class="now-playing-hero" id="heroSection">
+      <div class="album-art-hero" id="heroArt">
+        <span class="art-emoji" id="heroEmoji">♪</span>
+        <div class="hero-wave"></div>
+      </div>
+      <div class="track-info">
+        <div class="now-playing-label">Now Playing</div>
+        <div class="track-title-hero" id="heroTitle">Select a track</div>
+        <div class="track-artist-hero" id="heroArtist">Awaiting input</div>
+        <div class="progress-area">
+          <div class="progress-bar-wrap" id="heroProgBar"><div class="progress-bar-fill" id="heroProgFill"></div></div>
+          <div class="progress-times"><span id="heroCurrentTime">0:00</span><span id="heroTotalTime">0:00</span></div>
+          <div class="controls">
+            <button class="ctrl-btn" id="heroShuffleBtn" title="Shuffle">⇌</button>
+            <button class="ctrl-btn" id="heroPrevBtn">⏮</button>
+            <button class="ctrl-play" id="heroPlayBtn"><span id="heroPlayIcon">▶</span><span id="heroPauseIcon" style="display:none">⏸</span></button>
+            <button class="ctrl-btn" id="heroNextBtn">⏭</button>
+            <button class="ctrl-btn" id="heroRepeatBtn" title="Repeat">↺</button>
+           </div>
+        </div>
+      </div>
+      <div class="hero-right">
+        <div class="vol-label" id="heroVolLabel">VOL 72</div>
+        <input type="range" class="vol-slider" id="heroVolSlider" min="0" max="100" value="72">
+      </div>
+    </div>
+
+    <!-- PLAYLISTS -->
+    <div class="section-header" id="playlistSectionHeader" style="display:none">
+      <div class="section-title">Playlists</div>
+      <div class="section-action" id="viewAllPlaylists">View all →</div>
+    </div>
+    <div class="playlist-grid" id="playlistGrid"></div>
+
+    <!-- TRACK SECTION HEADER -->
+    <div class="section-header">
+      <div class="section-title"><span id="secTitle">Tracklist</span> <span class="badge-count" id="secCount">0 tracks</span></div>
+      <button class="section-action" id="randomizeBtn">⇌ SHUFFLE ORDER</button>
+    </div>
+
+    <!-- TRACK LIST -->
+    <div class="track-list-wrap">
+      <div class="track-list-header" id="trackHeader">
+        <span>#</span>
+        <span class="sortable" id="sortTitle">Title</span>
+        <span>Album</span>
+        <span class="sortable" id="sortDuration"></span>
+      </div>
+      <div id="songList"></div>
+    </div>
+    <div class="empty-state" id="emptyState" style="display:none">— no tracks match —</div>
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="right-panel">
+    <div class="resize-handle" id="resizeHandle"></div>
+    <div class="panel-tabs">
+      <button class="panel-tab active" onclick="switchTab('lyrics', this)">Lyrics</button>
+      <button class="panel-tab" onclick="switchTab('queue', this)">Up Next</button>
+      <button class="panel-tab" onclick="switchTab('stats', this)">Stats</button>
+    </div>
+
+    <div id="tab-lyrics" class="lyrics-panel">
+       <div class="lyrics-title">Now Playing — Lyrics</div>
+       <div class="lyrics-offset-controls" id="lyricsOffsetControls" style="display:none">
+         <span class="offset-label" id="lyricOffsetLabel">Offset: +0.00s</span>
+         <div class="offset-buttons">
+           <button class="offset-btn" id="offsetMinusBig" title="-0.5s">◀◀</button>
+           <button class="offset-btn" id="offsetMinus" title="-0.1s">◀</button>
+           <button class="offset-btn" id="offsetReset" title="Reset to 0">0</button>
+           <button class="offset-btn" id="offsetPlus" title="+0.1s">▶</button>
+           <button class="offset-btn" id="offsetPlusBig" title="+0.5s">▶▶</button>
+         </div>
+       </div>
+       <div class="lyrics-content" id="lyricsContent">
+         <div class="lyrics-placeholder">Select a track to see lyrics</div>
+       </div>
+     </div>
+
+    <div id="tab-queue" class="up-next-panel" style="display:none">
+      <div class="up-next-header">Queue · <span id="queueCount">0 tracks</span></div>
+      <div id="upNextList"></div>
+      <div class="up-next-empty" id="upNextEmpty">— queue is empty —</div>
+      <button class="queue-clear" id="upNextClear" style="display:none">Clear queue</button>
+    </div>
+
+    <div id="tab-stats" class="stats-panel" style="display:none">
+      <div class="stat-block">
+        <div class="stat-label">Listening Streak</div>
+        <div class="stat-value">12 <span class="stat-unit">days</span></div>
+        <div class="stat-sub">↑ +3 from last week</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-label">Total Play Time</div>
+        <div class="stat-value">48 <span class="stat-unit">hrs</span></div>
+        <div class="stat-sub">This month</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-label">Top Genre</div>
+        <div class="stat-value stat-value-sm">J-Pop / Anime</div>
+        <div class="stat-sub">Based on 87 plays</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-label">Genre breakdown</div>
+        <div class="top-genres">
+          <div class="genre-row">
+            <div class="genre-name">J-Pop</div>
+            <div class="genre-bar-bg"><div class="genre-bar-fill" style="width:78%"></div></div>
+            <div class="genre-pct">78%</div>
+          </div>
+          <div class="genre-row">
+            <div class="genre-name">Anime</div>
+            <div class="genre-bar-bg"><div class="genre-bar-fill" style="width:55%"></div></div>
+            <div class="genre-pct">55%</div>
+          </div>
+          <div class="genre-row">
+            <div class="genre-name">Vocaloid</div>
+            <div class="genre-bar-bg"><div class="genre-bar-fill" style="width:32%"></div></div>
+            <div class="genre-pct">32%</div>
+          </div>
+          <div class="genre-row">
+            <div class="genre-name">Holo</div>
+            <div class="genre-bar-bg"><div class="genre-bar-fill" style="width:18%"></div></div>
+            <div class="genre-pct">18%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar">
+  <div class="bottom-left">
+    <div class="bottom-album-art" id="albumArt">
+      <span class="art-emoji">♪</span>
+      <div class="wave-inner"></div>
+    </div>
+    <div class="bottom-track-info">
+      <div class="bottom-track-title" id="trackTitle">Select a track</div>
+      <div class="bottom-track-artist" id="trackArtist">Awaiting input</div>
+    </div>
+    <button class="bottom-like" id="likeBtn">☆</button>
+  </div>
+
+  <div class="bottom-center">
+    <div class="bottom-ctrls">
+      <button class="bottom-ctrl-btn" id="shuffleBtn" title="Shuffle">⇌</button>
+      <button class="bottom-ctrl-btn" id="prevBtn" title="Prev">⏮</button>
+      <button class="bottom-ctrl-btn bottom-play-btn" id="playBtn">
+        <span id="playIcon">▶</span>
+        <span id="pauseIcon" style="display:none">⏸</span>
+      </button>
+      <button class="bottom-ctrl-btn" id="nextBtn" title="Next">⏭</button>
+      <button class="bottom-ctrl-btn" id="repeatBtn" title="Repeat">↺</button>
+        <div class="viz-bars" id="vizBars">
+        <div class="viz-bar"></div><div class="viz-bar"></div>
+        <div class="viz-bar"></div><div class="viz-bar"></div>
+        <div class="viz-bar"></div>
+      </div>
+    </div>
+    <div class="bottom-progress">
+      <span class="bottom-time" id="currentTime">0:00</span>
+      <div class="bottom-prog-track" id="progressBar">
+        <div class="bottom-prog-fill" id="progressFill" style="width:0%"></div>
+      </div>
+      <span class="bottom-time" id="totalTime">0:00</span>
+    </div>
+  </div>
+
+  <div class="bottom-right">
+    <button class="bottom-vol-btn" id="volBtn">vol</button>
+    <div class="bottom-vol-track" id="volBar">
+      <div class="bottom-vol-fill" id="volFill" style="width:70%"></div>
+    </div>
+    <button class="bottom-util-btn" id="fullscreenBtn" title="Fullscreen">⛶</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="confirmOverlay" style="display:none"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/kuroshiro@1.1.2/dist/kuroshiro.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/kuroshiro-analyzer-kuromoji@1.1.0/dist/kuroshiro-analyzer-kuromoji.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
