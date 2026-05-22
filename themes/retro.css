@@ -98,8 +98,7 @@ body[data-theme="retro"] .logo-mark {
   box-shadow: inset 0 1px 3px rgba(255,220,80,0.4), 0 2px 6px rgba(0,0,0,0.4);
   margin-bottom: 10px;
 }
-body[data-theme="retro"] .logo-mark svg { display: none; }
-body[data-theme="retro"] .logo-mark::after { content: '♪'; color: #3a2208; }
+body[data-theme="retro"] .logo-mark svg { width: 14px; height: 14px; fill: #3a2208; }
 body[data-theme="retro"] .logo-name {
   font-family: 'Playfair Display', serif;
   font-size: 17px; font-weight: 900; font-style: italic;

@@ -1,0 +1,570 @@
+/* LumiTune — Neurophism (Neumorphism Light)
+   Base surface: #e8e4df
+   Shadows: highlight #ffffff, shadow #c5c0bb
+   Accent: warm terracotta #c06a3c
+*/
+
+[data-theme="neurophism"] {
+  --bg:          #e8e4df;
+  --surface:     #e8e4df;
+  --surface2:    #ede9e4;
+  --surface3:    #e0dcd7;
+  --accent:      #c06a3c;
+  --accent2:     #d48a5c;
+  --accent-dim:  rgba(192,106,60,0.12);
+  --text:        #2e2923;
+  --text-muted:  #7a6e65;
+  --text-dim:    #b0a89f;
+  --text3:       #9a9088;
+  --border:      rgba(192,106,60,0.18);
+  --border-soft: rgba(0,0,0,0.06);
+}
+
+body[data-theme="neurophism"] {
+  font-family: 'DM Mono', monospace;
+  background: var(--bg);
+  color: var(--text);
+}
+
+body[data-theme="neurophism"] ::-webkit-scrollbar { width: 4px; }
+body[data-theme="neurophism"] ::-webkit-scrollbar-track { background: transparent; }
+body[data-theme="neurophism"] ::-webkit-scrollbar-thumb { background: #c5c0bb; border-radius: 2px; }
+
+/* ── MARQUEE ── */
+body[data-theme="neurophism"] .marquee-bar {
+  background: var(--accent);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(192,106,60,0.3);
+}
+
+/* ── LAYOUT ── */
+body[data-theme="neurophism"] .sidebar {
+  background: var(--surface);
+  border-right: none;
+  box-shadow: 4px 0 12px rgba(0,0,0,0.06);
+}
+
+body[data-theme="neurophism"] .logo-area {
+  border-bottom: 1px solid rgba(0,0,0,0.07);
+}
+
+body[data-theme="neurophism"] .logo-mark {
+  background: var(--bg);
+  border-radius: 10px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+
+body[data-theme="neurophism"] .logo-mark svg { fill: var(--accent); }
+
+body[data-theme="neurophism"] .nav-item {
+  border-left: 2px solid transparent;
+  border-right: none; border-top: none; border-bottom: none;
+  border-radius: 0;
+}
+body[data-theme="neurophism"] .nav-item:hover {
+  background: rgba(0,0,0,0.03);
+}
+body[data-theme="neurophism"] .nav-item.active {
+  background: var(--accent-dim);
+}
+
+/* ── TOPBAR ── */
+body[data-theme="neurophism"] .topbar {
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  background: rgba(232,228,223,0.92);
+  backdrop-filter: blur(8px);
+}
+
+body[data-theme="neurophism"] .nav-btn {
+  background: var(--bg);
+  border: none;
+  border-radius: 8px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+body[data-theme="neurophism"] .nav-btn:hover { box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff; }
+body[data-theme="neurophism"] .nav-btn:disabled { opacity: 0.35; box-shadow: none; }
+
+body[data-theme="neurophism"] .search-box {
+  background: var(--bg);
+  border: none;
+  border-radius: 12px;
+  box-shadow: inset 4px 4px 10px #c5c0bb, inset -4px -4px 10px #ffffff;
+}
+body[data-theme="neurophism"] .search-box:focus-within {
+  box-shadow: inset 4px 4px 10px #bfbab5, inset -4px -4px 10px #ffffff, 0 0 0 2px rgba(192,106,60,0.15);
+}
+
+body[data-theme="neurophism"] .search-dropdown {
+  background: var(--bg);
+  border: none;
+  border-radius: 12px;
+  box-shadow: 6px 6px 14px #c5c0bb, -6px -6px 14px #ffffff, 0 12px 40px rgba(0,0,0,0.12);
+}
+body[data-theme="neurophism"] .search-dropdown-item:hover { background: rgba(0,0,0,0.04); }
+body[data-theme="neurophism"] .search-dropdown-item.selected { background: rgba(0,0,0,0.05); }
+
+body[data-theme="neurophism"] .icon-btn {
+  background: var(--bg);
+  border: none;
+  border-radius: 10px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+body[data-theme="neurophism"] .icon-btn:hover { box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff; }
+
+/* ── NOW PLAYING HERO ── */
+body[data-theme="neurophism"] .now-playing-hero {
+  background: var(--bg);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+body[data-theme="neurophism"] .now-playing-hero::before {
+  background: radial-gradient(circle at 30% 50%, rgba(192,106,60,0.05) 0%, transparent 60%);
+}
+
+body[data-theme="neurophism"] .album-art-hero {
+  background: var(--bg);
+  border: none;
+  border-radius: 18px;
+  box-shadow: 6px 6px 14px #c5c0bb, -6px -6px 14px #ffffff;
+}
+body[data-theme="neurophism"] .album-art-hero.playing { box-shadow: 4px 4px 12px rgba(192,106,60,0.35), -2px -2px 8px #ffffff; }
+body[data-theme="neurophism"] .album-art-hero::after {
+  background: linear-gradient(135deg, rgba(255,255,255,0.4), rgba(192,106,60,0.05));
+}
+body[data-theme="neurophism"] .album-art-hero .hero-wave {
+  background: linear-gradient(135deg, transparent 40%, rgba(192,106,60,0.1) 60%, transparent 80%);
+}
+
+body[data-theme="neurophism"] .progress-bar-wrap {
+  background: var(--bg);
+  border-radius: 3px;
+  box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff;
+}
+body[data-theme="neurophism"] .progress-bar-fill {
+  background: var(--accent);
+  box-shadow: 0 2px 6px rgba(192,106,60,0.4);
+}
+body[data-theme="neurophism"] .progress-bar-fill::after {
+  background: var(--accent);
+  box-shadow: 0 2px 6px rgba(192,106,60,0.5);
+}
+
+body[data-theme="neurophism"] .ctrl-btn {
+  background: var(--bg);
+  border: none;
+  border-radius: 10px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+body[data-theme="neurophism"] .ctrl-btn:hover { box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff; }
+body[data-theme="neurophism"] .ctrl-btn.active { box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff; }
+body[data-theme="neurophism"] .ctrl-play {
+  background: var(--accent);
+  border: none;
+  border-radius: 14px;
+  box-shadow: 4px 4px 12px rgba(192,106,60,0.35), -2px -2px 8px #ffffff;
+}
+body[data-theme="neurophism"] .ctrl-play:hover { box-shadow: 2px 2px 8px rgba(192,106,60,0.5), -1px -1px 4px #ffffff; }
+
+body[data-theme="neurophism"] .vol-slider {
+  background: var(--bg);
+  border-radius: 3px;
+  box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff;
+}
+body[data-theme="neurophism"] .vol-slider::-webkit-slider-thumb {
+  background: var(--accent);
+  box-shadow: 0 2px 6px rgba(192,106,60,0.4), 0 0 0 2px rgba(255,255,255,0.6);
+}
+
+/* ── SECTION HEADER ── */
+body[data-theme="neurophism"] .badge-count {
+  background: var(--accent-dim);
+  border-radius: 5px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+
+/* ── PLAYLIST CARDS ── */
+body[data-theme="neurophism"] .playlist-card {
+  background: var(--bg);
+  border: none;
+  border-radius: 14px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+body[data-theme="neurophism"] .playlist-card:hover {
+  box-shadow: 6px 6px 14px #c5c0bb, -6px -6px 14px #ffffff;
+  transform: translateY(-1px);
+}
+body[data-theme="neurophism"] .playlist-card.active {
+  box-shadow: inset 4px 4px 10px #c5c0bb, inset -4px -4px 10px #ffffff;
+  background: rgba(192,106,60,0.05);
+}
+body[data-theme="neurophism"] .playlist-card::before {
+  background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, transparent 70%);
+}
+
+body[data-theme="neurophism"] .collection-mark {
+  background: var(--accent-dim);
+  border-radius: 8px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+
+body[data-theme="neurophism"] .tool-tab,
+body[data-theme="neurophism"] .bulk-btn {
+  background: var(--bg);
+  border: none;
+  border-radius: 8px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+body[data-theme="neurophism"] .tool-tab.active,
+body[data-theme="neurophism"] .bulk-btn:hover:not(:disabled) {
+  box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff;
+}
+
+/* ── TRACK LIST ── */
+body[data-theme="neurophism"] .track-list-header {
+  border-bottom: 1px solid rgba(0,0,0,0.07);
+}
+
+body[data-theme="neurophism"] .track-row { border-radius: 10px; }
+body[data-theme="neurophism"] .track-row:hover {
+  background: var(--bg);
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+body[data-theme="neurophism"] .track-row.active {
+  background: var(--bg);
+  box-shadow: inset 4px 4px 10px #c5c0bb, inset -4px -4px 10px #ffffff;
+}
+
+body[data-theme="neurophism"] .track-actions button {
+  background: var(--bg);
+  border: none;
+  border-radius: 7px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+body[data-theme="neurophism"] .track-actions button:hover { box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff; }
+
+body[data-theme="neurophism"] .t-actions button {
+  background: var(--bg);
+  border: none;
+  border-radius: 8px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+body[data-theme="neurophism"] .t-actions button:hover { box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff; }
+
+/* ── RIGHT PANEL ── */
+body[data-theme="neurophism"] .right-panel {
+  background: var(--surface);
+  border-left: none;
+  box-shadow: -4px 0 12px rgba(0,0,0,0.05);
+}
+
+body[data-theme="neurophism"] .panel-tabs {
+  background: var(--bg);
+  border-bottom: 1px solid rgba(0,0,0,0.07);
+}
+body[data-theme="neurophism"] .panel-tab {
+  background: var(--bg);
+  border-top: none; border-left: none; border-right: none;
+  border-radius: 8px 8px 0 0;
+  box-shadow: 3px 3px 6px #c5c0bb, -3px -3px 6px #ffffff;
+}
+body[data-theme="neurophism"] .panel-tab.active {
+  box-shadow: inset 2px 2px 5px #c5c0bb, inset -2px -2px 5px #ffffff;
+}
+
+/* ── LYRICS ── */
+body[data-theme="neurophism"] .lyrics-panel { background: var(--bg); }
+body[data-theme="neurophism"] .lyrics-panel::-webkit-scrollbar-thumb { background: #c5c0bb; }
+body[data-theme="neurophism"] .lyrics-offset-controls {
+  background: var(--bg);
+  border: none;
+  border-radius: 10px;
+  box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff;
+}
+body[data-theme="neurophism"] .offset-btn {
+  background: var(--bg);
+  border: none;
+  border-radius: 7px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+body[data-theme="neurophism"] .offset-btn:hover { box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff; }
+body[data-theme="neurophism"] .lyrics-helper {
+  background: var(--bg);
+  border: none;
+  border-radius: 10px;
+  box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff;
+}
+
+body[data-theme="neurophism"] .lyrics-add-btn {
+  background: var(--bg);
+  border: none;
+  border-radius: 9px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+body[data-theme="neurophism"] .lyrics-add-btn:hover { box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff; }
+body[data-theme="neurophism"] .lyrics-add-btn.primary {
+  background: var(--accent);
+  color: #ffffff;
+  box-shadow: 4px 4px 12px rgba(192,106,60,0.35), -2px -2px 8px #ffffff;
+}
+body[data-theme="neurophism"] .lyrics-add-btn.primary:hover { opacity: 0.9; box-shadow: 2px 2px 8px rgba(192,106,60,0.5), -1px -1px 4px #ffffff; }
+
+/* ── UP NEXT ── */
+body[data-theme="neurophism"] .up-next-panel { background: var(--bg); }
+body[data-theme="neurophism"] .up-next-panel::-webkit-scrollbar-thumb { background: #c5c0bb; }
+body[data-theme="neurophism"] .queue-item:hover { background: var(--bg); box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff; }
+body[data-theme="neurophism"] .queue-item.active { background: var(--bg); box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff; }
+body[data-theme="neurophism"] .queue-thumb {
+  background: var(--bg);
+  border: none;
+  border-radius: 10px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+body[data-theme="neurophism"] .queue-del {
+  background: var(--bg);
+  border: none;
+  border-radius: 6px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+body[data-theme="neurophism"] .queue-del:hover { box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff; }
+
+/* ── STATS ── */
+body[data-theme="neurophism"] .stats-panel { background: var(--bg); }
+body[data-theme="neurophism"] .stat-block {
+  background: var(--bg);
+  border: none;
+  border-radius: 14px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+body[data-theme="neurophism"] .genre-bar-bg {
+  background: var(--bg);
+  border-radius: 3px;
+  box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff;
+}
+body[data-theme="neurophism"] .genre-bar-fill { box-shadow: 0 1px 4px rgba(192,106,60,0.3); }
+
+/* ── BOTTOM BAR ── */
+body[data-theme="neurophism"] .bottom-bar {
+  background: var(--bg);
+  border-top: none;
+  box-shadow: 0 -4px 16px rgba(0,0,0,0.07), 0 -1px 0 rgba(255,255,255,0.8);
+}
+
+body[data-theme="neurophism"] .bottom-album-art {
+  background: var(--bg);
+  border: none;
+  border-radius: 12px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+body[data-theme="neurophism"] .bottom-album-art.playing { box-shadow: 4px 4px 12px rgba(192,106,60,0.35), -2px -2px 8px #ffffff; }
+body[data-theme="neurophism"] .bottom-album-art .wave-inner {
+  background: linear-gradient(135deg, transparent 40%, rgba(192,106,60,0.1) 60%, transparent 80%);
+}
+
+body[data-theme="neurophism"] .bottom-like {
+  background: var(--bg);
+  border: none;
+  border-radius: 8px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+body[data-theme="neurophism"] .bottom-like:hover { box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff; }
+body[data-theme="neurophism"] .bottom-like.liked { box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff; }
+
+body[data-theme="neurophism"] .bottom-ctrl-btn {
+  background: var(--bg);
+  border: none;
+  border-radius: 10px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+body[data-theme="neurophism"] .bottom-ctrl-btn:hover { box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff; }
+body[data-theme="neurophism"] .bottom-ctrl-btn.active { box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff; }
+body[data-theme="neurophism"] .bottom-play-btn {
+  background: var(--accent) !important;
+  color: #ffffff !important;
+  border-radius: 13px !important;
+  box-shadow: 4px 4px 12px rgba(192,106,60,0.35), -2px -2px 8px #ffffff !important;
+}
+body[data-theme="neurophism"] .bottom-play-btn:hover { opacity: 0.9; color: #ffffff !important; background: var(--accent) !important; }
+
+body[data-theme="neurophism"] .bottom-prog-track {
+  background: var(--bg);
+  border-radius: 3px;
+  box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff;
+}
+body[data-theme="neurophism"] .bottom-prog-fill {
+  background: var(--accent);
+  box-shadow: 0 1px 4px rgba(192,106,60,0.35);
+}
+body[data-theme="neurophism"] .bottom-prog-fill::after {
+  background: var(--accent);
+  box-shadow: 0 2px 6px rgba(192,106,60,0.4), 0 0 0 2px rgba(255,255,255,0.7);
+}
+
+body[data-theme="neurophism"] .bottom-vol-btn {
+  background: var(--bg);
+  border: none;
+  border-radius: 8px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+body[data-theme="neurophism"] .bottom-vol-btn:hover { box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff; }
+body[data-theme="neurophism"] .bottom-vol-track {
+  background: var(--bg);
+  border-radius: 3px;
+  box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff;
+}
+body[data-theme="neurophism"] .bottom-vol-fill {
+  background: var(--accent);
+  box-shadow: 0 1px 4px rgba(192,106,60,0.3);
+}
+body[data-theme="neurophism"] .bottom-vol-fill::after {
+  background: var(--accent);
+  box-shadow: 0 2px 6px rgba(192,106,60,0.4), 0 0 0 2px rgba(255,255,255,0.7);
+}
+body[data-theme="neurophism"] .bottom-util-btn {
+  background: var(--bg);
+  border: none;
+  border-radius: 8px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+body[data-theme="neurophism"] .bottom-util-btn:hover { box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff; }
+
+body[data-theme="neurophism"] .queue-badge {
+  background: var(--accent);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(192,106,60,0.4);
+}
+
+/* ── MODALS ── */
+body[data-theme="neurophism"] .modal-overlay {
+  background: rgba(200,196,191,0.6);
+  backdrop-filter: blur(6px);
+}
+body[data-theme="neurophism"] .modal-box {
+  background: var(--bg);
+  border: none;
+  border-radius: 18px;
+  box-shadow: 6px 6px 14px #c5c0bb, -6px -6px 14px #ffffff, 0 24px 64px rgba(0,0,0,0.15);
+}
+body[data-theme="neurophism"] .modal-btn {
+  background: var(--bg);
+  border: none;
+  border-radius: 10px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+body[data-theme="neurophism"] .modal-btn:hover { box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff; }
+body[data-theme="neurophism"] .modal-ok {
+  background: var(--accent);
+  color: #ffffff;
+  box-shadow: 4px 4px 12px rgba(192,106,60,0.35), -2px -2px 8px #ffffff;
+}
+body[data-theme="neurophism"] .modal-ok:hover { opacity: 0.9; color: #ffffff; }
+body[data-theme="neurophism"] .modal-input {
+  background: var(--bg);
+  border: none;
+  border-radius: 10px;
+  box-shadow: inset 4px 4px 10px #c5c0bb, inset -4px -4px 10px #ffffff;
+}
+body[data-theme="neurophism"] .modal-input:focus { box-shadow: inset 4px 4px 10px #c5c0bb, inset -4px -4px 10px #ffffff, 0 0 0 2px rgba(192,106,60,0.15); }
+body[data-theme="neurophism"] .modal-textarea {
+  background: var(--bg);
+  border: none;
+  border-radius: 10px;
+  box-shadow: inset 4px 4px 10px #c5c0bb, inset -4px -4px 10px #ffffff;
+}
+body[data-theme="neurophism"] .modal-textarea:focus { box-shadow: inset 4px 4px 10px #c5c0bb, inset -4px -4px 10px #ffffff, 0 0 0 2px rgba(192,106,60,0.15); }
+
+/* ── PICKER / SOURCE ── */
+body[data-theme="neurophism"] .picker-item {
+  background: var(--bg);
+  border: none;
+  border-radius: 10px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+body[data-theme="neurophism"] .picker-item:hover { box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff; }
+
+body[data-theme="neurophism"] .source-option {
+  background: var(--bg);
+  border: none;
+  border-radius: 12px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+body[data-theme="neurophism"] .source-option:hover { box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff; }
+
+/* ── SETTINGS PAGE ── */
+body[data-theme="neurophism"] .settings-nav-item.active { background: var(--accent-dim); }
+body[data-theme="neurophism"] .setting-btn {
+  background: var(--bg);
+  border: none;
+  border-radius: 8px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+body[data-theme="neurophism"] .setting-btn:hover { box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff; }
+body[data-theme="neurophism"] .setting-btn.primary {
+  background: var(--accent);
+  color: #ffffff;
+}
+body[data-theme="neurophism"] .setting-btn.active {
+  background: var(--accent);
+  color: #ffffff;
+}
+body[data-theme="neurophism"] .theme-option {
+  background: var(--bg);
+  border: none;
+  border-radius: 10px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+body[data-theme="neurophism"] .theme-option:hover { box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff; }
+body[data-theme="neurophism"] .theme-option.active {
+  box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff;
+  background: var(--accent-dim);
+}
+body[data-theme="neurophism"] .theme-option-swatch { border: 1px solid rgba(0,0,0,0.08); }
+body[data-theme="neurophism"] .theme-option-check { color: var(--accent); }
+
+/* ── SHORTCUTS ── */
+body[data-theme="neurophism"] .shortcut-keys {
+  background: var(--bg);
+  border: none;
+  border-radius: 6px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+body[data-theme="neurophism"] .shortcut-reset-all {
+  background: var(--bg);
+  border: none;
+  border-radius: 6px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+body[data-theme="neurophism"] .shortcut-reset-all:hover { box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff; }
+body[data-theme="neurophism"] .shortcuts-recording {
+  background: var(--bg);
+  border: none;
+  border-radius: 8px;
+  box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff, 0 0 0 2px rgba(192,106,60,0.1);
+}
+body[data-theme="neurophism"] .recording-cancel {
+  background: var(--bg);
+  border: none;
+  border-radius: 6px;
+  box-shadow: 3px 3px 8px #c5c0bb, -3px -3px 8px #ffffff;
+}
+body[data-theme="neurophism"] .recording-cancel:hover { box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff; }
+
+/* ── TOAST ── */
+body[data-theme="neurophism"] .toast-notif {
+  background: var(--bg);
+  border: none;
+  border-radius: 10px;
+  box-shadow: 6px 6px 14px #c5c0bb, -6px -6px 14px #ffffff, 0 4px 20px rgba(192,106,60,0.15);
+}
+
+/* ── RESIZE HANDLE ── */
+body[data-theme="neurophism"] .resize-handle:hover { background: rgba(0,0,0,0.06); }
+body[data-theme="neurophism"] .resize-handle.active { background: var(--accent); }
+
+/* ── YT IMPORT ── */
+body[data-theme="neurophism"] .yt-info {
+  background: var(--bg);
+  border: none;
+  border-radius: 8px;
+  box-shadow: inset 2px 2px 6px #c5c0bb, inset -2px -2px 6px #ffffff;
+}
+body[data-theme="neurophism"] .yt-thumb { background: #d5d1cc; }
+body[data-theme="neurophism"] .yt-spinner { border-color: rgba(0,0,0,0.1); border-top-color: var(--accent); }

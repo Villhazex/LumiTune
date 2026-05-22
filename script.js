@@ -46,8 +46,8 @@ let lyricsMode='romaji';
 let lyricsHasRomaji=false;
 let lyricsShowEdit=false;
 
-let currentTheme='dark';
-const availableThemes=['dark','light','retro'];
+let currentTheme='default';
+const availableThemes=['default','retro','zine','neurophism'];
 
 let currentLyricOffset=0;
 let currentLyricOffsetSongId=null;
@@ -1969,7 +1969,7 @@ function showSettingsModal(){
         const themeOpts=availableThemes.map(t=>{
           const active=t===currentTheme;
           const label=t.charAt(0).toUpperCase()+t.slice(1);
-          const swatch={dark:'#0e0c0a',light:'#f5f0eb',retro:'#f2e8d5'}[t]||'#888';
+          const swatch={default:'#0e0c0a',retro:'#f2e8d5',zine:'#1a1612',neurophism:'#e8e4df'}[t]||'#888';
           return`<button class="theme-option${active?' active':''}" data-theme="${t}">
             <span class="theme-option-swatch" style="background:${swatch}"></span>
             <span class="theme-option-label">${label}</span>
@@ -2883,6 +2883,7 @@ async function init(){
   await loadState();
   const savedTheme=localStorage.getItem('lumi-theme');
   if(savedTheme&&availableThemes.includes(savedTheme))applyTheme(savedTheme);
+  else applyTheme('default');
   if(!playlists[currentPlaylist]){const keys=Object.keys(playlists);currentPlaylist=keys.length?keys[0]:'';}
   renderPlaylistNav();renderPlaylistGrid();switchView('home');
   renderSongList($('searchInput').value);

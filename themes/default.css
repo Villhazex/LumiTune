@@ -1,5 +1,5 @@
-/* LumiTune — Dark theme (default) */
-[data-theme="dark"],
+/* LumiTune — Default theme */
+[data-theme="default"],
 :root {
   --bg: #0e0c0a;
   --surface: #161410;
