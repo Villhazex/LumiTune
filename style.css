@@ -696,12 +696,52 @@ body {
 .lyrics-panel::-webkit-scrollbar-thumb { background: var(--border); }
 
 .lyrics-title {
-  font-family: 'Syne', sans-serif;
-  font-size: 12px; font-weight: 700;
-  letter-spacing: 0.15em; text-transform: uppercase;
-  color: var(--text-dim); margin-bottom: 16px;
+   font-family: 'Syne', sans-serif;
+   font-size: 12px; font-weight: 700;
+   letter-spacing: 0.15em; text-transform: uppercase;
+   color: var(--text-dim); margin-bottom: 12px;
+ }
+.lyrics-offset-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 10px 12px;
+  background: var(--surface2);
+  border-radius: 8px;
+  border: 1px solid var(--border-soft);
 }
-.lyrics-content {
+.offset-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+  text-align: center;
+}
+.offset-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+.offset-btn {
+  background: var(--surface3);
+  border: 1px solid var(--border-soft);
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.offset-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+  background: var(--accent-dim);
+}
+.offset-btn:active {
+  transform: scale(0.95);
+}
+ .lyrics-content {
   min-height: 100px;
 }
 .lyric-line {
@@ -1331,8 +1371,6 @@ body {
   font-size: 10px; padding: 4px 8px; border-radius: 4px; cursor: pointer;
 }
 .recording-cancel:hover { background: rgba(255,80,80,0.1); }
-
-.bottom-ctrl-btn.active, .ctrl-btn.active { color: var(--accent); }
 
 /* ── RESPONSIVE ── */
 @media(max-width:960px) {
