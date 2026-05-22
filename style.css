@@ -1250,7 +1250,9 @@ body {
 .picker-count { font-size: 11px; color: var(--text-dim); flex-shrink: 0; }
 
 .source-picker-box { max-width: 360px; }
+.settings-box { max-width: 420px; }
 .source-picker-grid { display: flex; gap: 12px; margin-bottom: 20px; }
+.settings-grid { display: grid !important; grid-template-columns: 1fr 1fr; gap: 12px; }
 .source-option {
   flex: 1; display: flex; flex-direction: column; align-items: center;
   padding: 20px 14px; border-radius: 8px;

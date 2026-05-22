@@ -535,15 +535,20 @@ function parseSongRefKey(key){
 function hasJapanese(text){
   return /[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/.test(text);
 }
+let kuroshiroPromise=null;
 async function initKuroshiro(){
-  if(kuroshiroReady||kuroshiroInitAttempted)return;
+  if(kuroshiroReady)return;
+  if(kuroshiroPromise)return kuroshiroPromise;
   kuroshiroInitAttempted=true;
-  if(typeof Kuroshiro==='undefined'||typeof KuromojiAnalyzer==='undefined')return;
-  try{
-    window.kuroshiroInst=new Kuroshiro();
-    await window.kuroshiroInst.init(new KuromojiAnalyzer({dictPath:'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/'}));
-    kuroshiroReady=true;
-  }catch(e){console.warn('Kuroshiro init failed:',e);}
+  kuroshiroPromise=(async()=>{
+    if(typeof Kuroshiro==='undefined'||typeof KuromojiAnalyzer==='undefined')return;
+    try{
+      window.kuroshiroInst=new Kuroshiro();
+      await window.kuroshiroInst.init(new KuromojiAnalyzer({dictPath:'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/'}));
+      kuroshiroReady=true;
+    }catch(e){console.warn('Kuroshiro init failed:',e);}
+  })();
+  return kuroshiroPromise;
 }
 function romajiCacheKey(lines){
   let h=5381;
@@ -1352,7 +1357,7 @@ async function fetchLyricsForSong(song){
   lastLyricsSong=song;
   loadLyricOffsetForSong(song.id);
   showLyricsLoading();
-  initKuroshiro();
+  await initKuroshiro();
   let title=song.title;
   let artist=song.artist;
   if(!song.metadataEdited&&song.file&&typeof jsmediatags!=='undefined'){
@@ -1896,9 +1901,9 @@ function showNewPlaylistPicker(){
 function showSettingsModal(){
   const o=$('confirmOverlay');
   const modeLabel=lyricsMode==='romaji'?'Romaji':'Japanese';
-  o.innerHTML=`<div class="modal-box source-picker-box">
+  o.innerHTML=`<div class="modal-box source-picker-box settings-box">
     <div class="modal-msg">Settings</div>
-    <div class="source-picker-grid">
+    <div class="source-picker-grid settings-grid">
       <button class="source-option" id="settingsExport">
         <span class="source-icon">⬇</span>
         <span class="source-label">Export</span>
