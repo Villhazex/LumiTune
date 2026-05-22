@@ -43,6 +43,7 @@ let lyricsShowEdit=false;
 
 const $=id=>document.getElementById(id);
 const YT_SERVER='http://localhost:3001';
+const LYRICS_CACHE_KEY='lumi-lyrics-cache';
 
 function getDB(){
   if(db)return Promise.resolve(db);
@@ -149,6 +150,14 @@ function findSongById(id){
   }
   return null;
 }
+function findSongLocation(song){
+  const sid=String(song?.id||'');
+  for(const[playlistKey,pl]of Object.entries(playlists)){
+    const index=pl.songs.findIndex(s=>String(s.id)===sid);
+    if(index>-1)return{playlistKey,index};
+  }
+  return null;
+}
 function esc(value){
   return String(value??'').replace(/[&<>"']/g,ch=>({
     '&':'&amp;',
@@ -157,6 +166,12 @@ function esc(value){
     '"':'&quot;',
     "'":'&#39;'
   })[ch]);
+}
+function normalizeMeta(value){
+  return String(value||'').trim().toLowerCase().replace(/\s+/g,' ');
+}
+function songLyricsCacheId(song){
+  return String(song?.id||'');
 }
 
 /* ── ROMAJI ── */
@@ -224,6 +239,43 @@ async function fetchLyrics(title,artist){
     if(r.ok){const arr=await r.json();return arr.length?arr[0]:null;}
   }catch(e){if(e.name==='AbortError')return null;}
   return null;
+}
+function getLyricsCache(){
+  try{
+    const data=JSON.parse(localStorage.getItem(LYRICS_CACHE_KEY)||'{}');
+    return data&&typeof data==='object'?data:{};
+  }catch(e){return{};}
+}
+function readCachedLyrics(song,title,artist){
+  const cache=getLyricsCache();
+  const entry=cache[songLyricsCacheId(song)];
+  if(!entry||!entry.data)return null;
+  if(normalizeMeta(entry.title)!==normalizeMeta(title))return null;
+  if(normalizeMeta(entry.artist)!==normalizeMeta(artist))return null;
+  return entry.data;
+}
+function saveCachedLyrics(song,title,artist,data){
+  if(!song||!data||(!data.syncedLyrics&&!data.plainLyrics))return;
+  try{
+    const cache=getLyricsCache();
+    cache[songLyricsCacheId(song)]={
+      title:String(title||''),
+      artist:String(artist||''),
+      cachedAt:new Date().toISOString(),
+      data:{
+        syncedLyrics:data.syncedLyrics||'',
+        plainLyrics:data.plainLyrics||''
+      }
+    };
+    localStorage.setItem(LYRICS_CACHE_KEY,JSON.stringify(cache));
+  }catch(e){}
+}
+function deleteCachedLyrics(song){
+  try{
+    const cache=getLyricsCache();
+    delete cache[songLyricsCacheId(song)];
+    localStorage.setItem(LYRICS_CACHE_KEY,JSON.stringify(cache));
+  }catch(e){}
 }
 function parseLRC(lrc){
   if(!lrc)return[];
@@ -397,6 +449,7 @@ function makeRow(song,origIdx,isActive,isLiked,plKey,showDel,extra){
     <div class="t-actions">
       <button class="like-btn ${isLiked?'liked':''}" data-song-id="${song.id}">${isLiked?'★':'☆'}</button>
       <button class="queue-btn-row" data-qadd="${origIdx}" data-qpl="${plKey}" title="Add to queue">↓</button>
+      <button class="edit-track-btn" data-edit="${origIdx}" data-edit-pl="${plKey}" title="Edit metadata">edit</button>
       ${showDel?`<button class="del-btn" data-del="${origIdx}">×</button>`:''}
     </div>
   </div>`;
@@ -613,12 +666,28 @@ function showLyricsNotFound(song){
   const el=$('lyricsContent');if(!el)return;
   lyricLines=[];lyricsSynced=false;
   const sid=String(song.id);
+  const apiUrl=`https://lrclib.net/api/search?track_name=${encodeURIComponent(song.title||'')}&artist_name=${encodeURIComponent(song.artist||'')}`;
   el.innerHTML=`<div class="lyrics-none">Lyrics not found</div>
+<div class="lyrics-helper">
+  <div class="lyrics-helper-title">Why it can fail</div>
+  <div class="lyrics-helper-text">LRCLIB matches mostly by clean title and artist. Remove words like Official MV, Lyrics, Full Version, Remix, Cover, AMV, or anime/game names.</div>
+  <div class="lyrics-helper-meta">
+    <span>Title</span><strong>${esc(song.title||'Unknown')}</strong>
+    <span>Artist</span><strong>${esc(song.artist||'Unknown')}</strong>
+  </div>
+</div>
 <div class="lyrics-actions">
+  <button class="lyrics-add-btn primary" id="lyricEditMeta">Edit Metadata</button>
+  <a class="lyrics-add-btn" href="https://lrclib.net/" target="_blank" rel="noopener">Open LRCLIB Search</a>
+  <a class="lyrics-add-btn" href="${apiUrl}" target="_blank" rel="noopener">Check Exact Match</a>
   <button class="lyrics-add-btn" id="lyricAddPlain">Add Plain Lyrics</button>
   <button class="lyrics-add-btn" id="lyricAddTimestamp">Add Timestamp Lyrics</button>
 </div>`;
   setTimeout(()=>{
+    $('lyricEditMeta')?.addEventListener('click',()=>{
+      const loc=findSongLocation(song);
+      if(loc)showMetadataEditor(loc.playlistKey,loc.index);
+    });
     $('lyricAddPlain')?.addEventListener('click',()=>showAddPlainLyricsModal(song));
     $('lyricAddTimestamp')?.addEventListener('click',()=>showAddTimestampLyricsModal(song));
   },0);
@@ -694,7 +763,7 @@ async function fetchLyricsForSong(song){
   initKuroshiro();
   let title=song.title;
   let artist=song.artist;
-  if(song.file&&typeof jsmediatags!=='undefined'){
+  if(!song.metadataEdited&&song.file&&typeof jsmediatags!=='undefined'){
     const tags=await readID3Tags(song.file);
     if(lyricsSongId!==song.id)return;
     if(tags){
@@ -709,9 +778,15 @@ async function fetchLyricsForSong(song){
     setTimeout(()=>{$('lyricEditBtn')?.addEventListener('click',showEditLyricsModal);$('lyricDeleteBtn')?.addEventListener('click',deleteCurrentUserLyrics);},0);
     return;
   }
+  const cached=readCachedLyrics(song,title,artist);
+  if(cached){
+    await renderLyrics(cached);
+    return;
+  }
   const data=await fetchLyrics(title,artist);
   if(lyricsSongId!==song.id)return;
   if(!data){showLyricsNotFound(song);return;}
+  saveCachedLyrics(song,title,artist,data);
   await renderLyrics(data);
 }
 
@@ -775,7 +850,7 @@ async function handleFolderSelect(e){
   for(const[idx,file]of files.entries()){
     const id=key+'-'+idx;const fk=`file-${key}-${id}`;
     await dbStore(fk,file);
-    songs.push({id,title:file.name.replace(/\.[^/.]+$/,''),artist:'Unknown',duration:'--:--',file,fileKey:fk});
+    songs.push({id,title:file.name.replace(/\.[^/.]+$/,''),artist:'Unknown',album:'',genre:'',year:'',duration:'--:--',file,fileKey:fk});
   }
   playlists[key]={name,emoji:'📂',color:'#D4522A',sub:`${files.length} tracks`,songs};
   libraryOrder=null;renderPlaylistNav();renderPlaylistGrid();switchPlaylist(key);saveState();
@@ -791,7 +866,7 @@ async function handleAddTracks(e){
   for(const[idx,file]of files.entries()){
     const id=startId+idx;const fk=`file-${targetKey}-${id}`;
     await dbStore(fk,file);
-    pl.songs.push({id,title:file.name.replace(/\.[^/.]+$/,''),artist:'Unknown',duration:'--:--',file,fileKey:fk});
+    pl.songs.push({id,title:file.name.replace(/\.[^/.]+$/,''),artist:'Unknown',album:'',genre:'',year:'',duration:'--:--',file,fileKey:fk});
   }
   pl.sub=`${pl.songs.length} tracks`;
   libraryOrder=null;if(currentPlaylist===targetKey)renderSongList($('searchInput').value);
@@ -868,6 +943,75 @@ async function handleRename(key){
   renderPlaylistNav();renderPlaylistGrid();
   if(key===currentPlaylist){$('breadcrumbTitle').textContent=newName;$('secTitle').textContent=newName;}
   saveState();
+}
+
+function showMetadataEditor(playlistKey,index){
+  const pl=playlists[playlistKey];
+  const song=pl?.songs[index];
+  if(!song)return;
+  const o=$('confirmOverlay');
+  o.innerHTML=`<div class="modal-box metadata-box">
+    <div class="modal-msg">Edit Metadata</div>
+    <label class="modal-field-label" for="metaTitle">Title</label>
+    <input type="text" class="modal-input" id="metaTitle" value="${esc(song.title)}">
+    <label class="modal-field-label" for="metaArtist">Artist</label>
+    <input type="text" class="modal-input" id="metaArtist" value="${esc(song.artist)}">
+    <div class="metadata-grid">
+      <div>
+        <label class="modal-field-label" for="metaAlbum">Album</label>
+        <input type="text" class="modal-input" id="metaAlbum" value="${esc(song.album||'')}">
+      </div>
+      <div>
+        <label class="modal-field-label" for="metaGenre">Genre</label>
+        <input type="text" class="modal-input" id="metaGenre" value="${esc(song.genre||'')}">
+      </div>
+      <div>
+        <label class="modal-field-label" for="metaYear">Year</label>
+        <input type="text" class="modal-input" id="metaYear" value="${esc(song.year||'')}">
+      </div>
+      <div>
+        <label class="modal-field-label" for="metaDuration">Duration</label>
+        <input type="text" class="modal-input" id="metaDuration" value="${esc(song.duration||'--:--')}">
+      </div>
+    </div>
+    <div class="modal-hint">Changes update LumiTune's library metadata. The original audio file is left untouched.</div>
+    <div class="modal-actions">
+      <button class="modal-btn" id="mc">Cancel</button>
+      <button class="modal-btn modal-ok" id="mo">Save</button>
+    </div>
+  </div>`;
+  o.style.display='flex';
+  const close=()=>{o.style.display='none';};
+  const save=()=>{
+    const oldTitle=song.title,oldArtist=song.artist;
+    song.title=$('metaTitle').value.trim()||oldTitle||'Unknown';
+    song.artist=$('metaArtist').value.trim()||'Unknown';
+    song.album=$('metaAlbum').value.trim();
+    song.genre=$('metaGenre').value.trim();
+    song.year=$('metaYear').value.trim();
+    song.duration=$('metaDuration').value.trim()||'--:--';
+    song.metadataEdited=true;
+    if(normalizeMeta(oldTitle)!==normalizeMeta(song.title)||normalizeMeta(oldArtist)!==normalizeMeta(song.artist)){
+      deleteCachedLyrics(song);
+    }
+    if(playlistKey===currentPlaylist&&index===currentSongIndex){
+      $('trackTitle').textContent=song.title;
+      $('trackArtist').textContent=song.artist;
+      updateHeroSection();
+      fetchLyricsForSong(song);
+    }
+    libraryOrder=null;
+    renderSongList($('searchInput').value);
+    renderPlaylistGrid();
+    saveState();
+    close();
+  };
+  const kh=e=>{if(e.key==='Escape'){document.removeEventListener('keydown',kh);close();}if(e.key==='Enter'&&e.ctrlKey){document.removeEventListener('keydown',kh);save();}};
+  document.addEventListener('keydown',kh);
+  $('metaTitle').focus();$('metaTitle').select();
+  $('mc').onclick=()=>{document.removeEventListener('keydown',kh);close();};
+  $('mo').onclick=()=>{document.removeEventListener('keydown',kh);save();};
+  o.onclick=e=>{if(e.target===o){document.removeEventListener('keydown',kh);close();}};
 }
 
 function togglePlay(){
@@ -1166,7 +1310,7 @@ function exportPlaylists(){
   const data={version:1,exportedAt:new Date().toISOString(),playlists:{},favorites:[...favorites]};
   for(const[key,pl]of Object.entries(playlists)){
     if(DEFAULT_KEYS.includes(key))continue;
-    data.playlists[key]={name:pl.name,emoji:pl.emoji,color:pl.color,sub:pl.sub,songs:pl.songs.map(s=>({id:s.id,title:s.title,artist:s.artist,duration:s.duration,fileKey:s.fileKey||`file-${key}-${s.id}`}))};
+    data.playlists[key]={name:pl.name,emoji:pl.emoji,color:pl.color,sub:pl.sub,songs:pl.songs.map(s=>({id:s.id,title:s.title,artist:s.artist,album:s.album||'',genre:s.genre||'',year:s.year||'',duration:s.duration,metadataEdited:!!s.metadataEdited,fileKey:s.fileKey||`file-${key}-${s.id}`}))};
   }
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const a=document.createElement('a');
@@ -1185,7 +1329,7 @@ async function importPlaylists(e){
     let count=0,missing=0;
     for(const[key,pl]of Object.entries(data.playlists)){
       if(playlists[key])continue;
-      const songs=(pl.songs||[]).map(s=>({id:s.id,title:s.title,artist:s.artist||'Unknown',duration:s.duration||'--:--',fileKey:s.fileKey||null}));
+      const songs=(pl.songs||[]).map(s=>({id:s.id,title:s.title,artist:s.artist||'Unknown',album:s.album||'',genre:s.genre||'',year:s.year||'',duration:s.duration||'--:--',metadataEdited:!!s.metadataEdited,fileKey:s.fileKey||null}));
       for(const s of songs){
         if(s.fileKey){const f=await dbGet(s.fileKey).catch(()=>null);if(f){s.file=f;}else missing++;}
         else missing++;
@@ -1220,7 +1364,7 @@ async function handleYouTubeImport(){
     const fk=`file-${targetKey}-${sid}`;
     const{blob,title,author}=await fetchYouTubeAudio(id);
     await dbStore(fk,blob);
-    pl.songs.push({id:sid,title:title||info.title||'Unknown',artist:author||info.author_name||'YouTube',duration:'--:--',file:blob,fileKey:fk});
+    pl.songs.push({id:sid,title:title||info.title||'Unknown',artist:author||info.author_name||'YouTube',album:'YouTube',genre:'',year:'',duration:'--:--',file:blob,fileKey:fk});
     pl.sub=`${pl.songs.length} tracks`;
     if(currentPlaylist===targetKey)renderSongList($('searchInput').value);
     renderPlaylistNav();renderPlaylistGrid();saveState();
@@ -1790,6 +1934,7 @@ $('songList').addEventListener('click',e=>{
   const delt=e.target.closest('.del-btn');if(delt){handleDeleteTrack(parseInt(delt.dataset.del));return;}
   const like=e.target.closest('.like-btn');if(like){toggleFav(like.dataset.songId);return;}
   const qadd=e.target.closest('.queue-btn-row');if(qadd){addToQueue(qadd.dataset.qpl,parseInt(qadd.dataset.qadd));return;}
+  const edit=e.target.closest('.edit-track-btn');if(edit){showMetadataEditor(edit.dataset.editPl,parseInt(edit.dataset.edit));return;}
   const card=e.target.closest('.pl-card,.playlist-card');
   if(card){recordNav();playlistsViewMode='detail';switchPlaylist(card.dataset.playlist);return;}
   const row=e.target.closest('.track-row');
