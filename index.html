@@ -47,6 +47,22 @@
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 2h8a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm1 2v8h6V4H5zm1 1h4v2H6V5zm0 3h4v1H6V8z"/></svg>
         Library
       </button>
+      <button class="nav-item" data-view="artists">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-5 6a5 5 0 0 1 10 0H3z"/></svg>
+        Artists
+      </button>
+      <button class="nav-item" data-view="albums">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/></svg>
+        Albums
+      </button>
+      <button class="nav-item" data-view="smart">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l1.2 4.1L13 3.2 11.1 7 15 8l-3.9 1 1.9 3.8-3.8-1.9L8 15l-1.2-4.1L3 12.8 4.9 9 1 8l3.9-1L3 3.2l3.8 1.9z"/></svg>
+        Smart
+      </button>
+      <button class="nav-item" data-view="tools">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zm2 4h8v2H4zm-2 4h12v2H2z"/></svg>
+        Tools
+      </button>
       <button class="nav-item" data-view="favorites">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5l1.8 3.7 4.1.6-3 2.9.7 4-3.6-1.9L4.4 12.7l.7-4-3-2.9 4.1-.6z"/></svg>
         Favourites
@@ -116,7 +132,8 @@
             <button class="ctrl-play" id="heroPlayBtn"><span id="heroPlayIcon">▶</span><span id="heroPauseIcon" style="display:none">⏸</span></button>
             <button class="ctrl-btn" id="heroNextBtn">⏭</button>
             <button class="ctrl-btn" id="heroRepeatBtn" title="Repeat">↺</button>
-          </div>
+             <button class="ctrl-btn" id="heroAutoplayBtn" title="Autoplay (Radio Mode)">📻</button>
+           </div>
         </div>
       </div>
       <div class="hero-right">
@@ -246,7 +263,8 @@
       </button>
       <button class="bottom-ctrl-btn" id="nextBtn" title="Next">⏭</button>
       <button class="bottom-ctrl-btn" id="repeatBtn" title="Repeat">↺</button>
-      <div class="viz-bars" id="vizBars">
+       <button class="bottom-ctrl-btn" id="autoplayBtn" title="Autoplay (Radio Mode)">📻</button>
+       <div class="viz-bars" id="vizBars">
         <div class="viz-bar"></div><div class="viz-bar"></div>
         <div class="viz-bar"></div><div class="viz-bar"></div>
         <div class="viz-bar"></div>
