@@ -30,6 +30,7 @@ let sortColumn='';
 let sortAsc=true;
 let playlistsViewMode='grid';
 let queue=[];
+let currentQueueIdx=-1;
 let libraryOrder=null;
 let selectedArtist='';
 let selectedAlbum='';
@@ -1189,7 +1190,7 @@ function updateHeroProgress(){
   fill.style.width=totalDuration>0?`${(currentPlaybackTime/totalDuration)*100}%`:'0%';
 }
 
-function playSong(index,playlistKey){
+function playSong(index,playlistKey,addToQueue){
   if(playlistKey&&playlistKey!==currentPlaylist){
     recordNav();audioPlayer.pause();
     if(currentAudioFile){URL.revokeObjectURL(audioPlayer.src);audioPlayer.src='';currentAudioFile=null;}
@@ -1201,6 +1202,17 @@ function playSong(index,playlistKey){
   if(!playlists[currentPlaylist])return;
   const songs=playlists[currentPlaylist].songs;
   if(index<0||index>=songs.length)return;
+
+  if(addToQueue){
+    const existing=queue.findIndex(q=>q.playlistKey===currentPlaylist&&q.songIndex===index);
+    if(existing>=0){
+      currentQueueIdx=existing;
+    }else{
+      queue.push({playlistKey:currentPlaylist,songIndex:index});
+      currentQueueIdx=queue.length-1;
+    }
+    updateQueueUI();
+  }
 
   currentSongIndex=index;
   currentPlaylistPlaying=currentPlaylist;
@@ -1404,7 +1416,8 @@ function handleEnd(){
   clearInterval(playbackInterval);
   const songs=(playlists[currentPlaylist]?.songs)||[];
   if(repeatMode===2){playSong(currentSongIndex);return;}
-  if(queue.length>0){playNext();return;}
+  const nextIdx=currentQueueIdx+1;
+  if(queue.length>0&&nextIdx<queue.length){currentQueueIdx=nextIdx;playSong(queue[currentQueueIdx].songIndex,queue[currentQueueIdx].playlistKey);return;}
   if(repeatMode===1||currentSongIndex<songs.length-1){playNext();return;}
   isPlaying=false;updatePlayBtn();
   $('albumArt').classList.remove('playing');$('vizBars').classList.remove('active');
@@ -1412,9 +1425,10 @@ function handleEnd(){
 }
 
 function playNext(){
-  if(queue.length){
-    const item=queue.shift();updateQueueUI();
-    playSong(item.songIndex,item.playlistKey);
+  const nextIdx=(currentQueueIdx>=0?currentQueueIdx:-1)+1;
+  if(queue.length>0&&nextIdx<queue.length){
+    currentQueueIdx=nextIdx;
+    playSong(queue[nextIdx].songIndex,queue[nextIdx].playlistKey);
     return;
   }
   const songs=playlists[currentPlaylist].songs;if(!songs.length)return;
@@ -2236,13 +2250,16 @@ function addToQueue(playlistKey,songIndex){
 function removeFromQueue(index){
   if(index<0||index>=queue.length)return;
   queue.splice(index,1);
+  if(index<currentQueueIdx)currentQueueIdx--;
+  else if(index===currentQueueIdx)currentQueueIdx=-1;
   renderQueue();updateQueueUI();updateUpNext();
 }
-function clearQueue(){queue=[];updateQueueUI();updateUpNext();}
+function clearQueue(){queue=[];currentQueueIdx=-1;updateQueueUI();updateUpNext();}
 function updateQueueUI(){
   const btn=$('queueBtn'),badge=$('queueBadge');
   if(!btn)return;
-  if(queue.length){badge.textContent=queue.length;badge.style.display='';}else{badge.style.display='none';}
+  const remaining=currentQueueIdx>=0?queue.length-currentQueueIdx-1:queue.length;
+  if(remaining>0){badge.textContent=remaining;badge.style.display='';}else{badge.style.display='none';}
 }
 function renderQueue(){
   const o=$('confirmOverlay');
@@ -2253,18 +2270,19 @@ function renderQueue(){
       <div class="modal-actions"><button class="modal-btn modal-ok" id="mc">Close</button></div>
     </div>`;
   }else{
-    o.innerHTML=`<div class="modal-box source-picker-box" style="max-width:400px">
-      <div class="modal-msg">Up Next <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">(${queue.length})</span></div>
+    const remaining=currentQueueIdx>=0?queue.length-currentQueueIdx-1:queue.length;
+    o.innerHTML=`<div class="modal-box source-picker-box queue-modal-box">
+      <div class="modal-msg">Up Next <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${remaining} left</span></div>
       <div class="queue-list">${queue.map((item,i)=>{
         const pl=playlists[item.playlistKey];
         const song=pl?.songs[item.songIndex];
         if(!song)return'';
-      return`<div class="queue-item has-del" draggable="true" data-qi="${i}">
+        const cls=i==currentQueueIdx?'queue-item active':i<currentQueueIdx?'queue-item queue-history':'queue-item has-del';
+      return`<div class="${cls}" draggable="true" data-qi="${i}">
           <span class="drag-handle">≡</span>
-          <span class="queue-num">${i+1}</span>
           <span class="queue-info"><span class="queue-title">${esc(song.title)}</span><span class="queue-artist">${esc(song.artist)}</span></span>
           <span class="queue-pl">${esc(pl?.name||'')}</span>
-          <button class="queue-del" data-qdel="${i}">×</button>
+          ${i>currentQueueIdx?`<button class="queue-del" data-qdel="${i}">×</button>`:''}
         </div>`;
       }).join('')}</div>
       <div class="modal-actions">
@@ -2340,40 +2358,31 @@ function switchTab(name, el){
 function updateUpNext(){
   const list=$('upNextList');if(!list)return;
   let html='';
-  let qty=0;
-  const hasNowPlaying=currentSongIndex>=0&&currentPlaylistPlaying&&playlists[currentPlaylistPlaying]?.songs[currentSongIndex];
-  if(hasNowPlaying){
-    const s=hasNowPlaying;
-    html+=`<div class="queue-item active" id="nowPlayingRow">
-      <div class="queue-thumb"><svg viewBox="0 0 16 16"><path d="M2 3h8l2 3h2v8H2z" fill="currentColor"/></svg></div>
-      <div class="queue-info">
-        <div class="queue-name active">${esc(s.title)}</div>
-        <div class="queue-sub">${esc(s.artist)}</div>
-      </div>
-    </div>`;
-    qty++;
-  }
-  const empty=$('upNextEmpty');if(empty)empty.style.display=queue.length||hasNowPlaying?'none':'';
+  const empty=$('upNextEmpty');if(empty)empty.style.display=queue.length?'none':'';
   const clear=$('upNextClear');if(clear)clear.style.display=queue.length?'':'none';
   if(queue.length){
     html+=queue.map((item,i)=>{
-      const pl2=playlists[item.playlistKey];
-      const song2=pl2?.songs[item.songIndex];
-      if(!song2)return'';
-      return`<div class="queue-item" draggable="true" data-qi="${i}">
-        <span class="queue-drag-handle">≡</span>
+      const pl=playlists[item.playlistKey];
+      const song=pl?.songs[item.songIndex];
+      if(!song)return'';
+      const cls=i==currentQueueIdx?'queue-item active':i<currentQueueIdx?'queue-item queue-history':'queue-item';
+      const draggable=i>=currentQueueIdx?'draggable="true"':'';
+      return`<div class="${cls}" ${draggable} data-qi="${i}"${i==currentQueueIdx?' id="nowPlayingRow"':''}>
+        ${i>=currentQueueIdx?`<span class="queue-drag-handle">≡</span>`:''}
         <div class="queue-thumb"><svg viewBox="0 0 16 16"><path d="M2 3h8l2 3h2v8H2z" fill="currentColor"/></svg></div>
         <div class="queue-info">
-          <div class="queue-name">${esc(song2.title)}</div>
-          <div class="queue-sub">${esc(song2.artist)}</div>
+          <div class="queue-name${i==currentQueueIdx?' active':''}">${esc(song.title)}</div>
+          <div class="queue-sub">${esc(song.artist)}</div>
         </div>
-        <button class="queue-del" data-qdel="${i}">×</button>
+        ${i>currentQueueIdx?`<button class="queue-del" data-qdel="${i}">×</button>`:''}
       </div>`;
     }).join('');
-    qty+=queue.length;
   }
   list.innerHTML=html;
-  const count=$('queueCount');if(count)count.textContent=qty+' tracks';
+  const np=document.getElementById('nowPlayingRow');
+  if(np)np.scrollIntoView({block:'start',behavior:'smooth'});
+  const remaining=currentQueueIdx>=0?queue.length-currentQueueIdx-1:queue.length;
+  const count=$('queueCount');if(count)count.textContent=remaining+' tracks';
 }
 
 /* ── STATS PANEL ── */
@@ -2451,14 +2460,22 @@ $('upNextList')?.addEventListener('click',e=>{
   const del=e.target.closest('.queue-del');
   if(del){
     const idx=parseInt(del.dataset.qdel);
-    if(idx>=0&&idx<queue.length){queue.splice(idx,1);updateQueueUI();updateUpNext();}
+    if(idx>=0&&idx<queue.length){
+      queue.splice(idx,1);
+      if(idx<currentQueueIdx)currentQueueIdx--;
+      else if(idx===currentQueueIdx)currentQueueIdx=-1;
+      updateQueueUI();updateUpNext();
+    }
     return;
   }
   const item=e.target.closest('.queue-item');
   if(item&&item.dataset.qi!==undefined){
     const qi=parseInt(item.dataset.qi);
     const q=queue[qi];
-    if(q)playSong(q.songIndex,q.playlistKey);
+    if(q){
+      currentQueueIdx=qi;
+      playSong(q.songIndex,q.playlistKey,false);
+    }
   }
 });
 
@@ -2486,10 +2503,15 @@ uq.addEventListener('drop',e=>{
   e.preventDefault();
   const target=e.target.closest('.queue-item');if(!target)return;
   const targetIdx=parseInt(target.dataset.qi);
+  if(isNaN(targetIdx))return;
   if(targetIdx!==upNextDragSrc){
     const overTop=target.classList.contains('drag-over-top');
+    const newPos=overTop?targetIdx:targetIdx+1;
     const [item]=queue.splice(upNextDragSrc,1);
-    queue.splice(overTop?targetIdx:targetIdx+1,0,item);
+    queue.splice(newPos,0,item);
+    if(upNextDragSrc===currentQueueIdx)currentQueueIdx=newPos;
+    else if(upNextDragSrc<currentQueueIdx&&newPos>=currentQueueIdx)currentQueueIdx--;
+    else if(upNextDragSrc>currentQueueIdx&&newPos<=currentQueueIdx)currentQueueIdx++;
     updateUpNext();updateQueueUI();
   }
   upNextDragSrc=null;
@@ -2523,6 +2545,13 @@ $('heroPrevBtn').addEventListener('click',playPrev);
 $('shuffleBtn').addEventListener('click',toggleShuffle);
 $('heroShuffleBtn')?.addEventListener('click',toggleShuffle);
 $('randomizeBtn').addEventListener('click',randomize);
+$('queueAllBtn')?.addEventListener('click',()=>{
+  const pl=playlists[currentPlaylist];
+  if(!pl||!pl.songs.length)return;
+  pl.songs.forEach((s,i)=>addToQueue(currentPlaylist,i));
+  const tab=document.querySelector('.panel-tab:nth-child(2)');
+  if(tab)switchTab('queue',tab);
+});
 $('repeatBtn').addEventListener('click',toggleRepeat);
 $('heroRepeatBtn')?.addEventListener('click',toggleRepeat);
 $('likeBtn').addEventListener('click',()=>{if(currentSongIndex!==-1)toggleFav(String(playlists[currentPlaylist].songs[currentSongIndex].id));});
@@ -2605,8 +2634,12 @@ document.addEventListener('mouseup',()=>{isDraggingProgress=false;isDraggingVolu
         const targetIdx=parseInt(target.dataset.qi);
         if(targetIdx!==dragSourceIdx){
           const overTop=target.classList.contains('drag-over-top');
+          const newPos=overTop?targetIdx:targetIdx+1;
           const [item]=queue.splice(dragSourceIdx,1);
-          queue.splice(overTop?targetIdx:targetIdx+1,0,item);
+          queue.splice(newPos,0,item);
+          if(dragSourceIdx===currentQueueIdx)currentQueueIdx=newPos;
+          else if(dragSourceIdx<currentQueueIdx&&newPos>=currentQueueIdx)currentQueueIdx--;
+          else if(dragSourceIdx>currentQueueIdx&&newPos<=currentQueueIdx)currentQueueIdx++;
           renderQueue();
           updateQueueUI();
         }
@@ -2772,7 +2805,7 @@ $('searchDropdown').addEventListener('click',e=>{
   if(type==='track'){
     const pk=item.dataset.playlist;
     const idx=parseInt(item.dataset.index);
-    if(playlists[pk]&&playlists[pk].songs[idx])playSong(idx,pk);
+    if(playlists[pk]&&playlists[pk].songs[idx])playSong(idx,pk,true);
     $('searchInput').value='';
     $('searchClear').classList.remove('show');
     $('searchDropdown').classList.remove('show');
@@ -2801,7 +2834,7 @@ $('songList').addEventListener('click',e=>{
   const card=e.target.closest('.pl-card,.playlist-card');
   if(card){recordNav();playlistsViewMode='detail';switchPlaylist(card.dataset.playlist);return;}
   const row=e.target.closest('.track-row');
-  if(row&&row.dataset.index!==undefined)playSong(parseInt(row.dataset.index),row.dataset.playlist||currentPlaylist);
+   if(row&&row.dataset.index!==undefined)playSong(parseInt(row.dataset.index),row.dataset.playlist||currentPlaylist,true);
 });
 
 let dragTrackSource=null;
