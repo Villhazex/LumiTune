@@ -2646,9 +2646,7 @@ document.addEventListener('mouseup',()=>{isDraggingProgress=false;isDraggingVolu
       if(tab)switchTab('queue',tab);
     }
   });
-  $('toggleSidebarBtn').addEventListener('click',()=>{
-    document.querySelector('.layout').classList.toggle('sidebar-closed');
-  });
+
 function addRecentSearch(term){
   term=term.trim();
   if(!term)return;
