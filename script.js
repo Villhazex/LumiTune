@@ -47,7 +47,7 @@ let lyricsHasRomaji=false;
 let lyricsShowEdit=false;
 
 let currentTheme='default';
-const availableThemes=['default','retro','zine','neurophism','synthwave','brutalism'];
+const availableThemes=['default','retro','zine','neurophism','synthwave','brutalism','shibuya','mecha','blackwhite'];
 
 let currentLyricOffset=0;
 let currentLyricOffsetSongId=null;
@@ -1997,7 +1997,7 @@ function showSettingsModal(){
         const themeOpts=availableThemes.map(t=>{
           const active=t===currentTheme;
           const label=t.charAt(0).toUpperCase()+t.slice(1);
-          const swatch={default:'#0e0c0a',retro:'#f2e8d5',zine:'#1a1612',neurophism:'#e0dbd5',synthwave:'#0a0014',brutalism:'#0A0A0A'}[t]||'#888';
+          const swatch={default:'#0e0c0a',retro:'#f2e8d5',zine:'#1a1612',neurophism:'#e0dbd5',synthwave:'#0a0014',brutalism:'#0A0A0A',shibuya:'#0d0b0b',mecha:'#f0ead8'}[t]||'#888';
           return`<button class="theme-option${active?' active':''}" data-theme="${t}">
             <span class="theme-option-swatch" style="background:${swatch}"></span>
             <span class="theme-option-label">${label}</span>
