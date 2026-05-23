@@ -183,26 +183,38 @@
 
     <div id="tab-lyrics" class="lyrics-panel">
        <div class="lyrics-title">Now Playing — Lyrics</div>
-       <div class="lyrics-offset-controls" id="lyricsOffsetControls" style="display:none">
-         <span class="offset-label" id="lyricOffsetLabel">Offset: +0.00s</span>
-         <div class="offset-buttons">
-           <button class="offset-btn" id="offsetMinusBig" title="-0.5s">◀◀</button>
-           <button class="offset-btn" id="offsetMinus" title="-0.1s">◀</button>
-           <button class="offset-btn" id="offsetReset" title="Reset to 0">0</button>
-           <button class="offset-btn" id="offsetPlus" title="+0.1s">▶</button>
-           <button class="offset-btn" id="offsetPlusBig" title="+0.5s">▶▶</button>
-         </div>
-       </div>
-       <div class="lyrics-content" id="lyricsContent">
-         <div class="lyrics-placeholder">Select a track to see lyrics</div>
-       </div>
-     </div>
+         <div class="lyrics-offset-controls" id="lyricsOffsetControls" style="display:none">
+          <div class="lyrics-toolbar">
+            <button class="queue-action-btn offset-activator" id="offsetActivator">
+              <span>Offset</span>
+              <span class="offset-activator-val" id="lyricOffsetLabel">+0.00s</span>
+            </button>
+            <button class="queue-action-btn karaoke-btn" id="karaokeBtn" title="Karaoke Mode">Karaoke</button>
+          </div>
+          <div class="offset-popover" id="offsetPopover" style="display:none">
+            <div class="offset-popover-header">Offset: <span id="popoverOffsetValue">+0.00s</span></div>
+            <div class="offset-popover-body">
+              <button class="offset-popover-btn" id="offsetMinusBig" title="-0.5s">◀◀</button>
+              <button class="offset-popover-btn" id="offsetMinus" title="-0.1s">◀</button>
+              <button class="offset-popover-btn offset-popover-reset" id="offsetReset" title="Reset">0</button>
+              <button class="offset-popover-btn" id="offsetPlus" title="+0.1s">▶</button>
+              <button class="offset-popover-btn" id="offsetPlusBig" title="+0.5s">▶▶</button>
+            </div>
+          </div>
+        </div>
+        <div class="lyrics-content" id="lyricsContent">
+          <div class="lyrics-placeholder">Select a track to see lyrics</div>
+        </div>
+      </div>
 
     <div id="tab-queue" class="up-next-panel" style="display:none">
       <div class="up-next-header">Queue · <span id="queueCount">0 tracks</span></div>
       <div id="upNextList"></div>
       <div class="up-next-empty" id="upNextEmpty">— queue is empty —</div>
-      <button class="queue-clear" id="upNextClear" style="display:none">Clear queue</button>
+      <div class="queue-actions" id="upNextActions" style="display:none">
+        <button class="queue-action-btn" id="upNextSave">+ Save</button>
+        <button class="queue-action-btn queue-action-danger" id="upNextClear">Clear</button>
+      </div>
     </div>
 
     <div id="tab-stats" class="stats-panel" style="display:none">
@@ -300,6 +312,57 @@
 </div>
 
 <div class="modal-overlay" id="confirmOverlay" style="display:none"></div>
+
+<div class="karaoke-container" id="karaokeContainer" style="display:none">
+  <button class="karaoke-exit-btn" id="karaokeExitBtn">✕</button>
+  <div class="karaoke-preview" id="karaokePreview">
+    <div class="karaoke-lyrics" id="karaokeLyrics"></div>
+  </div>
+  <!-- <div class="karaoke-player">
+    <div class="kp-controls">
+      <button class="kp-btn" id="kShuffleBtn" title="Shuffle">⇌</button>
+      <button class="kp-btn" id="kPrevBtn" title="Prev">⏮</button>
+      <button class="kp-btn kp-play-btn" id="kPlayBtn">
+        <span id="kPlayIcon">▶</span>
+        <span id="kPauseIcon" style="display:none">⏸</span>
+      </button>
+      <button class="kp-btn" id="kNextBtn" title="Next">⏭</button>
+      <button class="kp-btn" id="kRepeatBtn" title="Repeat">↺</button>
+    </div>
+    <div class="kp-progress">
+      <span class="kp-time" id="kCurrentTime">0:00</span>
+      <div class="kp-prog-track" id="kProgressBar">
+        <div class="kp-prog-fill" id="kProgressFill" style="width:0%"></div>
+      </div>
+      <span class="kp-time" id="kTotalTime">0:00</span>
+    </div>
+  </div> -->
+  <div class="karaoke-controls">
+    <div class="karaoke-row">
+      <span class="karaoke-label">Font</span>
+      <input type="range" class="karaoke-slider" id="karaokeFontSlider" min="24" max="80" value="40">
+      <span class="karaoke-value" id="karaokeFontVal">40px</span>
+    </div>
+    <div class="karaoke-row">
+      <span class="karaoke-label">Background</span>
+      <div class="karaoke-opts" id="karaokeBgOpts">
+        <button class="karaoke-opt" data-bg="dark">Dark</button>
+        <button class="karaoke-opt active" data-bg="dim">Dim</button>
+        <button class="karaoke-opt" data-bg="blur">Blur</button>
+      </div>
+    </div>
+    <div class="karaoke-offset-area">
+      <span class="karaoke-label">Offset</span>
+      <div class="karaoke-offset-opts">
+        <button class="offset-popover-btn karaoke-offset-btn" id="karaokeOffsetMinusBig" title="-0.5s">◀◀</button>
+        <button class="offset-popover-btn karaoke-offset-btn" id="karaokeOffsetMinus" title="-0.1s">◀</button>
+        <span class="karaoke-offset-val" id="karaokeOffsetLabel">+0.00s</span>
+        <button class="offset-popover-btn karaoke-offset-btn" id="karaokeOffsetPlus" title="+0.1s">▶</button>
+        <button class="offset-popover-btn karaoke-offset-btn" id="karaokeOffsetPlusBig" title="+0.5s">▶▶</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/kuroshiro@1.1.2/dist/kuroshiro.min.js"></script>
