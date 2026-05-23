@@ -150,12 +150,13 @@ body {
 .logo-bars { display: none; }
 .nav-num { display: none; }
 
-/* Sidebar bottom — acts like a nav-section in default theme */
-.sidebar-bottom {
-  margin-top: auto;
-  border-top: 1px solid var(--border-soft);
-  padding-top: 8px;
+/* Sidebar divider — separates Discover group from action buttons */
+.sidebar-divider {
+  height: 1px;
+  background: var(--border-soft);
+  margin: 4px 20px 8px;
 }
+
 .sidebar-action {
   display: flex; align-items: center; gap: 12px;
   padding: 11px 20px;
@@ -959,10 +960,11 @@ body {
 .queue-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
 .queue-dur { font-size: 11px; color: var(--text-dim); }
 .queue-del {
-  background: none; border: none; color: var(--text-dim);
-  cursor: pointer; font-size: 12px; padding: 2px; line-height: 1;
-  border-radius: 4px; transition: color 0.12s;
-  font-family: 'DM Mono', monospace; flex-shrink: 0;
+  background: none; border: none; border-left: 1px solid var(--border-soft);
+  color: var(--text-dim);
+  cursor: pointer; font-size: 18px; padding: 6px 0 6px 8px; line-height: 1;
+  border-radius: 0 4px 4px 0; transition: color 0.12s;
+  font-family: 'DM Mono', monospace; flex-shrink: 0; width: 36px; text-align: center;
 }
 .queue-del:hover { color: #E24B4A; }
 .queue-clear {
@@ -1296,7 +1298,8 @@ body {
   font-family: 'DM Mono', monospace; color: var(--text-muted);
 }
 .source-option:hover { border-color: var(--accent); color: var(--text); }
-.source-icon { font-size: 24px; margin-bottom: 8px; }
+.source-icon { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; margin-bottom: 8px; }
+.source-icon svg { width: 20px; height: 20px; }
 .source-label { font-size: 14px; font-weight: 500; color: var(--text); }
 .source-desc { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
 

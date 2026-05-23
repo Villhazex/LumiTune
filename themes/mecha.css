@@ -769,7 +769,7 @@ body[data-theme="mecha"] .queue-name { font-size: 11px; color: #0a0a0a; white-sp
 body[data-theme="mecha"] .queue-name.active { color: #0a0a0a; font-weight: 700; }
 body[data-theme="mecha"] .queue-sub { font-size: 10px; color: #7a6e5a; margin-top: 2px; }
 body[data-theme="mecha"] .queue-dur { font-size: 10px; color: #7a6e5a; font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.08em; }
-body[data-theme="mecha"] .queue-del { background: none; border: none; color: #7a6e5a; cursor: pointer; font-size: 12px; padding: 2px; line-height: 1; transition: color 0.12s; font-family: 'M PLUS 1 Code', monospace; flex-shrink: 0; }
+body[data-theme="mecha"] .queue-del { background: none; border: none; border-left: 1px solid rgba(10,10,10,0.1); color: #7a6e5a; cursor: pointer; font-size: 18px; padding: 6px 0 6px 8px; line-height: 1; transition: color 0.12s; font-family: 'M PLUS 1 Code', monospace; flex-shrink: 0; width: 36px; text-align: center; border-radius: 0 4px 4px 0; }
 body[data-theme="mecha"] .queue-del:hover { color: #e83232; }
 body[data-theme="mecha"] .queue-clear {
   display: block; width: 100%;
@@ -1043,7 +1043,8 @@ body[data-theme="mecha"] .source-option {
   font-family: 'M PLUS 1 Code', monospace; color: #3a3428;
 }
 body[data-theme="mecha"] .source-option:hover { background: #e8c832; color: #0a0a0a; box-shadow: 3px 3px 0 #0a0a0a; transform: translate(-1px,-1px); }
-body[data-theme="mecha"] .source-icon { font-size: 24px; margin-bottom: 8px; }
+body[data-theme="mecha"] .source-icon { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; margin-bottom: 8px; }
+body[data-theme="mecha"] .source-icon svg { width: 20px; height: 20px; }
 body[data-theme="mecha"] .source-label { font-size: 13px; font-weight: 500; color: #0a0a0a; font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.1em; }
 body[data-theme="mecha"] .source-desc { font-size: 10px; color: #7a6e5a; margin-top: 3px; }
 

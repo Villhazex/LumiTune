@@ -6,6 +6,7 @@ let playlists={};
 let audioPlayer=new Audio();
 let currentPlaylist='';
 let currentSongIndex=-1;
+let currentPlaylistPlaying='';
 let isPlaying=false;
 let isShuffle=false;
 let repeatMode=0;
@@ -487,10 +488,12 @@ function getMonthPlays(){
 function saveMonthPlays(data){
   try{localStorage.setItem('lumi-plays-'+monthKey(),JSON.stringify(data));}catch(e){}
 }
-function incrementPlayCount(id){
+function incrementPlayCount(id,title,artist){
   const sid=String(id);
   const data=getMonthPlays();
-  data[sid]=(data[sid]||0)+1;
+  const prev=data[sid];
+  const count=typeof prev==='number'?prev:(prev?.c||0);
+  data[sid]={c:count+1,t:title||'Unknown',a:artist||''};
   saveMonthPlays(data);
 }
 function findSongById(id){
@@ -854,7 +857,7 @@ function makeRow(song,origIdx,isActive,isLiked,plKey,showDel,extra){
     <div class="t-num ${isActive&&isPlaying?'playing':''}">${bulk}${num}</div>
     <div class="t-info">
       <span class="t-title">${song.title}</span>
-      <span class="t-artist">${statusBadge}${statusBadge?' ':''}${song.artist}</span>
+      <span class="t-artist">${song.artist}${statusBadge?' ':''}${statusBadge}</span>
     </div>
     <div class="t-extra">${extra}</div>
     <div class="t-actions">
@@ -897,7 +900,8 @@ function renderHome(filter){
   const isCustom=!DEFAULT_KEYS.includes(currentPlaylist);
   $('songList').innerHTML=songs.map(song=>{
     const oi=songs.indexOf(song);
-    return makeRow(song,oi,oi===currentSongIndex,favorites.has(String(song.id)),currentPlaylist,isCustom,song.duration);
+    const isActive=oi===currentSongIndex&&currentPlaylist===currentPlaylistPlaying;
+    return makeRow(song,oi,isActive,favorites.has(String(song.id)),currentPlaylist,isCustom,song.duration);
   }).join('');
   updateHeroSection();
 }
@@ -1087,7 +1091,8 @@ function renderPlaylists(filter){
     const isCustom=!DEFAULT_KEYS.includes(currentPlaylist);
     $('songList').innerHTML=songs.map(song=>{
       const oi=songs.indexOf(song);
-      return makeRow(song,oi,oi===currentSongIndex,favorites.has(String(song.id)),currentPlaylist,isCustom,song.duration);
+      const isActive=oi===currentSongIndex&&currentPlaylist===currentPlaylistPlaying;
+      return makeRow(song,oi,isActive,favorites.has(String(song.id)),currentPlaylist,isCustom,song.duration);
     }).join('');
     return;
   }
@@ -1161,7 +1166,7 @@ function updateHeroSection(){
   }
   const pl=playlists[currentPlaylist];
   const song=pl.songs[currentSongIndex];
-  $('heroEmoji').textContent=pl.emoji;
+  $('heroEmoji').textContent='♫';
   $('heroTitle').textContent=song?song.title:'Select a track';
   $('heroArtist').textContent=song?song.artist:'Pick a song to start listening';
   if(song&&isPlaying){
@@ -1197,49 +1202,29 @@ function playSong(index,playlistKey){
   const songs=playlists[currentPlaylist].songs;
   if(index<0||index>=songs.length)return;
 
-  if(index>0&&currentView==='home'&&!$('searchInput').value){
-    const above=songs.splice(0,index);
-    songs.push(...above);
-    currentSongIndex=0;
-  }else{
-    currentSongIndex=index;
-  }
+  currentSongIndex=index;
+  currentPlaylistPlaying=currentPlaylist;
 
   const song=songs[currentSongIndex];
-  incrementPlayCount(song.id);
+  incrementPlayCount(song.id,song.title,song.artist);
   $('trackTitle').textContent=song.title;
   $('trackArtist').textContent=song.artist;
   const aa=$('albumArt');
-  aa.querySelector('.art-emoji').textContent=playlists[currentPlaylist].emoji;
+  aa.querySelector('.art-emoji').textContent='♫';
   updateLikeBtn();
   isPlaying=true;updatePlayBtn();
   aa.classList.add('playing');
   $('vizBars').classList.add('active');
   lastTrackedPos=0;
+  const mainEl=document.querySelector('.main');
+  const scrollPos=mainEl.scrollTop;
   updateHeroSection();
   renderSongList($('searchInput').value);
+  requestAnimationFrame(()=>{mainEl.scrollTop=scrollPos;});
+  updateUpNext();
 
   if(song.file)playReal(song.file,song);else simPlay(song.duration);
   fetchLyricsForSong(song);
-
-  requestAnimationFrame(()=>{
-    const rows=$('songList')?.querySelectorAll('.track-row');
-    if(rows&&rows.length){
-      rows.forEach((row,i)=>{
-        row.animate([
-          { transform: 'translateY(80px)', opacity: 0.15 },
-          { transform: 'translateY(-3px)', opacity: 1, offset: 0.5 },
-          { transform: 'translateY(1px)', offset: 0.75 },
-          { transform: 'translateY(0)', opacity: 1 }
-        ],{
-          duration:2000,
-          delay:i*25,
-          easing:'cubic-bezier(0.22,1,0.36,1)',
-          fill:'forwards'
-        });
-      });
-    }
-  });
 }
 let lyricsSongId=null;
 let lastLyricsSong=null;
@@ -1423,7 +1408,7 @@ function handleEnd(){
   if(repeatMode===1||currentSongIndex<songs.length-1){playNext();return;}
   isPlaying=false;updatePlayBtn();
   $('albumArt').classList.remove('playing');$('vizBars').classList.remove('active');
-  updateHeroSection();renderSongList($('searchInput').value);showLyricsNone();
+  updateHeroSection();renderSongList($('searchInput').value);showLyricsNone();updateUpNext();
 }
 
 function playNext(){
@@ -1515,7 +1500,7 @@ async function handleDeletePlaylist(key){
     audioPlayer.pause();
     if(currentAudioFile){URL.revokeObjectURL(audioPlayer.src);audioPlayer.src='';currentAudioFile=null;}
     clearInterval(playbackInterval);
-    currentSongIndex=-1;isPlaying=false;updatePlayBtn();
+    currentSongIndex=-1;currentPlaylistPlaying='';isPlaying=false;updatePlayBtn();updateUpNext();
     $('albumArt').classList.remove('playing');$('vizBars').classList.remove('active');
     $('trackTitle').textContent='Select a track';$('trackArtist').textContent='Awaiting input';
     $('progressFill').style.width='0%';$('currentTime').textContent='0:00';$('totalTime').textContent='0:00';
@@ -1533,7 +1518,7 @@ async function handleDeleteTrack(index){
     audioPlayer.pause();
     if(currentAudioFile){URL.revokeObjectURL(audioPlayer.src);audioPlayer.src='';currentAudioFile=null;}
     clearInterval(playbackInterval);
-    currentSongIndex=-1;isPlaying=false;updatePlayBtn();
+    currentSongIndex=-1;currentPlaylistPlaying='';isPlaying=false;updatePlayBtn();updateUpNext();
     $('albumArt').classList.remove('playing');$('vizBars').classList.remove('active');
     $('trackTitle').textContent='Select a track';$('trackArtist').textContent='Awaiting input';
     $('progressFill').style.width='0%';$('currentTime').textContent='0:00';$('totalTime').textContent='0:00';
@@ -1846,12 +1831,12 @@ function showSourcePicker(){
       <div class="modal-msg">Add Track From</div>
       <div class="source-picker-grid">
         <button class="source-option" data-source="local">
-          <span class="source-icon">📁</span>
+          <span class="source-icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 4a1 1 0 0 1 1-1h4l2 2h5a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4z"/></svg></span>
           <span class="source-label">Local</span>
           <span class="source-desc">Browse files</span>
         </button>
         <button class="source-option" data-source="youtube">
-          <span class="source-icon">▶</span>
+          <span class="source-icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 2l10 6-10 6z"/></svg></span>
           <span class="source-label">YouTube</span>
           <span class="source-desc">Download audio</span>
         </button>
@@ -1877,12 +1862,12 @@ function showNewPlaylistPicker(){
       <div class="modal-msg">New Playlist</div>
       <div class="source-picker-grid">
         <button class="source-option" data-source="empty">
-          <span class="source-icon">📄</span>
+          <span class="source-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg></span>
           <span class="source-label">Empty</span>
           <span class="source-desc">Create blank playlist</span>
         </button>
         <button class="source-option" data-source="songs">
-          <span class="source-icon">📁</span>
+          <span class="source-icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 4a1 1 0 0 1 1-1h4l2 2h5a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4z"/></svg></span>
           <span class="source-label">Add Songs</span>
           <span class="source-desc">Select audio files</span>
         </button>
@@ -2274,7 +2259,7 @@ function renderQueue(){
         const pl=playlists[item.playlistKey];
         const song=pl?.songs[item.songIndex];
         if(!song)return'';
-        return`<div class="queue-item" draggable="true" data-qi="${i}">
+      return`<div class="queue-item has-del" draggable="true" data-qi="${i}">
           <span class="drag-handle">≡</span>
           <span class="queue-num">${i+1}</span>
           <span class="queue-info"><span class="queue-title">${esc(song.title)}</span><span class="queue-artist">${esc(song.artist)}</span></span>
@@ -2354,25 +2339,41 @@ function switchTab(name, el){
 
 function updateUpNext(){
   const list=$('upNextList');if(!list)return;
-  const empty=$('upNextEmpty');if(empty)empty.style.display=queue.length?'none':'';
-  const clear=$('upNextClear');if(clear)clear.style.display=queue.length?'':'none';
-  const count=$('queueCount');if(count)count.textContent=queue.length+' tracks';
-  if(!queue.length){list.innerHTML='';return;}
-  list.innerHTML=queue.map((item,i)=>{
-    const pl=playlists[item.playlistKey];
-    const song=pl?.songs[item.songIndex];
-    if(!song)return'';
-    return`<div class="queue-item ${item.playlistKey===currentPlaylist&&item.songIndex===currentSongIndex?'active':''}" draggable="true" data-qi="${i}">
-      <span class="queue-drag-handle">≡</span>
-      <span class="queue-num ${item.playlistKey===currentPlaylist&&item.songIndex===currentSongIndex?'active':''}">${i+1}</span>
+  let html='';
+  let qty=0;
+  const hasNowPlaying=currentSongIndex>=0&&currentPlaylistPlaying&&playlists[currentPlaylistPlaying]?.songs[currentSongIndex];
+  if(hasNowPlaying){
+    const s=hasNowPlaying;
+    html+=`<div class="queue-item active" id="nowPlayingRow">
       <div class="queue-thumb"><svg viewBox="0 0 16 16"><path d="M2 3h8l2 3h2v8H2z" fill="currentColor"/></svg></div>
       <div class="queue-info">
-        <div class="queue-name ${item.playlistKey===currentPlaylist&&item.songIndex===currentSongIndex?'active':''}">${esc(song.title)}</div>
-        <div class="queue-sub">${esc(pl?.name||'')} · ${esc(song.artist)}</div>
+        <div class="queue-name active">${esc(s.title)}</div>
+        <div class="queue-sub">${esc(s.artist)}</div>
       </div>
-      <button class="queue-del" data-qdel="${i}">×</button>
     </div>`;
-  }).join('');
+    qty++;
+  }
+  const empty=$('upNextEmpty');if(empty)empty.style.display=queue.length||hasNowPlaying?'none':'';
+  const clear=$('upNextClear');if(clear)clear.style.display=queue.length?'':'none';
+  if(queue.length){
+    html+=queue.map((item,i)=>{
+      const pl2=playlists[item.playlistKey];
+      const song2=pl2?.songs[item.songIndex];
+      if(!song2)return'';
+      return`<div class="queue-item" draggable="true" data-qi="${i}">
+        <span class="queue-drag-handle">≡</span>
+        <div class="queue-thumb"><svg viewBox="0 0 16 16"><path d="M2 3h8l2 3h2v8H2z" fill="currentColor"/></svg></div>
+        <div class="queue-info">
+          <div class="queue-name">${esc(song2.title)}</div>
+          <div class="queue-sub">${esc(song2.artist)}</div>
+        </div>
+        <button class="queue-del" data-qdel="${i}">×</button>
+      </div>`;
+    }).join('');
+    qty+=queue.length;
+  }
+  list.innerHTML=html;
+  const count=$('queueCount');if(count)count.textContent=qty+' tracks';
 }
 
 /* ── STATS PANEL ── */
@@ -2393,8 +2394,18 @@ function updateStats(){
   const maxArt=topArtists.length?topArtists[0][1]:1;
   const favoritesCount=favorites.size;
   const monthPlays=getMonthPlays();
-  const sortedPlays=Object.entries(monthPlays).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  const maxPlay=sortedPlays.length?sortedPlays[0][1]:1;
+  let changed=false;
+  Object.keys(monthPlays).forEach(id=>{
+    const entry=monthPlays[id];
+    if(typeof entry==='number'&&!findSongById(id)){delete monthPlays[id];changed=true;}
+  });
+  if(changed)saveMonthPlays(monthPlays);
+  const sortedPlays=Object.entries(monthPlays).sort((a,b)=>{
+    const bc=typeof b[1]==='number'?b[1]:b[1].c;
+    const ac=typeof a[1]==='number'?a[1]:a[1].c;
+    return bc-ac;
+  }).slice(0,5);
+  const maxPlay=sortedPlays.length?(typeof sortedPlays[0][1]==='number'?sortedPlays[0][1]:sortedPlays[0][1].c):1;
   const monthNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const now=new Date();
   const monthLabel=monthNames[now.getMonth()]+' '+now.getFullYear();
@@ -2413,10 +2424,11 @@ function updateStats(){
 <div class="stat-block">
   <div class="stat-label">Most Listened This Month</div>
   <div class="stat-sub" style="margin-bottom:6px">${monthLabel}</div>
-  ${sortedPlays.length?sortedPlays.map(([id,count])=>{
+  ${sortedPlays.length?sortedPlays.map(([id,entry])=>{
+    const count=typeof entry==='number'?entry:entry.c;
     const song=findSongById(id);
-    const label=song?esc(song.title):'Unknown';
-    const artist=song?esc(song.artist):'';
+    const label=song?esc(song.title):(entry.t?esc(entry.t):'Unknown');
+    const artist=song?esc(song.artist):(entry.a?esc(entry.a):'');
     return `<div class="genre-row" style="display:flex;justify-content:space-between;align-items:flex-start">
     <div class="genre-name" style="width:auto;flex-shrink:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${label}${artist?'<br><span style="font-size:10px;color:var(--text-dim)">'+artist+'</span>':''}</div>
     <div class="genre-pct" style="flex-shrink:0;margin-left:8px">${count}</div>
@@ -2609,7 +2621,6 @@ document.addEventListener('mouseup',()=>{isDraggingProgress=false;isDraggingVolu
   $('sortTitle')?.addEventListener('click',()=>toggleSort('title'));
   $('sortDuration')?.addEventListener('click',()=>toggleSort('duration'));
   $('settingsBtn').addEventListener('click',showSettingsModal);
-  $('settingsSideBtn')?.addEventListener('click',showSettingsModal);
   $('togglePanelBtn').addEventListener('click',()=>{
     const layout=document.querySelector('.layout');
     const closed=layout.classList.toggle('panel-closed');

@@ -746,7 +746,7 @@ body[data-theme="shibuya"] .queue-name { font-size:11px; color:var(--text); whit
 body[data-theme="shibuya"] .queue-name.active { color:#ff8080; }
 body[data-theme="shibuya"] .queue-sub { font-size:10px; color:var(--text-dim); margin-top:2px; font-family:'DM Mono',monospace; }
 body[data-theme="shibuya"] .queue-dur { font-size:10px; color:var(--text-dim); font-family:'DM Mono',monospace; }
-body[data-theme="shibuya"] .queue-del { background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:11px; padding:2px; line-height:1; border-radius:3px; transition:color 0.12s; font-family:'DM Mono',monospace; flex-shrink:0; }
+body[data-theme="shibuya"] .queue-del { background:none; border:none; border-left:1px solid var(--border); color:var(--text-dim); cursor:pointer; font-size:18px; padding:6px 0 6px 8px; line-height:1; border-radius:0 3px 3px 0; transition:color 0.12s; font-family:'DM Mono',monospace; flex-shrink:0; width:36px; text-align:center; }
 body[data-theme="shibuya"] .queue-del:hover { color:#E24B4A; }
 body[data-theme="shibuya"] .queue-clear { display:block; width:100%; background:none; border:none; border-top:1px solid var(--border-soft); padding:7px 3px; margin-top:3px; font-size:9px; color:var(--text-dim); cursor:pointer; text-transform:uppercase; letter-spacing:0.1em; transition:color 0.12s; font-family:'DM Mono',monospace; }
 body[data-theme="shibuya"] .queue-clear:hover { color:var(--text-muted); }
@@ -935,7 +935,8 @@ body[data-theme="shibuya"] .source-option {
   font-family: 'DM Mono', monospace; color: var(--text-muted);
 }
 body[data-theme="shibuya"] .source-option:hover { border-color: var(--red); color: var(--text); }
-body[data-theme="shibuya"] .source-icon { font-size: 22px; margin-bottom: 7px; }
+body[data-theme="shibuya"] .source-icon { display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; margin-bottom: 7px; }
+body[data-theme="shibuya"] .source-icon svg { width: 18px; height: 18px; }
 body[data-theme="shibuya"] .source-label { font-size: 13px; font-weight: 500; color: var(--text); }
 body[data-theme="shibuya"] .source-desc { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
 

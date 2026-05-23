@@ -767,7 +767,7 @@ body[data-theme="synthwave"] .queue-name { font-size: 11px; color: var(--text); 
 body[data-theme="synthwave"] .queue-name.active { color: var(--neon-cyan); }
 body[data-theme="synthwave"] .queue-sub { font-size: 10px; color: var(--text-dim); margin-top: 1px; }
 body[data-theme="synthwave"] .queue-dur { font-size: 10px; color: var(--text-dim); }
-body[data-theme="synthwave"] .queue-del { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 12px; padding: 2px; line-height: 1; border-radius: 3px; transition: color 0.12s; font-family: 'Share Tech Mono', monospace; flex-shrink: 0; }
+body[data-theme="synthwave"] .queue-del { background: none; border: none; border-left: 1px solid var(--border); color: var(--text-dim); cursor: pointer; font-size: 18px; padding: 6px 0 6px 8px; line-height: 1; border-radius: 0 3px 3px 0; transition: color 0.12s; font-family: 'Share Tech Mono', monospace; flex-shrink: 0; width: 36px; text-align: center; }
 body[data-theme="synthwave"] .queue-del:hover { color: #E24B4A; }
 body[data-theme="synthwave"] .queue-clear { display: block; width: 100%; background: none; border: none; border-top: 1px solid var(--border); padding: 8px 4px; margin-top: 4px; font-family: 'Orbitron', monospace; font-size: 9px; color: var(--text-dim); cursor: pointer; text-transform: uppercase; letter-spacing: 0.12em; transition: color 0.12s; }
 body[data-theme="synthwave"] .queue-clear:hover { color: var(--neon-pink); }
@@ -1003,7 +1003,8 @@ body[data-theme="synthwave"] .source-option {
   font-family: 'Share Tech Mono', monospace; color: var(--text-muted);
 }
 body[data-theme="synthwave"] .source-option:hover { border-color: var(--neon-pink); color: var(--text); }
-body[data-theme="synthwave"] .source-icon { font-size: 22px; margin-bottom: 7px; }
+body[data-theme="synthwave"] .source-icon { display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; margin-bottom: 7px; }
+body[data-theme="synthwave"] .source-icon svg { width: 18px; height: 18px; }
 body[data-theme="synthwave"] .source-label { font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700; color: var(--text); letter-spacing: 0.06em; }
 body[data-theme="synthwave"] .source-desc { font-size: 10px; color: var(--text-dim); margin-top: 3px; }
 

@@ -661,7 +661,7 @@ body[data-theme="zine"] .queue-name {
 body[data-theme="zine"] .queue-name.active { color: var(--accent); }
 body[data-theme="zine"] .queue-sub { font-size: 10px; color: var(--text-dim); }
 body[data-theme="zine"] .queue-dur { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text-dim); }
-body[data-theme="zine"] .queue-del { font-family: 'Space Mono', monospace; }
+body[data-theme="zine"] .queue-del { font-family: 'Space Mono', monospace; font-size: 18px; padding: 6px 0 6px 8px; border-left: 1px solid var(--border); border-radius: 0; width: 36px; text-align: center; }
 body[data-theme="zine"] .queue-del:hover { color: #f54242; }
 body[data-theme="zine"] .queue-clear {
   font-family: 'Barlow Condensed', sans-serif;
