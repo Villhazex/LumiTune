@@ -514,11 +514,11 @@ body[data-theme="synthwave"] .collection-mark {
 }
 body[data-theme="synthwave"] .smart-mark { background: rgba(0,255,231,0.1); color: var(--neon-cyan); border-color: rgba(0,255,231,0.25); }
 
-body[data-theme="synthwave"] .tool-tabs, body[data-theme="synthwave"] .bulk-bar {
+body[data-theme="synthwave"] .bulk-bar {
   display: flex; gap: 8px; align-items: center;
   padding: 8px 26px; flex-wrap: wrap;
 }
-body[data-theme="synthwave"] .tool-tab, body[data-theme="synthwave"] .bulk-btn {
+body[data-theme="synthwave"] .bulk-btn {
   border: 1px solid var(--border);
   background: var(--surface2);
   color: var(--text-muted);
@@ -528,17 +528,11 @@ body[data-theme="synthwave"] .tool-tab, body[data-theme="synthwave"] .bulk-btn {
   font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em;
   cursor: pointer; transition: all 0.12s;
 }
-body[data-theme="synthwave"] .tool-tab.active, body[data-theme="synthwave"] .bulk-btn:hover:not(:disabled) { border-color: var(--neon-pink); color: var(--neon-pink); background: rgba(255,45,155,0.07); }
-body[data-theme="synthwave"] .tool-tab span { color: var(--neon-yellow); margin-left: 4px; }
+body[data-theme="synthwave"] .bulk-btn:hover:not(:disabled) { border-color: var(--neon-pink); color: var(--neon-pink); background: rgba(255,45,155,0.07); }
 body[data-theme="synthwave"] .bulk-btn:disabled { opacity: 0.35; cursor: default; }
 body[data-theme="synthwave"] .bulk-btn.danger:hover:not(:disabled) { border-color: #E24B4A; color: #E24B4A; }
 body[data-theme="synthwave"] .bulk-count { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-dim); margin-right: auto; }
 body[data-theme="synthwave"] .bulk-check { width: 12px; height: 12px; margin-right: 4px; accent-color: var(--neon-pink); }
-body[data-theme="synthwave"] .tool-empty {
-  padding: 48px 26px; text-align: center;
-  color: var(--text-dim); font-family: 'Orbitron', monospace;
-  font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em;
-}
 
 body[data-theme="synthwave"] .track-list-wrap { padding: 0 26px 12px; position: relative; z-index: 1; }
 body[data-theme="synthwave"] .track-list-header {

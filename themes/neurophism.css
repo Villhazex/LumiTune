@@ -202,14 +202,12 @@ body[data-theme="neurophism"] .collection-mark {
   box-shadow: 3px 3px 7px rgba(160,150,138,0.55), -3px -3px 7px rgba(255,255,255,0.85);
 }
 
-body[data-theme="neurophism"] .tool-tab,
 body[data-theme="neurophism"] .bulk-btn {
   background: var(--surface);
   border: none;
   border-radius: 9px;
   box-shadow: 3px 3px 7px rgba(160,150,138,0.55), -3px -3px 7px rgba(255,255,255,0.85);
 }
-body[data-theme="neurophism"] .tool-tab.active,
 body[data-theme="neurophism"] .bulk-btn:hover:not(:disabled) {
   box-shadow: inset 2px 2px 5px rgba(150,140,128,0.4), inset -2px -2px 5px rgba(255,255,255,0.6);
 }

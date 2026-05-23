@@ -14,6 +14,8 @@
   --text3: #777;
   --border: 1px solid #2a2a2a;
   --border-soft: 1px solid #2a2a2a;
+  --sw: 200px;
+  --rpw: 280px;
 }
 
 body[data-theme="blackwhite"] {
@@ -50,13 +52,7 @@ body[data-theme="blackwhite"] .marquee-inner {
 body[data-theme="blackwhite"] .marquee-inner span { padding: 0 24px; color: #0a0a0a; }
 body[data-theme="blackwhite"] .marquee-inner span:nth-child(even) { color: rgba(0,0,0,0.4); }
 
-/* ── LAYOUT ── */
-body[data-theme="blackwhite"] .layout {
-  display: grid;
-  grid-template-columns: 200px 1fr 280px;
-  flex: 1;
-  overflow: hidden;
-}
+
 
 /* ── SIDEBAR ── */
 body[data-theme="blackwhite"] .sidebar {
@@ -1242,8 +1238,6 @@ body[data-theme="blackwhite"] .fade-in { animation: bw-fadeIn 0.4s ease both; }
 
 body[data-theme="blackwhite"] .drag-handle { cursor: grab; color: #555; font-size: 12px; flex-shrink: 0; padding: 0 5px 0 0; line-height: 1; }
 
-/* COLLECTION / TOOL TABS */
-body[data-theme="blackwhite"] .tool-tab,
 body[data-theme="blackwhite"] .bulk-btn {
   border: 1px solid #2a2a2a;
   background: none;
@@ -1255,14 +1249,11 @@ body[data-theme="blackwhite"] .bulk-btn {
   letter-spacing: 0.05em;
   cursor: pointer;
 }
-body[data-theme="blackwhite"] .tool-tab.active,
 body[data-theme="blackwhite"] .bulk-btn:hover:not(:disabled) { border-color: #f2ede6; color: #f2ede6; }
-body[data-theme="blackwhite"] .tool-tab span { color: #f2ede6; }
 body[data-theme="blackwhite"] .bulk-btn:disabled { opacity: 0.35; cursor: default; }
 body[data-theme="blackwhite"] .bulk-btn.danger:hover:not(:disabled) { border-color: #e24b4a; color: #e24b4a; }
 body[data-theme="blackwhite"] .bulk-count { font-family: 'Space Mono', monospace; font-size: 10px; color: #555; }
 body[data-theme="blackwhite"] .bulk-check { width: 12px; height: 12px; margin-right: 4px; accent-color: #f2ede6; }
-body[data-theme="blackwhite"] .tool-empty { padding: 48px 28px; text-align: center; color: #555; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; }
 
 body[data-theme="blackwhite"] .collection-mark {
   width: 32px; height: 32px;

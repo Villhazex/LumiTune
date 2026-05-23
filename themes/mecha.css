@@ -504,11 +504,11 @@ body[data-theme="mecha"] .collection-mark {
   border: 2px solid #0a0a0a;
 }
 body[data-theme="mecha"] .smart-mark { background: rgba(91,185,116,0.12); color: #3a8a50; }
-body[data-theme="mecha"] .tool-tabs, body[data-theme="mecha"] .bulk-bar {
+body[data-theme="mecha"] .bulk-bar {
   display: flex; gap: 8px; align-items: center;
   padding: 8px 28px; flex-wrap: wrap;
 }
-body[data-theme="mecha"] .tool-tab, body[data-theme="mecha"] .bulk-btn {
+body[data-theme="mecha"] .bulk-btn {
   border: 2px solid #0a0a0a;
   background: #dfd5be;
   color: #3a3428;
@@ -516,13 +516,11 @@ body[data-theme="mecha"] .tool-tab, body[data-theme="mecha"] .bulk-btn {
   font-family: 'M PLUS 1 Code', monospace; font-size: 10px;
   text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer;
 }
-body[data-theme="mecha"] .tool-tab.active, body[data-theme="mecha"] .bulk-btn:hover:not(:disabled) { border-color: #0a0a0a; color: #0a0a0a; background: #e8c832; }
-body[data-theme="mecha"] .tool-tab span { color: #0a0a0a; margin-left: 4px; }
+body[data-theme="mecha"] .bulk-btn:hover:not(:disabled) { border-color: #0a0a0a; color: #0a0a0a; background: #e8c832; }
 body[data-theme="mecha"] .bulk-btn:disabled { opacity: 0.35; cursor: default; }
 body[data-theme="mecha"] .bulk-btn.danger:hover:not(:disabled) { border-color: #e83232; color: #e83232; background: rgba(232,50,50,0.06); }
 body[data-theme="mecha"] .bulk-count { font-family: 'M PLUS 1 Code', monospace; font-size: 10px; color: #7a6e5a; margin-right: auto; }
 body[data-theme="mecha"] .bulk-check { width: 12px; height: 12px; margin-right: 4px; accent-color: #0a0a0a; }
-body[data-theme="mecha"] .tool-empty { padding: 48px 28px; text-align: center; color: #7a6e5a; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; }
 
 body[data-theme="mecha"] .track-list-wrap { padding: 0 28px 12px; }
 body[data-theme="mecha"] .track-list-header {

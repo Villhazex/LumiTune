@@ -1431,8 +1431,6 @@ body[data-theme="brutalism"] .source-option {
 body[data-theme="brutalism"] .source-option:hover { border-color: var(--accent); color: var(--text); }
 body[data-theme="brutalism"] .source-label { font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: var(--text); letter-spacing: 0.08em; }
 
-/* ── COLLECTION / TOOL TABS ── */
-body[data-theme="brutalism"] .tool-tab,
 body[data-theme="brutalism"] .bulk-btn {
   border: 1px solid #555;
   background: none;
@@ -1444,9 +1442,7 @@ body[data-theme="brutalism"] .bulk-btn {
   letter-spacing: 0.05em;
   cursor: pointer;
 }
-body[data-theme="brutalism"] .tool-tab.active,
 body[data-theme="brutalism"] .bulk-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--text); }
-body[data-theme="brutalism"] .tool-tab span { color: var(--accent); }
 body[data-theme="brutalism"] .bulk-btn.danger:hover:not(:disabled) { border-color: #FF6060; color: #FF6060; }
 
 /* ── RESIZE HANDLE ── */

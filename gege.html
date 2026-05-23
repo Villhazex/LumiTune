@@ -489,40 +489,10 @@ body {
   background: rgba(91,185,116,0.12);
   color: #5BB974;
 }
-.tool-tabs,.bulk-bar {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  padding: 8px 28px;
-  flex-wrap: wrap;
-}
-.tool-tab,.bulk-btn {
-  border: 1px solid var(--border-soft);
-  background: var(--surface2);
-  color: var(--text-muted);
-  border-radius: 7px;
-  padding: 8px 12px;
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-}
-.tool-tab.active,.bulk-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--text); }
-.tool-tab span { color: var(--accent); margin-left: 4px; }
 .bulk-btn:disabled { opacity: 0.35; cursor: default; }
 .bulk-btn.danger:hover:not(:disabled) { border-color: #E24B4A; color: #E24B4A; }
 .bulk-count { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-dim); margin-right: auto; }
 .bulk-check { width: 12px; height: 12px; margin-right: 4px; accent-color: var(--accent); }
-.tool-empty {
-  padding: 48px 28px;
-  text-align: center;
-  color: var(--text-dim);
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
 
 .track-list-wrap { padding: 0 28px 12px; }
 .track-list-header {
@@ -1445,10 +1415,6 @@ body {
        <button class="nav-item" data-view="albums">
          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/></svg>
          Albums
-       </button>
-       <button class="nav-item" data-view="tools">
-         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2zm2 4h8v2H4zm-2 4h12v2H2z"/></svg>
-         Tools
        </button>
         <button class="nav-item" data-view="favorites">
           <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5l1.8 3.7 4.1.6-3 2.9.7 4-3.6-1.9L4.4 12.7l.7-4-3-2.9 4.1-.6z"/></svg>
