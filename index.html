@@ -184,13 +184,12 @@
     <div id="tab-lyrics" class="lyrics-panel">
        <div class="lyrics-title">Now Playing — Lyrics</div>
          <div class="lyrics-offset-controls" id="lyricsOffsetControls" style="display:none">
-          <div class="lyrics-toolbar">
-            <button class="queue-action-btn offset-activator" id="offsetActivator">
-              <span>Offset</span>
-              <span class="offset-activator-val" id="lyricOffsetLabel">+0.00s</span>
-            </button>
-            <button class="queue-action-btn karaoke-btn" id="karaokeBtn" title="Karaoke Mode">Karaoke</button>
-          </div>
+           <div class="lyrics-toolbar">
+             <button class="queue-action-btn offset-activator" id="offsetActivator">
+               <span>Offset</span>
+               <span class="offset-activator-val" id="lyricOffsetLabel">+0.00s</span>
+             </button>
+           </div>
           <div class="offset-popover" id="offsetPopover" style="display:none">
             <div class="offset-popover-header">Offset: <span id="popoverOffsetValue">+0.00s</span></div>
             <div class="offset-popover-body">
@@ -303,6 +302,11 @@
   </div>
 
   <div class="bottom-right">
+    <button class="bottom-util-btn karaoke-btn" id="karaokeBtn" title="Karaoke Mode">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M5 3c0-1.657 1.343-3 3-3s3 1.343 3 3v5c0 1.657-1.343 3-3 3s-3-1.343-3-3V3zm-1 6v1c0 1.86 1.277 3.43 3 3.874V16h2v-2.126c1.723-.445 3-2.014 3-3.874V9H10v1c0 1.59-1.11 2.9-2.5 3.32V14h-1v-1.68C7.11 11.9 6 10.59 6 9V9H4z"/>
+      </svg>
+    </button>
     <button class="bottom-vol-btn" id="volBtn">vol</button>
     <div class="bottom-vol-track" id="volBar">
       <div class="bottom-vol-fill" id="volFill" style="width:70%"></div>
