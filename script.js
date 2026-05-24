@@ -613,6 +613,22 @@ function readID3Tags(file){
     });
   });
 }
+function extractCoverFromFile(file){
+  return new Promise(res=>{
+    if(!file||typeof jsmediatags==='undefined'){res(undefined);return;}
+    jsmediatags.read(file,{
+      onSuccess:t=>{
+        const pic=t.tags?.picture;
+        if(!pic||!pic.data||!pic.format){res(undefined);return;}
+        const data=pic.data instanceof Uint8Array?pic.data:new Uint8Array(pic.data);
+        let binary='';
+        for(let i=0;i<data.length;i++)binary+=String.fromCharCode(data[i]);
+        res(`data:${pic.format};base64,${btoa(binary)}`);
+      },
+      onError:()=>res(undefined)
+    });
+  });
+}
 async function fetchLyrics(title,artist){
   if(lyricsAbort){lyricsAbort.abort();}
   lyricsAbort=new AbortController();
@@ -1215,9 +1231,20 @@ function updateHeroSection(){
   }
   const pl=playlists[currentPlaylist];
   const song=pl.songs[currentSongIndex];
-  $('heroEmoji').textContent='♫';
   $('heroTitle').textContent=song?song.title:'Select a track';
   $('heroArtist').textContent=song?song.artist:'Pick a song to start listening';
+  const heroArt=$('heroArt');
+  if(song?.cover){
+    heroArt.style.backgroundImage=`url(${JSON.stringify(song.cover)})`;
+    heroArt.style.backgroundSize='cover';
+    heroArt.style.backgroundPosition='center';
+    heroArt.classList.add('has-cover');
+    $('heroEmoji').style.display='none';
+  }else{
+    heroArt.style.backgroundImage='';
+    heroArt.classList.remove('has-cover');
+    $('heroEmoji').style.display='';
+  }
   if(song&&isPlaying){
     hs.classList.add('playing');
     $('heroPlayIcon').style.display='none';
@@ -1246,7 +1273,7 @@ function updateHeroProgress(){
 //   fill.style.width=totalDuration>0?`${(currentPlaybackTime/totalDuration)*100}%`:'0%';
 // }
 
-function playSong(index,playlistKey,addToQueue){
+async function playSong(index,playlistKey,addToQueue){
   if(playlistKey&&playlistKey!==currentPlaylist){
     recordNav();audioPlayer.pause();
     if(currentAudioFile){URL.revokeObjectURL(audioPlayer.src);audioPlayer.src='';currentAudioFile=null;}
@@ -1275,11 +1302,27 @@ function playSong(index,playlistKey,addToQueue){
   currentPlaylistPlaying=currentPlaylist;
 
   const song=songs[currentSongIndex];
+  if(!song.cover&&song.file){
+    const cover=await extractCoverFromFile(song.file);
+    if(cover){song.cover=cover;saveState();}
+  }
   incrementPlayCount(song.id,song.title,song.artist);
   $('trackTitle').textContent=song.title;
   $('trackArtist').textContent=song.artist;
   const aa=$('albumArt');
-  aa.querySelector('.art-emoji').textContent='♫';
+  const emoji=aa.querySelector('.art-emoji');
+  if(song.cover){
+    aa.style.backgroundImage=`url(${JSON.stringify(song.cover)})`;
+    aa.style.backgroundSize='cover';
+    aa.style.backgroundPosition='center';
+    aa.classList.add('has-cover');
+    emoji.style.display='none';
+  }else{
+    aa.style.backgroundImage='';
+    aa.classList.remove('has-cover');
+    emoji.style.display='';
+  }
+  emoji.textContent='♫';
   updateLikeBtn();
   isPlaying=true;updatePlayBtn();
   aa.classList.add('playing');
@@ -1510,8 +1553,8 @@ async function handleFolderSelect(e){
   const songs=[];
   for(const[idx,file]of files.entries()){
     const id=key+'-'+idx;const fk=`file-${key}-${id}`;
-    await dbStore(fk,file);
-    songs.push({id,title:file.name.replace(/\.[^/.]+$/,''),artist:'Unknown',album:'',genre:'',year:'',duration:'--:--',addedAt:new Date().toISOString(),file,fileKey:fk});
+    const[cover]=await Promise.all([extractCoverFromFile(file),dbStore(fk,file)]);
+    songs.push({id,title:file.name.replace(/\.[^/.]+$/,''),artist:'Unknown',album:'',genre:'',year:'',duration:'--:--',addedAt:new Date().toISOString(),file,fileKey:fk,cover});
   }
   playlists[key]={name,emoji:'📂',color:'#D4522A',sub:`${files.length} tracks`,songs};
   libraryOrder=null;renderPlaylistNav();renderPlaylistGrid();switchPlaylist(key);saveState();
@@ -1526,8 +1569,8 @@ async function handleAddTracks(e){
   const pl=playlists[targetKey];const startId=Date.now();
   for(const[idx,file]of files.entries()){
     const id=startId+idx;const fk=`file-${targetKey}-${id}`;
-    await dbStore(fk,file);
-    pl.songs.push({id,title:file.name.replace(/\.[^/.]+$/,''),artist:'Unknown',album:'',genre:'',year:'',duration:'--:--',addedAt:new Date().toISOString(),file,fileKey:fk});
+    const[cover]=await Promise.all([extractCoverFromFile(file),dbStore(fk,file)]);
+    pl.songs.push({id,title:file.name.replace(/\.[^/.]+$/,''),artist:'Unknown',album:'',genre:'',year:'',duration:'--:--',addedAt:new Date().toISOString(),file,fileKey:fk,cover});
   }
   pl.sub=`${pl.songs.length} tracks`;
   libraryOrder=null;if(currentPlaylist===targetKey)renderSongList($('searchInput').value);
@@ -2210,7 +2253,7 @@ function exportPlaylists(){
   const data={version:1,exportedAt:new Date().toISOString(),playlists:{},favorites:[...favorites]};
   for(const[key,pl]of Object.entries(playlists)){
     if(DEFAULT_KEYS.includes(key))continue;
-    data.playlists[key]={name:pl.name,emoji:pl.emoji,color:pl.color,sub:pl.sub,songs:pl.songs.map(s=>({id:s.id,title:s.title,artist:s.artist,album:s.album||'',genre:s.genre||'',year:s.year||'',duration:s.duration,addedAt:s.addedAt||'',metadataEdited:!!s.metadataEdited,fileKey:s.fileKey||`file-${key}-${s.id}`}))};
+    data.playlists[key]={name:pl.name,emoji:pl.emoji,color:pl.color,sub:pl.sub,songs:pl.songs.map(s=>({id:s.id,title:s.title,artist:s.artist,album:s.album||'',genre:s.genre||'',year:s.year||'',duration:s.duration,addedAt:s.addedAt||'',metadataEdited:!!s.metadataEdited,fileKey:s.fileKey||`file-${key}-${s.id}`,cover:s.cover||undefined}))};
   }
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const a=document.createElement('a');
@@ -2229,7 +2272,7 @@ async function importPlaylists(e){
     let count=0,missing=0;
     for(const[key,pl]of Object.entries(data.playlists)){
       if(playlists[key])continue;
-      const songs=(pl.songs||[]).map(s=>({id:s.id,title:s.title,artist:s.artist||'Unknown',album:s.album||'',genre:s.genre||'',year:s.year||'',duration:s.duration||'--:--',addedAt:s.addedAt||'',metadataEdited:!!s.metadataEdited,fileKey:s.fileKey||null}));
+      const songs=(pl.songs||[]).map(s=>({id:s.id,title:s.title,artist:s.artist||'Unknown',album:s.album||'',genre:s.genre||'',year:s.year||'',duration:s.duration||'--:--',addedAt:s.addedAt||'',metadataEdited:!!s.metadataEdited,fileKey:s.fileKey||null,cover:s.cover||undefined}));
       for(const s of songs){
         if(s.fileKey){const f=await dbGet(s.fileKey).catch(()=>null);if(f){s.file=f;}else missing++;}
         else missing++;
@@ -2266,7 +2309,7 @@ async function handleYouTubeImport(){
     const{blob,title,author}=await fetchYouTubeAudio(id);
     loading2(`<div class="yt-loading"><div class="yt-spinner"></div><div class="yt-step">Step 4 of 4</div><div>Saving to ${esc(pl.name||'playlist')}&hellip;</div></div>`);
     await dbStore(fk,blob);
-    pl.songs.push({id:sid,title:title||info.title||'Unknown',artist:author||info.author_name||'YouTube',album:'YouTube',genre:'',year:'',duration:'--:--',addedAt:new Date().toISOString(),file:blob,fileKey:fk});
+    pl.songs.push({id:sid,title:title||info.title||'Unknown',artist:author||info.author_name||'YouTube',album:'YouTube',genre:'',year:'',duration:'--:--',addedAt:new Date().toISOString(),file:blob,fileKey:fk,cover:info.thumbnail_url||undefined});
     pl.sub=`${pl.songs.length} tracks`;
     if(currentPlaylist===targetKey)renderSongList($('searchInput').value);
     renderPlaylistNav();renderPlaylistGrid();saveState();

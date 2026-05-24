@@ -384,6 +384,9 @@ body {
   animation: waveShimmer 2.8s ease-in-out infinite;
 }
 .album-art-hero.playing .hero-wave { opacity: 1; }
+.album-art-hero.has-cover::after { display: none; }
+.album-art-hero.has-cover .hero-wave { display: none; }
+.album-art-hero.has-cover .art-emoji { display: none; }
 @keyframes waveShimmer { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 
 .track-info { min-width: 0; }
@@ -1504,6 +1507,8 @@ body {
 }
 .bottom-album-art.playing .wave-inner { opacity: 1; }
 .bottom-album-art .art-emoji { position: relative; z-index: 1; }
+.bottom-album-art.has-cover .wave-inner { display: none; }
+.bottom-album-art.has-cover .art-emoji { display: none; }
 .bottom-track-info { min-width: 0; flex: 1; }
 .bottom-track-title {
   font-size: 14px; font-weight: 500; color: var(--text);
