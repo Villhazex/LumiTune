@@ -1399,10 +1399,15 @@ body {
 }
 .queue-del:hover { color: #E24B4A; }
 .queue-actions {
+  position: sticky;
+  bottom: -16px;
   display: flex; gap: 6px;
-  padding: 8px 0 0;
+  padding: 12px 12px 20px;
   border-top: 1px solid var(--border-soft);
   margin-top: 6px;
+  margin-left: -12px;
+  margin-right: -12px;
+  background: var(--surface);
 }
 .queue-action-btn {
   flex: 1;

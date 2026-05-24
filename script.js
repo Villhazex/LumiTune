@@ -2654,10 +2654,14 @@ $('shuffleBtn').addEventListener('click',toggleShuffle);
 $('heroShuffleBtn')?.addEventListener('click',toggleShuffle);
 $('randomizeBtn').addEventListener('click',randomize);
 $('queueAllBtn')?.addEventListener('click',()=>{
-    const pl=playlists[currentPlaylist];
-    if(!pl||!pl.songs.length)return;
-    pl.songs.forEach((s,i)=>addToQueue(currentPlaylist,i));
-    showToast('↓ All added to queue');
+    const rows=document.querySelectorAll('#songList .track-row');
+    if(!rows.length)return;
+    rows.forEach(row=>{
+        const playlistKey=row.dataset.playlist;
+        const songIndex=parseInt(row.dataset.index);
+        if(!isNaN(songIndex)&&playlistKey)addToQueue(playlistKey,songIndex);
+    });
+    showToast(`↓ ${rows.length} added to queue`);
     const tab=document.querySelector('.panel-tab:nth-child(2)');
     if(tab)switchTab('queue',tab);
   });

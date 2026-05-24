@@ -598,6 +598,9 @@ body[data-theme="blackwhite"] .right-panel {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
+  width: var(--rpw);
+  flex-shrink: 0;
 }
 
 body[data-theme="blackwhite"] .panel-tabs {

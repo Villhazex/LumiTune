@@ -58,7 +58,7 @@ body[data-theme="mecha"] .marquee-inner span:nth-child(even) { color: rgba(232,2
 /* ── LAYOUT ── */
 body[data-theme="mecha"] .layout {
   display: grid;
-  grid-template-columns: 220px 1fr 300px;
+  grid-template-columns: var(--sw) 1fr var(--rpw);
   grid-template-rows: 1fr auto;
   flex: 1;
   overflow: hidden;

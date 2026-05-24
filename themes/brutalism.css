@@ -772,6 +772,7 @@ body[data-theme="brutalism"] .right-panel {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
 }
 
 body[data-theme="brutalism"] .panel-tabs {

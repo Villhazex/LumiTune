@@ -622,6 +622,7 @@ body[data-theme="soft-pastel"] .right-panel {
   display: flex; flex-direction: column; overflow: hidden;
   margin: 0;
   border-left: none;
+  position: relative;
 }
 
 body[data-theme="soft-pastel"] .panel-tabs {
