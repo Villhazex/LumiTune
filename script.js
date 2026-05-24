@@ -1713,7 +1713,7 @@ function showMetadataEditor(playlistKey,index){
     saveState();
     close();
   };
-  const kh=e=>{if(e.key==='Escape'){document.removeEventListener('keydown',kh);close();}if(e.key==='Enter'&&e.ctrlKey){document.removeEventListener('keydown',kh);save();}};
+  const kh=e=>{if(e.key==='Escape'){document.removeEventListener('keydown',kh);close();}if(e.key==='Enter'){e.preventDefault();document.removeEventListener('keydown',kh);save();}};
   document.addEventListener('keydown',kh);
   $('metaTitle').focus();$('metaTitle').select();
   $('mc').onclick=()=>{document.removeEventListener('keydown',kh);close();};
@@ -2646,6 +2646,10 @@ $('addTracksBtn').addEventListener('click',async()=>{
 $('addTracksInput').addEventListener('change',handleAddTracks);
 $('playBtn').addEventListener('click',togglePlay);
 $('heroPlayBtn').addEventListener('click',togglePlay);
+$('heroSection').addEventListener('click', e => {
+  if(e.target.closest('button, .hero-right, #heroProgBar')) return;
+  togglePlay();
+});
 $('nextBtn').addEventListener('click',playNext);
 $('heroNextBtn').addEventListener('click',playNext);
 $('prevBtn').addEventListener('click',playPrev);
