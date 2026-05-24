@@ -2676,6 +2676,7 @@ function resizePanel(e){
   let w=window.innerWidth-e.clientX;
   w=Math.max(200,Math.min(600,w));
   root.style.setProperty('--rpw',w+'px');
+  document.body.style.setProperty('--rpw',w+'px');
 }
 $('resizeHandle')?.addEventListener('mousedown',e=>{
   e.preventDefault();
