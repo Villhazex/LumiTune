@@ -4,10 +4,9 @@ function showToast(msg,duration=2000){
   toast.className='toast-notif';
   toast.textContent=msg;
   document.body.appendChild(toast);
-  setTimeout(()=>{toast.style.opacity='0';toast.style.transform='translateY(10px)';},50);
-  requestAnimationFrame(()=>{toast.style.opacity='1';toast.style.transform='translateY(0)';});
+  requestAnimationFrame(()=>{toast.style.opacity='1';toast.style.transform='translateX(-50%) translateY(0)';});
   setTimeout(()=>{
-    toast.style.opacity='0';toast.style.transform='translateY(-10px)';
+    toast.style.opacity='0';toast.style.transform='translateX(-50%) translateY(-10px)';
     setTimeout(()=>toast.remove(),300);
   },duration);
 }

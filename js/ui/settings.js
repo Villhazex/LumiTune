@@ -14,7 +14,7 @@ function applyTheme(theme){
   document.body.dataset.theme=theme;
   localStorage.setItem('lumi-theme',theme);
   loadThemeCSS(theme);
-  showToast('🎨 Theme: '+theme);
+  showToast('Theme: '+theme);
 }
 
 function showSettingsModal(){

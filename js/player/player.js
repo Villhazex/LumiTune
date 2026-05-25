@@ -161,7 +161,7 @@ function updatePlayBtn(){
   $('heroPlayIcon').style.display=isPlaying?'none':'inline';
   $('heroPauseIcon').style.display=isPlaying?'inline':'none';
 }
-function toggleShuffle(){isShuffle=!isShuffle;$('shuffleBtn').classList.toggle('active',isShuffle);const hs=$('heroShuffleBtn');if(hs)hs.classList.toggle('active',isShuffle);saveState();showToast(isShuffle?'🔀 Shuffle On':'🔀 Shuffle Off');}
+function toggleShuffle(){isShuffle=!isShuffle;$('shuffleBtn').classList.toggle('active',isShuffle);const hs=$('heroShuffleBtn');if(hs)hs.classList.toggle('active',isShuffle);saveState();showToast('Shuffle '+(isShuffle?'On':'Off'));}
 function toggleRepeat(){repeatMode=(repeatMode+1)%3;$('repeatBtn').classList.toggle('active',repeatMode>0);$('repeatBtn').textContent=repeatMode===2?'↺¹':'↺';const hr=$('heroRepeatBtn');if(hr){hr.classList.toggle('active',repeatMode>0);hr.textContent=repeatMode===2?'↺¹':'↺';}saveState();const labels=['↺ Repeat Off','↺ Repeat All','↺¹ Repeat One'];showToast(labels[repeatMode]);}
 function toggleFav(id){
   id=String(id);
@@ -209,7 +209,7 @@ function setVol(e){
   const vl=$('heroVolLabel');if(vl)vl.textContent='VOL '+Math.round(volume*100);
   showVolPopup();
 }
-function toggleMute(){isMuted=!isMuted;audioPlayer.volume=isMuted?0:volume;updateVolIcon();showToast(isMuted?'🔇 Muted':'🔊 Unmuted');}
+function toggleMute(){isMuted=!isMuted;audioPlayer.volume=isMuted?0:volume;updateVolIcon();showToast(isMuted?'Muted':'Unmuted');}
 function updateVolIcon(){
   $('volBtn').textContent=(isMuted||volume===0)?'mute':'vol';
   const vs=$('heroVolSlider');if(vs)vs.value=isMuted?0:Math.round(volume*100);

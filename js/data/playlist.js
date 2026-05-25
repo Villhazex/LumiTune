@@ -40,23 +40,6 @@ async function handleAddTracks(e){
   renderPlaylistNav();renderPlaylistGrid();saveState();e.target.value='';
 }
 
-async function handleAddTracks(e){
-  const files=Array.from(e.target.files).filter(f=>audioExtensions.includes('.'+f.name.split('.').pop().toLowerCase()));
-  if(!files.length){e.target.value='';return;}
-  const targetKey=await showPlaylistPicker();
-  if(!targetKey){e.target.value='';return;}
-  const pl=playlists[targetKey];const startId=Date.now();
-  for(const[idx,file]of files.entries()){
-    const id=startId+idx;const fk=`file-${targetKey}-${id}`;
-    const[cover]=await Promise.all([extractCoverFromFile(file),dbStore(fk,file)]);
-    songs[id]={id,title:file.name.replace(/\.[^/.]+$/,''),artist:'Unknown',album:'',genre:'',year:'',duration:'--:--',addedAt:new Date().toISOString(),file,fileKey:fk,cover};
-    pl.songs.push(String(id));
-  }
-  pl.sub=`${pl.songs.length} tracks`;
-  libraryOrder=null;if(currentPlaylist===targetKey)renderSongList($('searchInput').value);
-  renderPlaylistNav();renderPlaylistGrid();saveState();e.target.value='';
-}
-
 async function handleDeletePlaylist(key){
   if(DEFAULT_KEYS.includes(key))return;
   if(!(await showConfirm(`Delete "${playlists[key].name}"?`)))return;
