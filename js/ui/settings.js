@@ -46,6 +46,20 @@ function showSettingsModal(){
                 <button class="setting-btn" id="sImport">⬆ Import</button>
               </div>
             </div>
+          </div>
+          <div class="setting-group">
+            <div class="setting-row">
+              <div class="setting-row-label">
+                <span>Disable Animations</span>
+                <small>Turn off all animations and transitions</small>
+              </div>
+              <div class="setting-row-control">
+                <label class="toggle-switch">
+                  <input type="checkbox" id="sNoAnim"${noAnim?' checked':''}>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
           </div>`;
       },
       bind(){
@@ -57,6 +71,11 @@ function showSettingsModal(){
           document.body.appendChild(inp);
           inp.click();
           setTimeout(()=>document.body.removeChild(inp),1000);
+        };
+        $('sNoAnim').onchange=()=>{
+          noAnim=$('sNoAnim').checked;
+          document.body.classList.toggle('no-anim',noAnim);
+          localStorage.setItem('lumi-no-anim',noAnim?'1':'');
         };
       }
     },
@@ -99,23 +118,25 @@ function showSettingsModal(){
     lyrics:{
       label:'Lyrics',icon:'♪',
       render(){
-        const modeLabel=lyricsMode==='romaji'?'Romaji':'Japanese';
         return`<div class="settings-section-title">Lyrics</div>
           <div class="settings-section-desc">Configure how lyrics are displayed</div>
           <div class="setting-group">
             <div class="setting-row">
               <div class="setting-row-label">
                 <span>Display Mode</span>
-                <small>Show lyrics in Romaji or Japanese script</small>
+                <small>show japanese lyric in romaji</small>
               </div>
               <div class="setting-row-control">
-                <button class="setting-btn${lyricsMode==='romaji'?' active':''}" id="sLyricMode">${modeLabel}</button>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="sLyricMode"${lyricsMode==='romaji'?' checked':''}>
+                  <span class="toggle-slider"></span>
+                </label>
               </div>
             </div>
           </div>`;
       },
       bind(){
-        $('sLyricMode').onclick=()=>{
+        $('sLyricMode').onchange=()=>{
           toggleLyricsMode();
           renderContent('lyrics');
         };

@@ -1162,7 +1162,7 @@ body[data-theme="soft-pastel"] .setting-btn.primary:hover { opacity: 0.88; }
 body[data-theme="soft-pastel"] .setting-btn.small { padding: 5px 12px; font-size: 10px; }
 body[data-theme="soft-pastel"] .setting-btn.active { background: linear-gradient(135deg, var(--purple-mid), var(--pink)); color: white; border-color: transparent; }
 
-body[data-theme="soft-pastel"] .theme-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+body[data-theme="soft-pastel"] .theme-list { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
 body[data-theme="soft-pastel"] .theme-option {
   display: flex; align-items: center; gap: 12px;
   padding: 12px 16px; border-radius: 12px;

@@ -58,6 +58,8 @@ let currentLyricOffset=0;
 let currentLyricOffsetSongId=null;
 
 let isRecordingShortcut=false;
+
+let noAnim=false;
 let recordingShortcutKey=null;
 
 const SHORTCUTS={

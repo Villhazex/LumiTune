@@ -1185,7 +1185,7 @@ body[data-theme="blackwhite"] .setting-btn.primary:hover { opacity: 0.88; }
 body[data-theme="blackwhite"] .setting-btn.small { padding: 5px 12px; font-size: 9px; }
 body[data-theme="blackwhite"] .setting-btn.active { background: #f2ede6; color: #0a0a0a; border-color: #f2ede6; }
 
-body[data-theme="blackwhite"] .theme-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+body[data-theme="blackwhite"] .theme-list { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
 body[data-theme="blackwhite"] .theme-option {
   display: flex; align-items: center; gap: 12px;
   padding: 12px 16px;

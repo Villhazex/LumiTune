@@ -547,6 +547,7 @@ async function init(){
     if(savedTheme&&availableThemes.includes(savedTheme))applyTheme(savedTheme);
     else applyTheme('default');
     if(!playlists[currentPlaylist]){const keys=Object.keys(playlists);currentPlaylist=keys.length?keys[0]:'';}
+    if(localStorage.getItem('lumi-no-anim')){noAnim=true;document.body.classList.add('no-anim');}
     renderPlaylistNav();renderPlaylistGrid();switchView('home');
     $('shuffleBtn').classList.toggle('active',isShuffle);
     const hs=$('heroShuffleBtn');if(hs)hs.classList.toggle('active',isShuffle);
