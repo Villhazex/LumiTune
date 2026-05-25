@@ -99,7 +99,7 @@ function playReal(file,song){
   audioPlayer.volume=isMuted?0:volume;
   audioPlayer.play().catch(()=>{});
   audioPlayer.onloadedmetadata=()=>{totalDuration=audioPlayer.duration;$('totalTime').textContent=fmt(totalDuration);$('heroTotalTime').textContent=fmt(totalDuration);song.duration=fmt(totalDuration);const activeRow=$('songList')?.querySelector('.track-row.active');if(activeRow){const extra=activeRow.querySelector('.t-extra');if(extra)extra.textContent=song.duration;}};
-  audioPlayer.ontimeupdate=()=>{if(!isDraggingProgress){currentPlaybackTime=audioPlayer.currentTime;if(isPlaying){const delta=currentPlaybackTime-lastTrackedPos;if(delta>0&&delta<5){totalPlayTime+=delta;}}lastTrackedPos=currentPlaybackTime;updateLyricHighlight(currentPlaybackTime);$('currentTime').textContent=fmt(currentPlaybackTime);$('progressFill').style.width=`${(currentPlaybackTime/totalDuration)*100}%`;updateHeroProgress();}};
+  audioPlayer.ontimeupdate=()=>{if(!isDraggingProgress){currentPlaybackTime=audioPlayer.currentTime;if(isPlaying){const delta=currentPlaybackTime-lastTrackedPos;if(delta>0&&delta<5){totalPlayTime+=delta;sessionPlayTime+=delta;}}lastTrackedPos=currentPlaybackTime;updateLyricHighlight(currentPlaybackTime);$('currentTime').textContent=fmt(currentPlaybackTime);$('progressFill').style.width=`${(currentPlaybackTime/totalDuration)*100}%`;updateHeroProgress();}};
   audioPlayer.onended=handleEnd;
 }
 
@@ -112,7 +112,7 @@ function simPlay(durStr){
   currentPlaybackTime=0;
   $('totalTime').textContent=durStr;$('currentTime').textContent='0:00';$('progressFill').style.width='0%';updateHeroProgress();
   playbackInterval=setInterval(()=>{
-    if(isPlaying){currentPlaybackTime+=0.1;totalPlayTime+=0.1;updateLyricHighlight(currentPlaybackTime);if(currentPlaybackTime>=totalDuration){$('currentTime').textContent=fmt(totalDuration);$('progressFill').style.width='100%';updateHeroProgress();handleEnd();return;}
+    if(isPlaying){currentPlaybackTime+=0.1;totalPlayTime+=0.1;sessionPlayTime+=0.1;updateLyricHighlight(currentPlaybackTime);if(currentPlaybackTime>=totalDuration){$('currentTime').textContent=fmt(totalDuration);$('progressFill').style.width='100%';updateHeroProgress();handleEnd();return;}
     $('currentTime').textContent=fmt(currentPlaybackTime);$('progressFill').style.width=`${(currentPlaybackTime/totalDuration)*100}%`;updateHeroProgress();
 }},100);
 }

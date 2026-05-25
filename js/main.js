@@ -95,14 +95,10 @@ $('shuffleBtn').addEventListener('click',toggleShuffle);
 $('heroShuffleBtn')?.addEventListener('click',toggleShuffle);
 $('randomizeBtn').addEventListener('click',randomize);
 $('queueAllBtn')?.addEventListener('click',()=>{
-    const rows=document.querySelectorAll('#songList .track-row');
-    if(!rows.length)return;
-    rows.forEach(row=>{
-        const playlistKey=row.dataset.playlist;
-        const songIndex=parseInt(row.dataset.index);
-        if(!isNaN(songIndex)&&playlistKey)addToQueue(playlistKey,songIndex);
-    });
-    showToast(`↓ ${rows.length} added to queue`);
+    const items=getQueueAllItems();
+    if(!items.length)return;
+    items.forEach(item=>addToQueue(item.playlistKey,item.songIndex,true));
+    showToast(`↓ ${items.length} added to queue`);
     const tab=document.querySelector('.panel-tab:nth-child(2)');
     if(tab)switchTab('queue',tab);
   });
@@ -315,10 +311,12 @@ document.addEventListener('mouseup',()=>{isDraggingProgress=false;isDraggingVolu
     }
   });
 
-$('searchInput').addEventListener('input',e=>{
-  const val=e.target.value;
+const doSearch=debounce(val=>{
   renderSongList(val);
   renderSearchDropdown(val);
+},150);
+$('searchInput').addEventListener('input',e=>{
+  doSearch(e.target.value);
 });
 $('searchInput').addEventListener('keydown',e=>{
   const dd=$('searchDropdown');

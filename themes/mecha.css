@@ -28,9 +28,9 @@ body[data-theme="mecha"] {
   --ink: #0a0a0a;
 }
 
-body[data-theme="mecha"] ::-webkit-scrollbar { width: 4px; }
+body[data-theme="mecha"] ::-webkit-scrollbar { width: 8px; }
 body[data-theme="mecha"] ::-webkit-scrollbar-track { background: transparent; }
-body[data-theme="mecha"] ::-webkit-scrollbar-thumb { background: rgba(10,10,10,0.15); border-radius: 0; }
+body[data-theme="mecha"] ::-webkit-scrollbar-thumb { background: rgba(10,10,10,0.15); border-radius: 3px; }
 
 /* ── MARQUEE ── */
 body[data-theme="mecha"] .marquee-bar {
@@ -177,8 +177,8 @@ body[data-theme="mecha"] .main {
   background: #f0ead8;
   padding: 0;
 }
-body[data-theme="mecha"] .main::-webkit-scrollbar { width: 4px; }
-body[data-theme="mecha"] .main::-webkit-scrollbar-thumb { background: rgba(10,10,10,0.15); }
+body[data-theme="mecha"] .main::-webkit-scrollbar { width: 8px; }
+body[data-theme="mecha"] .main::-webkit-scrollbar-thumb { background: rgba(10,10,10,0.15); border-radius: 3px; }
 
 /* Topbar */
 body[data-theme="mecha"] .topbar {
@@ -671,8 +671,8 @@ body[data-theme="mecha"] .panel-tab.active { color: #0a0a0a; border-bottom-color
 
 /* Lyrics */
 body[data-theme="mecha"] .lyrics-panel { flex: 1; overflow-y: auto; padding: 18px; }
-body[data-theme="mecha"] .lyrics-panel::-webkit-scrollbar { width: 3px; }
-body[data-theme="mecha"] .lyrics-panel::-webkit-scrollbar-thumb { background: rgba(10,10,10,0.15); }
+body[data-theme="mecha"] .lyrics-panel::-webkit-scrollbar { width: 8px; }
+body[data-theme="mecha"] .lyrics-panel::-webkit-scrollbar-thumb { background: rgba(10,10,10,0.15); border-radius: 3px; }
 
 body[data-theme="mecha"] .lyrics-title {
   font-family: 'Bebas Neue', sans-serif;
@@ -737,8 +737,8 @@ body[data-theme="mecha"] .lyrics-helper-meta strong { min-width: 0; color: #3a34
 
 /* Up Next */
 body[data-theme="mecha"] .up-next-panel { flex: 1; overflow-y: auto; padding: 14px; }
-body[data-theme="mecha"] .up-next-panel::-webkit-scrollbar { width: 3px; }
-body[data-theme="mecha"] .up-next-panel::-webkit-scrollbar-thumb { background: rgba(10,10,10,0.15); }
+body[data-theme="mecha"] .up-next-panel::-webkit-scrollbar { width: 8px; }
+body[data-theme="mecha"] .up-next-panel::-webkit-scrollbar-thumb { background: rgba(10,10,10,0.15); border-radius: 3px; }
 body[data-theme="mecha"] .up-next-panel.drag-over { outline: 2px dashed #0a0a0a; outline-offset: -2px; background: rgba(232,200,50,0.05); }
 body[data-theme="mecha"] .up-next-header {
   padding: 0 4px 10px; border-bottom: 2px solid #0a0a0a; margin-bottom: 8px;

@@ -1,8 +1,9 @@
-function addToQueue(playlistKey,songIndex){
+function addToQueue(playlistKey,songIndex,silent){
   const pl=playlists[playlistKey];
   if(!pl||songIndex<0||songIndex>=pl.songs.length)return;
   queue.push({playlistKey,songIndex});
-  updateQueueUI();updateUpNext();showToast('↓ Added to queue');
+  updateQueueUI();updateUpNext();
+  if(!silent)showToast('↓ Added to queue');
 }
 function removeFromQueue(index){
   if(index<0||index>=queue.length)return;

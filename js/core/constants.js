@@ -40,6 +40,7 @@ let selectedAlbum='';
 let selectedSmart='';
 let bulkSelected=new Set();
 let totalPlayTime=0;
+let sessionPlayTime=0;
 let lastTrackedPos=0;
 let lyricLines=[];
 let lyricsSynced=false;

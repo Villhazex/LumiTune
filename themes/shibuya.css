@@ -42,7 +42,7 @@ body[data-theme="shibuya"]::before {
   z-index: 9999;
 }
 
-body[data-theme="shibuya"] ::-webkit-scrollbar { width: 3px; }
+body[data-theme="shibuya"] ::-webkit-scrollbar { width: 8px; }
 body[data-theme="shibuya"] ::-webkit-scrollbar-track { background: transparent; }
 body[data-theme="shibuya"] ::-webkit-scrollbar-thumb { background: var(--red); border-radius: 2px; }
 
@@ -653,8 +653,8 @@ body[data-theme="shibuya"] .panel-tab.active { color: var(--red2); border-bottom
 
 /* Lyrics */
 body[data-theme="shibuya"] .lyrics-panel { flex: 1; overflow-y: auto; padding: 16px; }
-body[data-theme="shibuya"] .lyrics-panel::-webkit-scrollbar { width: 2px; }
-body[data-theme="shibuya"] .lyrics-panel::-webkit-scrollbar-thumb { background: var(--red); }
+body[data-theme="shibuya"] .lyrics-panel::-webkit-scrollbar { width: 8px; }
+body[data-theme="shibuya"] .lyrics-panel::-webkit-scrollbar-thumb { background: var(--red); border-radius: 3px; }
 
 body[data-theme="shibuya"] .lyrics-title {
   font-family: 'Noto Sans JP', sans-serif;
@@ -723,8 +723,8 @@ body[data-theme="shibuya"] .lyrics-helper-meta strong { min-width:0; color:var(-
 
 /* Up Next */
 body[data-theme="shibuya"] .up-next-panel { flex: 1; overflow-y: auto; padding: 14px; }
-body[data-theme="shibuya"] .up-next-panel::-webkit-scrollbar { width: 2px; }
-body[data-theme="shibuya"] .up-next-panel::-webkit-scrollbar-thumb { background: var(--red); }
+body[data-theme="shibuya"] .up-next-panel::-webkit-scrollbar { width: 8px; }
+body[data-theme="shibuya"] .up-next-panel::-webkit-scrollbar-thumb { background: var(--red); border-radius: 3px; }
 body[data-theme="shibuya"] .up-next-panel.drag-over { outline:2px dashed var(--red); outline-offset:-2px; background:rgba(212,43,43,0.04); }
 
 body[data-theme="shibuya"] .up-next-header {

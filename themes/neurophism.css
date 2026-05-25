@@ -26,9 +26,9 @@ body[data-theme="neurophism"] {
   color: var(--text);
 }
 
-body[data-theme="neurophism"] ::-webkit-scrollbar { width: 4px; }
+body[data-theme="neurophism"] ::-webkit-scrollbar { width: 8px; }
 body[data-theme="neurophism"] ::-webkit-scrollbar-track { background: transparent; }
-body[data-theme="neurophism"] ::-webkit-scrollbar-thumb { background: var(--border-soft); border-radius: 2px; }
+body[data-theme="neurophism"] ::-webkit-scrollbar-thumb { background: var(--border-soft); border-radius: 3px; }
 
 /* ── MARQUEE ── */
 body[data-theme="neurophism"] .marquee-bar {

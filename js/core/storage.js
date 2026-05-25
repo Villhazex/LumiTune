@@ -38,6 +38,7 @@ function saveState(){
 }
 async function loadState(){
   try{
+    totalPlayTime=parseFloat(localStorage.getItem('lumi-pt')||'0');
     const raw=localStorage.getItem('lumi-pl');
     const songsRaw=localStorage.getItem('lumi-songs');
     let migrated=false;
@@ -96,7 +97,6 @@ async function loadState(){
     if(Array.isArray(rec))recentPlaylists=rec.filter(k=>typeof k==='string');
     const src=JSON.parse(localStorage.getItem('lumi-src')||'[]');
     if(Array.isArray(src))recentSearches=src.filter(s=>typeof s==='string');
-    totalPlayTime=parseFloat(localStorage.getItem('lumi-pt')||'0');
   }catch(e){console.warn(e);}
 }
 

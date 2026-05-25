@@ -786,9 +786,9 @@ body[data-theme="retro"] .theme-option.active {
 }
 
 /* ── SCROLLBAR ── */
-body[data-theme="retro"] ::-webkit-scrollbar { width: 4px; }
+body[data-theme="retro"] ::-webkit-scrollbar { width: 8px; }
 body[data-theme="retro"] ::-webkit-scrollbar-track { background: transparent; }
-body[data-theme="retro"] ::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 2px; }
+body[data-theme="retro"] ::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 3px; }
 
 /* ── TOAST ── */
 body[data-theme="retro"] .toast-notif {

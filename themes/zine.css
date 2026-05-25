@@ -22,7 +22,7 @@ body[data-theme="zine"] {
   color: var(--text);
 }
 
-body[data-theme="zine"] ::-webkit-scrollbar { width: 3px; }
+body[data-theme="zine"] ::-webkit-scrollbar { width: 8px; }
 body[data-theme="zine"] ::-webkit-scrollbar-track { background: transparent; }
 body[data-theme="zine"] ::-webkit-scrollbar-thumb { background: var(--text-dim); }
 
@@ -1013,7 +1013,7 @@ body[data-theme="zine"] .theme-option.active {
 }
 
 /* ── SCROLLBAR ── */
-body[data-theme="zine"] ::-webkit-scrollbar { width: 3px; }
+body[data-theme="zine"] ::-webkit-scrollbar { width: 8px; }
 body[data-theme="zine"] ::-webkit-scrollbar-track { background: transparent; }
 body[data-theme="zine"] ::-webkit-scrollbar-thumb { background: var(--text-dim); }
 

@@ -25,9 +25,9 @@ body[data-theme="blackwhite"] {
   cursor: default;
 }
 
-body[data-theme="blackwhite"] ::-webkit-scrollbar { width: 3px; }
-body[data-theme="blackwhite"] ::-webkit-scrollbar-track { background: #0a0a0a; }
-body[data-theme="blackwhite"] ::-webkit-scrollbar-thumb { background: #3d3d3d; }
+body[data-theme="blackwhite"] ::-webkit-scrollbar { width: 8px; }
+body[data-theme="blackwhite"] ::-webkit-scrollbar-track { background: #0a0a0a; border-radius: 3px; }
+body[data-theme="blackwhite"] ::-webkit-scrollbar-thumb { background: #3d3d3d; border-radius: 3px; }
 
 /* ── MARQUEE / TICKER ── */
 body[data-theme="blackwhite"] .marquee-bar {
@@ -631,8 +631,8 @@ body[data-theme="blackwhite"] .lyrics-panel {
   flex: 1; overflow-y: auto;
   padding: 18px 16px;
 }
-body[data-theme="blackwhite"] .lyrics-panel::-webkit-scrollbar { width: 2px; }
-body[data-theme="blackwhite"] .lyrics-panel::-webkit-scrollbar-thumb { background: #3d3d3d; }
+body[data-theme="blackwhite"] .lyrics-panel::-webkit-scrollbar { width: 8px; }
+body[data-theme="blackwhite"] .lyrics-panel::-webkit-scrollbar-thumb { background: #3d3d3d; border-radius: 3px; }
 
 body[data-theme="blackwhite"] .lyrics-title {
   font-size: 9px; letter-spacing: 0.25em;
@@ -743,8 +743,8 @@ body[data-theme="blackwhite"] .lyrics-helper-meta strong { color: #888; }
 
 /* UP NEXT */
 body[data-theme="blackwhite"] .up-next-panel { flex: 1; overflow-y: auto; padding: 0 0 8px; }
-body[data-theme="blackwhite"] .up-next-panel::-webkit-scrollbar { width: 2px; }
-body[data-theme="blackwhite"] .up-next-panel::-webkit-scrollbar-thumb { background: #3d3d3d; }
+body[data-theme="blackwhite"] .up-next-panel::-webkit-scrollbar { width: 8px; }
+body[data-theme="blackwhite"] .up-next-panel::-webkit-scrollbar-thumb { background: #3d3d3d; border-radius: 3px; }
 body[data-theme="blackwhite"] .up-next-panel.drag-over { outline: 1px dashed #f2ede6; outline-offset: -2px; background: rgba(242,237,230,0.05); }
 
 body[data-theme="blackwhite"] .up-next-header {
