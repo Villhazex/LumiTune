@@ -542,21 +542,29 @@ async function init(){
   playlists={};
   for(const[k,v]of Object.entries(DEFAULT_PLAYLISTS))playlists[k]=JSON.parse(JSON.stringify(v));
   await loadState();
-  const savedTheme=localStorage.getItem('lumi-theme');
-  if(savedTheme&&availableThemes.includes(savedTheme))applyTheme(savedTheme);
-  else applyTheme('default');
-  if(!playlists[currentPlaylist]){const keys=Object.keys(playlists);currentPlaylist=keys.length?keys[0]:'';}
-  renderPlaylistNav();renderPlaylistGrid();switchView('home');
-  renderSongList($('searchInput').value);
-  $('shuffleBtn').classList.toggle('active',isShuffle);
-  const hs=$('heroShuffleBtn');if(hs)hs.classList.toggle('active',isShuffle);
-   $('repeatBtn').classList.toggle('active',repeatMode>0);
-   $('repeatBtn').textContent=repeatMode===2?'↺¹':'↺';
-   const hr=$('heroRepeatBtn');if(hr){hr.classList.toggle('active',repeatMode>0);hr.textContent=repeatMode===2?'↺¹':'↺';}
-   audioPlayer.volume=isMuted?0:volume;
-   $('volFill').style.width=`${volume*100}%`;
-   updateVolIcon();
-   updateNavBtns();
- }
+  try{
+    const savedTheme=localStorage.getItem('lumi-theme');
+    if(savedTheme&&availableThemes.includes(savedTheme))applyTheme(savedTheme);
+    else applyTheme('default');
+    if(!playlists[currentPlaylist]){const keys=Object.keys(playlists);currentPlaylist=keys.length?keys[0]:'';}
+    renderPlaylistNav();renderPlaylistGrid();switchView('home');
+    $('shuffleBtn').classList.toggle('active',isShuffle);
+    const hs=$('heroShuffleBtn');if(hs)hs.classList.toggle('active',isShuffle);
+    $('repeatBtn').classList.toggle('active',repeatMode>0);
+    $('repeatBtn').textContent=repeatMode===2?'↺¹':'↺';
+    const hr=$('heroRepeatBtn');if(hr){hr.classList.toggle('active',repeatMode>0);hr.textContent=repeatMode===2?'↺¹':'↺';}
+    audioPlayer.volume=isMuted?0:volume;
+    $('volFill').style.width=`${volume*100}%`;
+    updateVolIcon();
+    updateNavBtns();
+  }finally{
+    const splash=$('splash');
+    if(splash){splash.style.opacity='0';setTimeout(()=>splash.remove(),400);}
+  }
+}
 init();
+setTimeout(()=>{
+  const s=$('splash');
+  if(s){s.style.opacity='0';setTimeout(()=>s.remove(),400);}
+},3000);
 addEventListener('beforeunload',()=>{localStorage.setItem('lumi-pt',String(totalPlayTime));});

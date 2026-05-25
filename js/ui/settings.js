@@ -217,37 +217,44 @@ async function handleCreateEmptyPlaylist(){
 }
 
 function exportPlaylists(){
-  const data={version:2,exportedAt:new Date().toISOString(),playlists:{},songs:{},favorites:[...favorites]};
-  for(const[key,pl]of Object.entries(playlists)){
-    if(DEFAULT_KEYS.includes(key))continue;
-    data.playlists[key]={name:pl.name,emoji:pl.emoji,color:pl.color,sub:pl.sub,songs:pl.songs};
-  }
-  Object.entries(songs).forEach(([id,s])=>{
-    const{file,...r}=s;
-    data.songs[id]=r;
-  });
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=`lumitune-backup-${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-  URL.revokeObjectURL(a.href);
+  const loading=showLoading('<div class="yt-loading"><div class="yt-spinner"></div><div>Exporting&hellip;</div></div>');
+  setTimeout(()=>{
+    const data={version:2,exportedAt:new Date().toISOString(),playlists:{},songs:{},favorites:[...favorites]};
+    for(const[key,pl]of Object.entries(playlists)){
+      if(DEFAULT_KEYS.includes(key))continue;
+      data.playlists[key]={name:pl.name,emoji:pl.emoji,color:pl.color,sub:pl.sub,songs:pl.songs};
+    }
+    Object.entries(songs).forEach(([id,s])=>{
+      const{file,...r}=s;
+      data.songs[id]=r;
+    });
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=`lumitune-backup-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    loading(null);
+  },50);
 }
 async function importPlaylists(e){
   const file=e.target.files[0];
   if(!file)return;
+  const loading=showLoading('<div class="yt-loading"><div class="yt-spinner"></div><div>Importing&hellip;</div></div>');
   try{
     const text=await file.text();
     const data=JSON.parse(text);
-    if(!data.version||!data.playlists)return showMessage('Invalid backup file','OK');
+    if(!data.version||!data.playlists){loading(null);return showMessage('Invalid backup file','OK');}
     const isV1=data.version===1;
     let count=0,missing=0;
+    loading('<div class="yt-loading"><div class="yt-spinner"></div><div>Processing songs&hellip;</div></div>');
     if(isV1&&data.songs){
       Object.entries(data.songs).forEach(([id,s])=>{
         if(!songs[id])songs[id]={...s};
       });
     }
-    for(const[key,pl]of Object.entries(data.playlists)){
+    const plEntries=Object.entries(data.playlists);
+    for(const[idx,[key,pl]]of plEntries.entries()){
       if(playlists[key])continue;
       let songIds;
       if(isV1){
@@ -273,12 +280,14 @@ async function importPlaylists(e){
       }
       playlists[key]={name:pl.name||'Untitled',emoji:pl.emoji||'📂',color:pl.color||'#D4522A',sub:pl.sub||`${songIds.length} tracks`,songs:songIds};
       count++;
+      if(idx%3===0)loading(`<div class="yt-loading"><div class="yt-spinner"></div><div class="yt-step">${idx+1} of ${plEntries.length}</div><div>Importing playlists&hellip;</div></div>`);
     }
     if(data.favorites)data.favorites.forEach(id=>favorites.add(String(id)));
+    loading(null);
     renderPlaylistNav();renderPlaylistGrid();renderSongList($('searchInput').value);saveState();
     let msg=`Imported ${count} playlist${count!==1?'s':''}`;
     if(missing)msg+=`<br><span style="font-size:11px;color:var(--text3)">${missing} song${missing!==1?'s':''} have no audio — re-add via Add Tracks</span>`;
     showMessage(msg,'OK');
-  }catch(err){showMessage('Failed to parse file','OK');}
+  }catch(err){loading(null);showMessage('Failed to parse file','OK');}
   e.target.value='';
 }

@@ -59,4 +59,6 @@ function switchView(view){
   updateSortIndicator();
   renderSongList($('searchInput').value);
   if(view==='home'){renderPlaylistGrid();}
+  const sl=$('songList');
+  if(sl){sl.classList.remove('fade-in');void sl.offsetWidth;sl.classList.add('fade-in');}
 }

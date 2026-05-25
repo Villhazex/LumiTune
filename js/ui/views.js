@@ -41,6 +41,7 @@ function renderPlaylistGrid(){
 }
 
 function renderSongList(filter=''){
+  showSkeleton();
   if(currentView!=='home')$('heroSection').style.display='none';
   if(currentView==='home')renderHome(filter);
   else if(currentView==='library')renderLibrary(filter);
