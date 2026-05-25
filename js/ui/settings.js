@@ -217,11 +217,15 @@ async function handleCreateEmptyPlaylist(){
 }
 
 function exportPlaylists(){
-  const data={version:1,exportedAt:new Date().toISOString(),playlists:{},favorites:[...favorites]};
+  const data={version:2,exportedAt:new Date().toISOString(),playlists:{},songs:{},favorites:[...favorites]};
   for(const[key,pl]of Object.entries(playlists)){
     if(DEFAULT_KEYS.includes(key))continue;
-    data.playlists[key]={name:pl.name,emoji:pl.emoji,color:pl.color,sub:pl.sub,songs:pl.songs.map(s=>({id:s.id,title:s.title,artist:s.artist,album:s.album||'',genre:s.genre||'',year:s.year||'',duration:s.duration,addedAt:s.addedAt||'',metadataEdited:!!s.metadataEdited,fileKey:s.fileKey||`file-${key}-${s.id}`,cover:s.cover||undefined}))};
+    data.playlists[key]={name:pl.name,emoji:pl.emoji,color:pl.color,sub:pl.sub,songs:pl.songs};
   }
+  Object.entries(songs).forEach(([id,s])=>{
+    const{file,...r}=s;
+    data.songs[id]=r;
+  });
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
@@ -236,15 +240,38 @@ async function importPlaylists(e){
     const text=await file.text();
     const data=JSON.parse(text);
     if(!data.version||!data.playlists)return showMessage('Invalid backup file','OK');
+    const isV1=data.version===1;
     let count=0,missing=0;
+    if(isV1&&data.songs){
+      Object.entries(data.songs).forEach(([id,s])=>{
+        if(!songs[id])songs[id]={...s};
+      });
+    }
     for(const[key,pl]of Object.entries(data.playlists)){
       if(playlists[key])continue;
-      const songs=(pl.songs||[]).map(s=>({id:s.id,title:s.title,artist:s.artist||'Unknown',album:s.album||'',genre:s.genre||'',year:s.year||'',duration:s.duration||'--:--',addedAt:s.addedAt||'',metadataEdited:!!s.metadataEdited,fileKey:s.fileKey||null,cover:s.cover||undefined}));
-      for(const s of songs){
-        if(s.fileKey){const f=await dbGet(s.fileKey).catch(()=>null);if(f){s.file=f;}else missing++;}
-        else missing++;
+      let songIds;
+      if(isV1){
+        songIds=(pl.songs||[]).map(s=>{
+          const sid=String(s.id);
+          if(!songs[sid]){
+            const fk=s.fileKey||`file-${key}-${sid}`;
+            songs[sid]={id:sid,title:s.title,artist:s.artist||'Unknown',album:s.album||'',genre:s.genre||'',year:s.year||'',duration:s.duration||'--:--',addedAt:s.addedAt||'',metadataEdited:!!s.metadataEdited,fileKey:fk,cover:s.cover||undefined};
+          }
+          return sid;
+        });
+      }else{
+        songIds=(pl.songs||[]).filter(id=>{
+          if(songs[id])return true;
+          missing++;
+          return false;
+        });
       }
-      playlists[key]={name:pl.name||'Untitled',emoji:pl.emoji||'📂',color:pl.color||'#D4522A',sub:pl.sub||`${pl.songs?.length||0} tracks`,songs};
+      for(const sid of songIds){
+        const s=songs[sid];
+        if(s&&s.fileKey){const f=await dbGet(s.fileKey).catch(()=>null);if(f){songs[sid]={...s,file:f};}else missing++;}
+        else if(s)missing++;
+      }
+      playlists[key]={name:pl.name||'Untitled',emoji:pl.emoji||'📂',color:pl.color||'#D4522A',sub:pl.sub||`${songIds.length} tracks`,songs:songIds};
       count++;
     }
     if(data.favorites)data.favorites.forEach(id=>favorites.add(String(id)));

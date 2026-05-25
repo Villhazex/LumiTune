@@ -53,13 +53,16 @@ function renderSongList(filter=''){
 
 function makeRow(song,origIdx,isActive,isLiked,plKey,showDel,extra){
   const num=isActive&&isPlaying?'▶':String(origIdx+1).padStart(2,'0');
-  const ref=songRefKey(plKey,origIdx);
-  const bulk='';
   const statusBadge=isActive
     ?`<span class="badge ${isPlaying?'badge-playing':'badge-paused'}"><span class="badge-dot"></span>${isPlaying?'Playing':'Paused'}</span>`
     :'';
+  const moreItems=`<button class="dropdown-item" data-qadd="${origIdx}" data-qpl="${plKey}">Add to queue</button>
+    <button class="dropdown-item" data-addpl="${origIdx}" data-addpl-pl="${plKey}">Add to playlist</button>
+    <button class="dropdown-item" data-movepl="${origIdx}" data-movepl-pl="${plKey}">Move to playlist</button>
+    <button class="dropdown-item" data-edit="${origIdx}" data-edit-pl="${plKey}">Edit metadata</button>
+    ${showDel?`<div class="dropdown-divider"></div><button class="dropdown-item danger" data-del="${origIdx}">Delete</button>`:''}`;
   return`<div class="track-row ${isActive?'active':''}" draggable="true" data-index="${origIdx}" data-playlist="${plKey}">
-    <div class="t-num ${isActive&&isPlaying?'playing':''}">${bulk}${isActive&&isPlaying?'<div class="eq-bars"><span></span><span></span><span></span></div>':num}</div>
+    <div class="t-num ${isActive&&isPlaying?'playing':''}">${isActive&&isPlaying?'<div class="eq-bars"><span></span><span></span><span></span></div>':num}</div>
     <div class="t-info">
       <span class="t-title">${song.title}</span>
       <span class="t-artist">${song.artist}${statusBadge?' ':''}${statusBadge}</span>
@@ -67,9 +70,10 @@ function makeRow(song,origIdx,isActive,isLiked,plKey,showDel,extra){
     <div class="t-extra">${extra}</div>
     <div class="t-actions">
       <button class="like-btn ${isLiked?'liked':''}" data-song-id="${song.id}">${isLiked?'★':'☆'}</button>
-      <button class="queue-btn-row" data-qadd="${origIdx}" data-qpl="${plKey}" title="Add to queue">↓</button>
-      <button class="edit-track-btn" data-edit="${origIdx}" data-edit-pl="${plKey}" title="Edit metadata">edit</button>
-      ${showDel?`<button class="del-btn" data-del="${origIdx}">×</button>`:''}
+      <div class="track-more-wrap">
+        <button class="track-more-btn" data-more="${origIdx}" title="More">⋮</button>
+        <div class="track-more-dropdown">${moreItems}</div>
+      </div>
     </div>
   </div>`;
 }
@@ -79,7 +83,10 @@ function renderHome(filter){
   if(filter){
     $('heroSection').style.display='none';
     const all=[];
-    Object.entries(playlists).forEach(([pk,pl])=>pl.songs.forEach((s,i)=>all.push({...s,playlistKey:pk,songIndex:i})));
+    Object.entries(playlists).forEach(([pk,pl])=>pl.songs.forEach((songId,i)=>{
+      const song=getSong(songId);
+      if(song)all.push({...song,playlistKey:pk,songIndex:i});
+    }));
     const filtered=all.filter(s=>s.title.toLowerCase().includes(filter.toLowerCase())||s.artist.toLowerCase().includes(filter.toLowerCase())||(playlists[s.playlistKey]?.name||'').toLowerCase().includes(filter.toLowerCase()));
     $('secTitle').textContent='Search Results';
     $('secCount').textContent=filtered.length+' tracks';
@@ -95,18 +102,19 @@ function renderHome(filter){
   }
   const pl=playlists[currentPlaylist];
   if(!pl){$('secTitle').textContent='Tracklist';$('secCount').textContent='0 tracks';$('songList').innerHTML='';$('heroSection').style.display='none';return;}
-  const songs=pl.songs;
+  const songIds=pl.songs;
   $('secTitle').textContent=pl.name;
-  $('secCount').textContent=songs.length+' tracks';
+  $('secCount').textContent=songIds.length+' tracks';
   $('breadcrumbTitle').textContent=pl.name;
   $('breadcrumbSub').textContent=pl.sub;
-  if(!songs.length){$('songList').innerHTML='';$('emptyState').style.display='block';$('heroSection').style.display='none';return;}
+  if(!songIds.length){$('songList').innerHTML='';$('emptyState').style.display='block';$('heroSection').style.display='none';return;}
   $('emptyState').style.display='none';
   const isCustom=!DEFAULT_KEYS.includes(currentPlaylist);
-  $('songList').innerHTML=songs.map(song=>{
-    const oi=songs.indexOf(song);
-    const isActive=oi===currentSongIndex&&currentPlaylist===currentPlaylistPlaying;
-    return makeRow(song,oi,isActive,favorites.has(String(song.id)),currentPlaylist,isCustom,song.duration);
+  $('songList').innerHTML=songIds.map((songId,i)=>{
+    const song=getSong(songId);
+    if(!song)return'';
+    const isActive=i===currentSongIndex&&currentPlaylist===currentPlaylistPlaying;
+    return makeRow(song,i,isActive,favorites.has(String(songId)),currentPlaylist,isCustom,song.duration);
   }).join('');
   updateHeroSection();
 }
@@ -115,7 +123,10 @@ function renderLibrary(filter){
   $('trackHeader').style.display='';
   if(filter){
     const all=[];
-    Object.entries(playlists).forEach(([pk,pl])=>pl.songs.forEach((s,i)=>all.push({...s,playlistKey:pk,songIndex:i})));
+    Object.entries(playlists).forEach(([pk,pl])=>pl.songs.forEach((songId,i)=>{
+      const song=getSong(songId);
+      if(song)all.push({...song,playlistKey:pk,songIndex:i});
+    }));
     const filtered=all.filter(s=>s.title.toLowerCase().includes(filter.toLowerCase())||s.artist.toLowerCase().includes(filter.toLowerCase())||(playlists[s.playlistKey]?.name||'').toLowerCase().includes(filter.toLowerCase()));
     $('secTitle').textContent='Library';$('secCount').textContent=filtered.length+' tracks';
     if(!filtered.length){$('songList').innerHTML='';$('emptyState').style.display='block';libraryOrder=null;return;}
@@ -129,7 +140,10 @@ function renderLibrary(filter){
   }
   if(!libraryOrder){
     libraryOrder=[];
-    Object.entries(playlists).forEach(([pk,pl])=>pl.songs.forEach((s,i)=>libraryOrder.push({...s,playlistKey:pk,songIndex:i})));
+    Object.entries(playlists).forEach(([pk,pl])=>pl.songs.forEach((songId,i)=>{
+      const song=getSong(songId);
+      if(song)libraryOrder.push({...song,playlistKey:pk,songIndex:i});
+    }));
   }
   $('secTitle').textContent='Library';$('secCount').textContent=libraryOrder.length+' tracks';
   if(!libraryOrder.length){$('songList').innerHTML='';$('emptyState').style.display='block';return;}
@@ -200,13 +214,14 @@ function getSmartSets(){
     mostPlayed:{name:'Most Played',sub:'Top tracks this month',songs:[...all].sort((a,b)=>(plays[String(b.id)]||0)-(plays[String(a.id)]||0)).filter(s=>(plays[String(s.id)]||0)>0).slice(0,50)},
     neverPlayed:{name:'Never Played',sub:'Tracks with no plays this month',songs:all.filter(s=>!plays[String(s.id)])},
     missingLyrics:{name:'Missing Lyrics',sub:'No custom or cached lyrics yet',songs:all.filter(s=>!userLyrics[String(s.id)]&&!cache[String(s.id)])},
-    favorites:{name:'Favorites',sub:'Liked tracks',songs:all.filter(s=>favorites.has(String(s.id)))}
+    looseSongs:{name:'Loose Songs',sub:'Tracks not in any playlist',songs:getLooseSongs()}
   };
 }
 
 function renderSmart(filter){
   const sets=getSmartSets();
   if(selectedSmart&&sets[selectedSmart]){
+    if(selectedSmart==='looseSongs'){renderLooseSongs(filter);return;}
     const smart=sets[selectedSmart];
     renderVirtualRows(smart.name,smart.sub,smart.songs,filter);
     return;
@@ -261,6 +276,7 @@ function renderBulkBar(songs){
     <button class="bulk-btn" data-bulk-action="clear">Clear</button>
     <span class="bulk-count">${selected} selected</span>
     <button class="bulk-btn" data-bulk-action="playlist" ${selected?'':'disabled'}>Add to playlist</button>
+    <button class="bulk-btn" data-bulk-action="move" ${selected?'':'disabled'}>Move to playlist</button>
     <button class="bulk-btn" data-bulk-action="favorite" ${selected?'':'disabled'}>Favorite</button>
     <button class="bulk-btn" data-bulk-action="queue" ${selected?'':'disabled'}>Queue</button>
     <button class="bulk-btn danger" data-bulk-action="delete" ${selected?'':'disabled'}>Delete</button>
@@ -270,7 +286,12 @@ function renderBulkBar(songs){
 function renderFavs(filter){
   $('trackHeader').style.display='';
   const favs=[];
-  Object.entries(playlists).forEach(([pk,pl])=>pl.songs.forEach((s,i)=>favorites.has(String(s.id))&&favs.push({...s,playlistKey:pk,songIndex:i})));
+  Object.entries(playlists).forEach(([pk,pl])=>pl.songs.forEach((songId,i)=>{
+    if(favorites.has(String(songId))){
+      const song=getSong(songId);
+      if(song)favs.push({...song,playlistKey:pk,songIndex:i});
+    }
+  }));
   const filtered=filter?favs.filter(s=>s.title.toLowerCase().includes(filter.toLowerCase())||s.artist.toLowerCase().includes(filter.toLowerCase())):favs;
   $('secTitle').textContent='Favourites';$('secCount').textContent=filtered.length+' tracks';
   $('breadcrumbTitle').textContent='Favourites';$('breadcrumbSub').textContent='Your liked tracks';
@@ -285,23 +306,40 @@ function renderFavs(filter){
   }).join('');
 }
 
+function renderLooseSongs(filter){
+  $('trackHeader').style.display='';
+  const loose=getLooseSongs();
+  const filtered=filter?loose.filter(s=>s.title.toLowerCase().includes(filter.toLowerCase())||s.artist.toLowerCase().includes(filter.toLowerCase())):loose;
+  $('secTitle').textContent='Loose Songs';$('secCount').textContent=filtered.length+' tracks';
+  $('breadcrumbTitle').textContent='Loose Songs';$('breadcrumbSub').textContent='Tracks not assigned to any playlist';
+  if(!filtered.length){
+    $('songList').innerHTML='<div style="padding:60px 20px;text-align:center;font-family:DM Mono,monospace;font-size:10px;color:#4A4844;letter-spacing:.08em;text-transform:uppercase">— all songs are in playlists —</div>';
+    $('emptyState').style.display='none';return;
+  }
+  $('emptyState').style.display='none';
+  $('songList').innerHTML=filtered.map((song,i)=>{
+    return makeRow(song,i,false,favorites.has(String(song.id)),'__loose',false,'Not in a playlist');
+  }).join('');
+}
+
 function renderPlaylists(filter){
   if(playlistsViewMode==='detail'&&currentPlaylist){
     const pl=playlists[currentPlaylist];
     if(!pl){playlistsViewMode='grid';renderPlaylists(filter);return;}
-    const songs=pl.songs;
+    const songIds=pl.songs;
     $('secTitle').textContent=pl.name;
-    $('secCount').textContent=songs.length+' tracks';
+    $('secCount').textContent=songIds.length+' tracks';
     $('breadcrumbTitle').textContent=pl.name;
     $('breadcrumbSub').textContent=pl.sub;
     $('trackHeader').style.display='';
-    if(!songs.length){$('songList').innerHTML='';$('emptyState').style.display='block';return;}
+    if(!songIds.length){$('songList').innerHTML='';$('emptyState').style.display='block';return;}
     $('emptyState').style.display='none';
     const isCustom=!DEFAULT_KEYS.includes(currentPlaylist);
-    $('songList').innerHTML=songs.map(song=>{
-      const oi=songs.indexOf(song);
-      const isActive=oi===currentSongIndex&&currentPlaylist===currentPlaylistPlaying;
-      return makeRow(song,oi,isActive,favorites.has(String(song.id)),currentPlaylist,isCustom,song.duration);
+    $('songList').innerHTML=songIds.map((songId,i)=>{
+      const song=getSong(songId);
+      if(!song)return'';
+      const isActive=i===currentSongIndex&&currentPlaylist===currentPlaylistPlaying;
+      return makeRow(song,i,isActive,favorites.has(String(songId)),currentPlaylist,isCustom,song.duration);
     }).join('');
     return;
   }
@@ -374,7 +412,7 @@ function updateHeroSection(){
     hs.style.display='none';return;
   }
   const pl=playlists[currentPlaylist];
-  const song=pl.songs[currentSongIndex];
+  const song=getSong(pl.songs[currentSongIndex]);
   $('heroTitle').textContent=song?song.title:'Select a track';
   $('heroArtist').textContent=song?song.artist:'Pick a song to start listening';
   const heroArt=$('heroArt');
@@ -422,7 +460,10 @@ function randomize(){
   if(currentView==='library'){
     if(!libraryOrder){
       libraryOrder=[];
-      Object.entries(playlists).forEach(([pk,pl])=>pl.songs.forEach((s,i)=>libraryOrder.push({...s,playlistKey:pk,songIndex:i})));
+      Object.entries(playlists).forEach(([pk,pl])=>pl.songs.forEach((songId,i)=>{
+        const song=getSong(songId);
+        if(song)libraryOrder.push({...song,playlistKey:pk,songIndex:i});
+      }));
     }
     if(libraryOrder.length<2)return;
     for(let i=libraryOrder.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[libraryOrder[i],libraryOrder[j]]=[libraryOrder[j],libraryOrder[i]];}
@@ -441,8 +482,10 @@ function toggleSort(col){
   if(!pl||!pl.songs.length)return;
   if(sortColumn===col)sortAsc=!sortAsc;
   else{sortColumn=col;sortAsc=true;}
-  const cur=currentSongIndex>=0?pl.songs[currentSongIndex]:null;
-  pl.songs.sort((a,b)=>{
+  const curId=currentSongIndex>=0?pl.songs[currentSongIndex]:null;
+  pl.songs.sort((aId,bId)=>{
+    const a=getSong(aId),b=getSong(bId);
+    if(!a||!b)return 0;
     let va=a[col],vb=b[col];
     if(col==='duration'){
       const pa=String(va).split(':'),pb=String(vb).split(':');
@@ -454,7 +497,7 @@ function toggleSort(col){
     const res=typeof va==='number'?va-vb:va.localeCompare(vb);
     return sortAsc?res:-res;
   });
-  if(cur)currentSongIndex=pl.songs.indexOf(cur);
+  if(curId)currentSongIndex=pl.songs.indexOf(curId);
   libraryOrder=null;updateSortIndicator();
   renderSongList($('searchInput').value);saveState();
 }
@@ -484,7 +527,7 @@ function updateUpNext(){
   if(queue.length){
     html+=queue.map((item,i)=>{
       const pl=playlists[item.playlistKey];
-      const song=pl?.songs[item.songIndex];
+      const song=getSong(pl?.songs[item.songIndex]);
       if(!song)return'';
       const cls=i==currentQueueIdx?'queue-item active':i<currentQueueIdx?'queue-item queue-history':'queue-item';
       const draggable=i>=currentQueueIdx?'draggable="true"':'';
@@ -515,7 +558,9 @@ function updateStats(){
   Object.entries(playlists).forEach(([key,pl])=>{
     const len=pl.songs.length;
     totalTracks+=len;
-    pl.songs.forEach(s=>{
+    pl.songs.forEach(songId=>{
+      const s=getSong(songId);
+      if(!s)return;
       const a=s.artist||'Unknown';
       artistCount[a]=(artistCount[a]||0)+1;
     });

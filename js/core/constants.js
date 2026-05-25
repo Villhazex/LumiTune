@@ -3,6 +3,7 @@ const DEFAULT_KEYS=[];
 const DEFAULT_PLAYLISTS={};
 
 let playlists={};
+let songs={};
 let audioPlayer=new Audio();
 let currentPlaylist='';
 let currentSongIndex=-1;

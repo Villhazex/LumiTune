@@ -32,6 +32,16 @@ function normalizeMeta(value){
   return String(value||'').trim().toLowerCase().replace(/\s+/g,' ');
 }
 
+function getSong(id){
+  return songs[String(id)]||null;
+}
+
+function getLooseSongs(){
+  const used=new Set();
+  Object.values(playlists).forEach(pl=>pl.songs.forEach(id=>used.add(String(id))));
+  return Object.values(songs).filter(s=>!used.has(String(s.id)));
+}
+
 function songLyricsCacheId(song){
   return String(song?.id||'');
 }
@@ -46,19 +56,13 @@ function parseSongRefKey(key){
 }
 
 function findSongById(id){
-  const sid=String(id);
-  for(const pl of Object.values(playlists)){
-    for(const song of pl.songs){
-      if(String(song.id)===sid)return song;
-    }
-  }
-  return null;
+  return getSong(id);
 }
 
 function findSongLocation(song){
   const sid=String(song?.id||'');
   for(const[playlistKey,pl]of Object.entries(playlists)){
-    const index=pl.songs.findIndex(s=>String(s.id)===sid);
+    const index=pl.songs.findIndex(id=>String(id)===sid);
     if(index>-1)return{playlistKey,index};
   }
   return null;
@@ -71,7 +75,10 @@ function playlistSongs(pl){
 function allLibrarySongs(){
   const all=[];
   Object.entries(playlists).forEach(([playlistKey,pl])=>{
-    playlistSongs(pl).forEach((song,songIndex)=>all.push({...song,playlistKey,songIndex}));
+    playlistSongs(pl).forEach((songId,songIndex)=>{
+      const song=getSong(songId);
+      if(song)all.push({...song,playlistKey,songIndex});
+    });
   });
   return all;
 }

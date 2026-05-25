@@ -16,10 +16,16 @@ function saveState(){
   for(const key of Object.keys(playlists)){
     if(DEFAULT_KEYS.includes(key))continue;
     const pl=playlists[key];
-    custom[key]={name:pl.name,emoji:pl.emoji,color:pl.color,sub:pl.sub,songs:pl.songs.map(s=>{const{file,...r}=s;return r;})};
+    custom[key]={name:pl.name,emoji:pl.emoji,color:pl.color,sub:pl.sub,songs:pl.songs};
   }
+  const songData={};
+  Object.entries(songs).forEach(([id,s])=>{
+    const{file,...r}=s;
+    songData[id]=r;
+  });
   try{
     localStorage.setItem('lumi-pl',JSON.stringify(custom));
+    localStorage.setItem('lumi-songs',JSON.stringify(songData));
     localStorage.setItem('lumi-fav',JSON.stringify([...favorites]));
     localStorage.setItem('lumi-vol',String(volume));
     localStorage.setItem('lumi-rep',String(repeatMode));
@@ -33,16 +39,46 @@ function saveState(){
 async function loadState(){
   try{
     const raw=localStorage.getItem('lumi-pl');
+    const songsRaw=localStorage.getItem('lumi-songs');
+    let migrated=false;
+    if(songsRaw){
+      const songData=JSON.parse(songsRaw);
+      for(const[id,s]of Object.entries(songData)){
+        const file=await dbGet(s.fileKey).catch(()=>null);
+        songs[id]=file?{...s,file,fileKey:s.fileKey}:{...s};
+      }
+    }
     if(raw){
       const custom=JSON.parse(raw);
       for(const[key,pl]of Object.entries(custom)){
-        const songs=[];
-        for(const s of pl.songs){
-          const fk=`file-${key}-${s.id}`;
-          const file=await dbGet(fk).catch(()=>null);
-          songs.push(file?{...s,file,fileKey:fk}:{...s});
+        if(Array.isArray(pl.songs)&&pl.songs.length>0&&typeof pl.songs[0]==='object'){
+          migrated=true;
+          const oldIds=[];
+          for(const s of pl.songs){
+            const sid=String(s.id);
+            if(!songs[sid]){
+              const fk=s.fileKey||`file-${key}-${sid}`;
+              const file=await dbGet(fk).catch(()=>null);
+              songs[sid]=file?{...s,file,fileKey:fk}:{...s};
+            }
+            oldIds.push(sid);
+          }
+          pl.songs=oldIds;
+        }else if(Array.isArray(pl.songs)&&pl.songs.length>0&&typeof pl.songs[0]==='string'){
+          if(!songsRaw){
+            for(const id of pl.songs){
+              if(!songs[id]){
+                const fk=`file-${key}-${id}`;
+                const file=await dbGet(fk).catch(()=>null);
+                songs[id]=file?{id,file,fileKey:fk}:{id};
+              }
+            }
+          }
         }
-        playlists[key]={...pl,songs};
+        playlists[key]={...pl};
+      }
+      if(migrated){
+        saveState();
       }
     }
     const fav=JSON.parse(localStorage.getItem('lumi-fav')||'[]');

@@ -26,8 +26,9 @@ function renderSearchDropdown(term){
   const matchPls=[];
   Object.entries(playlists).forEach(([pk,pl])=>{
     if(pl.name.toLowerCase().includes(ql))matchPls.push({key:pk,name:pl.name});
-    pl.songs.forEach((s,i)=>{
-      if(s.title.toLowerCase().includes(ql)||s.artist.toLowerCase().includes(ql))
+    pl.songs.forEach((songId,i)=>{
+      const s=getSong(songId);
+      if(s&&(s.title.toLowerCase().includes(ql)||s.artist.toLowerCase().includes(ql)))
         matchTracks.push({...s,playlistKey:pk,songIndex:i});
     });
   });

@@ -19,10 +19,12 @@ async function saveQueueToPlaylist(){
   const key='custom-'+Date.now();
   const songs=queue.map(item=>{
     const pl=playlists[item.playlistKey];
-    return pl?.songs[item.songIndex];
+    const songId=pl?.songs[item.songIndex];
+    const song=getSong(songId);
+    return song;
   }).filter(Boolean);
   if(!songs.length)return;
-  playlists[key]={name,emoji:'♫',color:'var(--accent)',sub:songs.length+' tracks',songs:songs.map(s=>({...s}))};
+  playlists[key]={name,emoji:'♫',color:'var(--accent)',sub:songs.length+' tracks',songs:songs.map(s=>String(s.id))};
   renderPlaylistNav();renderPlaylistGrid();saveState();
   const tab=document.querySelector('.panel-tab:nth-child(3)');
   if(tab)switchTab('stats',tab);
@@ -47,7 +49,7 @@ function renderQueue(){
       <div class="modal-msg">Up Next <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${remaining} left</span></div>
       <div class="queue-list">${queue.map((item,i)=>{
         const pl=playlists[item.playlistKey];
-        const song=pl?.songs[item.songIndex];
+        const song=getSong(pl?.songs[item.songIndex]);
         if(!song)return'';
         const cls=i==currentQueueIdx?'queue-item active':i<currentQueueIdx?'queue-item queue-history':'queue-item has-del';
       return`<div class="${cls}" draggable="true" data-qi="${i}">

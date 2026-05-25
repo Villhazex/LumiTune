@@ -111,8 +111,15 @@ function showPlaylistPicker(){
   });
 }
 function showMetadataEditor(playlistKey,index){
-  const pl=playlists[playlistKey];
-  const song=pl?.songs[index];
+  let song,pl;
+  if(playlistKey==='__loose'){
+    const loose=getLooseSongs();
+    song=loose[index];
+  }else{
+    pl=playlists[playlistKey];
+    const songId=pl?.songs[index];
+    song=getSong(songId);
+  }
   if(!song)return;
   const o=$('confirmOverlay');
   o.innerHTML=`<div class="modal-box metadata-box">

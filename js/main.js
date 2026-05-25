@@ -108,7 +108,7 @@ $('queueAllBtn')?.addEventListener('click',()=>{
   });
 $('repeatBtn').addEventListener('click',toggleRepeat);
 $('heroRepeatBtn')?.addEventListener('click',toggleRepeat);
-$('likeBtn').addEventListener('click',()=>{if(currentSongIndex!==-1)toggleFav(String(playlists[currentPlaylist].songs[currentSongIndex].id));});
+$('likeBtn').addEventListener('click',()=>{if(currentSongIndex!==-1)toggleFav(String(playlists[currentPlaylist].songs[currentSongIndex]));});
 $('progressBar').addEventListener('mousedown',e=>{isDraggingProgress=true;seekTo(e);});
 $('heroProgBar')?.addEventListener('mousedown',e=>{isDraggingProgress=true;seekHero(e);});
 $('volBar').addEventListener('mousedown',e=>{isDraggingVolume=true;setVol(e);});
@@ -418,17 +418,40 @@ $('songList').addEventListener('click',e=>{
   const bulk=e.target.closest('.bulk-check');if(bulk){if(bulk.checked)bulkSelected.add(bulk.dataset.bulk);else bulkSelected.delete(bulk.dataset.bulk);renderSongList($('searchInput').value);return;}
   const ren=e.target.closest('[data-rename]');if(ren){handleRename(ren.dataset.rename);return;}
   const del=e.target.closest('[data-delete]');if(del){handleDeletePlaylist(del.dataset.delete);return;}
-  const delt=e.target.closest('.del-btn');if(delt){handleDeleteTrack(parseInt(delt.dataset.del));return;}
   const like=e.target.closest('.like-btn');if(like){toggleFav(like.dataset.songId);return;}
-  const qadd=e.target.closest('.queue-btn-row');if(qadd){addToQueue(qadd.dataset.qpl,parseInt(qadd.dataset.qadd));return;}
-  const edit=e.target.closest('.edit-track-btn');if(edit){showMetadataEditor(edit.dataset.editPl,parseInt(edit.dataset.edit));return;}
+  const moreBtn=e.target.closest('.track-more-btn');
+  if(moreBtn){
+    e.stopPropagation();
+    const wrap=moreBtn.closest('.track-more-wrap');
+    const dd=wrap?.querySelector('.track-more-dropdown');
+    if(dd){
+      const wasOpen=dd.classList.contains('show');
+      document.querySelectorAll('.track-more-dropdown.show').forEach(d=>d.classList.remove('show'));
+      if(!wasOpen)dd.classList.add('show');
+    }
+    return;
+  }
+  document.querySelectorAll('.track-more-dropdown.show').forEach(d=>d.classList.remove('show'));
+  const qadd=e.target.closest('[data-qadd]');if(qadd){addToQueue(qadd.dataset.qpl,parseInt(qadd.dataset.qadd));return;}
+  const addpl=e.target.closest('[data-addpl]');if(addpl){handleAddToAnotherPlaylist(addpl.dataset.addplPl,parseInt(addpl.dataset.addpl));return;}
+  const movepl=e.target.closest('[data-movepl]');if(movepl){handleMoveToPlaylist(movepl.dataset.moveplPl,parseInt(movepl.dataset.movepl));return;}
+  const edit=e.target.closest('[data-edit]');if(edit){showMetadataEditor(edit.dataset.editPl,parseInt(edit.dataset.edit));return;}
+  const delTrack=e.target.closest('[data-del]');if(delTrack){handleDeleteTrack(parseInt(delTrack.dataset.del));return;}
    const artist=e.target.closest('[data-artist]');if(artist){recordNav();selectedArtist=artist.dataset.artist;currentView='artists';renderSongList($('searchInput').value);return;}
    const album=e.target.closest('[data-album]');if(album){recordNav();selectedAlbum=album.dataset.album;currentView='albums';renderSongList($('searchInput').value);return;}
    const smart=e.target.closest('[data-smart]');if(smart){recordNav();selectedSmart=smart.dataset.smart;currentView='smart';renderSongList($('searchInput').value);return;}
   const card=e.target.closest('.pl-card,.playlist-card');
   if(card){recordNav();playlistsViewMode='detail';switchPlaylist(card.dataset.playlist);return;}
   const row=e.target.closest('.track-row');
-   if(row&&row.dataset.index!==undefined)playSong(parseInt(row.dataset.index),row.dataset.playlist||currentPlaylist,true);
+   if(row&&row.dataset.index!==undefined){
+     const plKey=row.dataset.playlist||currentPlaylist;
+     if(plKey==='__loose'){showToast('⊕ Add this song to a playlist first');return;}
+     playSong(parseInt(row.dataset.index),plKey,true);
+   }
+});
+
+document.addEventListener('click',()=>{
+  document.querySelectorAll('.track-more-dropdown.show').forEach(d=>d.classList.remove('show'));
 });
 
 let dragTrackSource=null;

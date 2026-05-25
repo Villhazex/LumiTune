@@ -648,6 +648,24 @@ body {
 .t-actions button:hover { color: var(--accent); background: var(--accent-dim); }
 .t-actions .like-btn { font-size: 18px; padding: 6px 7px; }
 .t-actions .like-btn.liked { color: #E24B4A; }
+.track-more-wrap { position: relative; }
+.track-more-btn { font-size: 18px !important; padding: 6px 10px !important; letter-spacing: 0; }
+.track-more-dropdown {
+  position: absolute; right: 0; top: 100%; z-index: 100;
+  min-width: 160px; padding: 4px; margin-top: 4px;
+  background: var(--surface2); border: 1px solid var(--border-soft); border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4); opacity: 0; visibility: hidden;
+  transform: translateY(-4px); transition: opacity 0.12s, transform 0.12s, visibility 0.12s;
+}
+.track-more-dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+.track-more-dropdown .dropdown-item {
+  display: block; width: 100%; padding: 8px 12px; border: none; border-radius: 6px;
+  background: none; color: var(--text); font-size: 12px; font-family: 'DM Mono', monospace;
+  text-align: left; cursor: pointer; transition: background 0.1s;
+}
+.track-more-dropdown .dropdown-item:hover { background: var(--accent-dim); color: var(--accent); }
+.track-more-dropdown .dropdown-item.danger:hover { color: #E24B4A; background: rgba(226,75,74,0.1); }
+.track-more-dropdown .dropdown-divider { height: 1px; margin: 4px 8px; background: var(--border-soft); }
 .edit-track-btn {
   font-size: 11px !important;
   text-transform: uppercase;

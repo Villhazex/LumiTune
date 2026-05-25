@@ -52,7 +52,9 @@ async function playSong(index,playlistKey,addToQueue){
   currentSongIndex=index;
   currentPlaylistPlaying=currentPlaylist;
 
-  const song=songs[currentSongIndex];
+  const songId=playlists[currentPlaylist].songs[currentSongIndex];
+  const song=getSong(songId);
+  if(!song)return;
   if(!song.cover&&song.file){
     const cover=await extractCoverFromFile(song.file);
     if(cover){song.cover=cover;saveState();}
@@ -169,8 +171,8 @@ function toggleFav(id){
 }
 function updateLikeBtn(){
   if(currentSongIndex===-1)return;
-  const id=String(playlists[currentPlaylist].songs[currentSongIndex].id);
-  const liked=favorites.has(id);
+  const songId=String(playlists[currentPlaylist].songs[currentSongIndex]);
+  const liked=favorites.has(songId);
   $('likeBtn').classList.toggle('liked',liked);
   $('likeBtn').textContent=liked?'★':'☆';
 }
@@ -230,7 +232,11 @@ function seekToLyricTime(time){
   if(totalDuration<=0)return;
   currentPlaybackTime=time;
   if(currentAudioFile)audioPlayer.currentTime=time;
-  else simPlay(playlists[currentPlaylist]?.songs?.[currentSongIndex]?.duration);
+  else {
+    const songId=playlists[currentPlaylist]?.songs?.[currentSongIndex];
+    const song=getSong(songId);
+    simPlay(song?.duration);
+  }
   $('currentTime').textContent=fmt(time);
   const pct=(time/totalDuration)*100;
   $('progressFill').style.width=`${pct}%`;
