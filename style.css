@@ -1007,11 +1007,18 @@ body {
 }
 .karaoke-controls {
   display: flex;
-  align-items: center;
-  gap: 24px;
-  padding: 16px 24px;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 24px 16px;
   background: var(--surface);
   border-top: 1px solid var(--border-soft);
+}
+.karaoke-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  width: 100%;
 }
 .karaoke-row {
   display: flex;
@@ -1114,6 +1121,86 @@ body {
   min-width: 48px;
   text-align: center;
 }
+
+.karaoke-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+.karaoke-time {
+  font-size: 11px;
+  color: var(--text-dim);
+  min-width: 36px;
+  text-align: center;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.04em;
+}
+.karaoke-prog-track {
+  flex: 1;
+  height: 3px;
+  background: rgba(255,255,255,0.12);
+  cursor: pointer;
+  position: relative;
+  border-radius: 2px;
+  transition: height 0.12s;
+}
+.karaoke-prog-track:hover { height: 5px; }
+.karaoke-prog-fill {
+  height: 100%;
+  background: var(--accent);
+  position: relative;
+  border-radius: 2px;
+  pointer-events: none;
+}
+.karaoke-prog-fill::after {
+  content: '';
+  position: absolute;
+  right: -4px;
+  top: -2.5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.karaoke-prog-track:hover .karaoke-prog-fill::after { opacity: 1; }
+.karaoke-btns {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.karaoke-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  border-radius: 7px;
+  transition: color 0.12s, background 0.12s;
+  font-family: 'DM Mono', monospace;
+}
+.karaoke-btn:hover { color: var(--text); background: rgba(255,255,255,0.08); }
+.karaoke-btn:active { transform: scale(0.92); }
+.karaoke-play-btn {
+  width: 42px !important;
+  height: 42px !important;
+  background: var(--accent) !important;
+  color: #0e0c0a !important;
+  border-radius: 11px !important;
+  font-size: 16px !important;
+  box-shadow: 0 4px 20px rgba(232,119,58,0.35);
+  margin: 0 4px;
+}
+.karaoke-play-btn:hover { opacity: 0.88; color: #0e0c0a !important; background: var(--accent) !important; }
+.karaoke-play-btn:active { transform: scale(0.92); }
 
 /* Karaoke backgrounds */
 .karaoke-container.bg-dark { background: #000; }

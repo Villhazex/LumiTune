@@ -189,6 +189,9 @@ document.addEventListener('mouseup',()=>{isDraggingProgress=false;isDraggingVolu
       applyKaraokeFontSize();
       const cbs=$('karaokeBgOpts');
       if(cbs)cbs.querySelector('.karaoke-opt.active')?.click();
+      const kct=$('karaokeCurrentTime');if(kct)kct.textContent=$('currentTime').textContent;
+      const ktt=$('karaokeTotalTime');if(ktt)ktt.textContent=$('totalTime').textContent;
+      const kpf=$('karaokeProgressFill');if(kpf)kpf.style.width=$('progressFill').style.width;
     }
   });
   function applyKaraokeFontSize(){
@@ -249,6 +252,26 @@ document.addEventListener('mouseup',()=>{isDraggingProgress=false;isDraggingVolu
     line.classList.add('pulse');
     seekToLyricTime(lyricLines[idx].time+currentLyricOffset);
   });
+
+  $('karaokePrevBtn')?.addEventListener('click',playPrev);
+  $('karaokeNextBtn')?.addEventListener('click',playNext);
+  $('karaokePlayBtn')?.addEventListener('click',togglePlay);
+
+  function seekKaraoke(e){
+    const track=$('karaokeProgressBar');
+    if(!track)return;
+    const rect=track.getBoundingClientRect();
+    const pct=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
+    currentPlaybackTime=pct*totalDuration;
+    $('karaokeProgressFill').style.width=`${pct*100}%`;
+    $('karaokeCurrentTime').textContent=fmt(currentPlaybackTime);
+    $('progressFill').style.width=`${pct*100}%`;
+    $('currentTime').textContent=fmt(currentPlaybackTime);
+    updateHeroProgress();
+    if(currentAudioFile)audioPlayer.currentTime=currentPlaybackTime;
+    lastTrackedPos=currentPlaybackTime;
+  }
+  $('karaokeProgressBar')?.addEventListener('click',seekKaraoke);
 
    let dragSourceIdx=null;
   const ov=$('confirmOverlay');

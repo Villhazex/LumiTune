@@ -98,22 +98,22 @@ function playReal(file,song){
   audioPlayer.src=URL.createObjectURL(file);
   audioPlayer.volume=isMuted?0:volume;
   audioPlayer.play().catch(()=>{});
-  audioPlayer.onloadedmetadata=()=>{totalDuration=audioPlayer.duration;$('totalTime').textContent=fmt(totalDuration);$('heroTotalTime').textContent=fmt(totalDuration);song.duration=fmt(totalDuration);const activeRow=$('songList')?.querySelector('.track-row.active');if(activeRow){const extra=activeRow.querySelector('.t-extra');if(extra)extra.textContent=song.duration;}};
-  audioPlayer.ontimeupdate=()=>{if(!isDraggingProgress){currentPlaybackTime=audioPlayer.currentTime;if(isPlaying){const delta=currentPlaybackTime-lastTrackedPos;if(delta>0&&delta<5){totalPlayTime+=delta;sessionPlayTime+=delta;}}lastTrackedPos=currentPlaybackTime;updateLyricHighlight(currentPlaybackTime);$('currentTime').textContent=fmt(currentPlaybackTime);$('progressFill').style.width=`${(currentPlaybackTime/totalDuration)*100}%`;updateHeroProgress();}};
+  audioPlayer.onloadedmetadata=()=>{totalDuration=audioPlayer.duration;$('totalTime').textContent=fmt(totalDuration);$('heroTotalTime').textContent=fmt(totalDuration);const ktt=$('karaokeTotalTime');if(ktt)ktt.textContent=fmt(totalDuration);song.duration=fmt(totalDuration);const activeRow=$('songList')?.querySelector('.track-row.active');if(activeRow){const extra=activeRow.querySelector('.t-extra');if(extra)extra.textContent=song.duration;}};
+  audioPlayer.ontimeupdate=()=>{if(!isDraggingProgress){currentPlaybackTime=audioPlayer.currentTime;if(isPlaying){const delta=currentPlaybackTime-lastTrackedPos;if(delta>0&&delta<5){totalPlayTime+=delta;sessionPlayTime+=delta;}}lastTrackedPos=currentPlaybackTime;updateLyricHighlight(currentPlaybackTime);$('currentTime').textContent=fmt(currentPlaybackTime);$('progressFill').style.width=`${(currentPlaybackTime/totalDuration)*100}%`;const kct=$('karaokeCurrentTime');if(kct)kct.textContent=fmt(currentPlaybackTime);const kpf=$('karaokeProgressFill');if(kpf)kpf.style.width=`${(currentPlaybackTime/totalDuration)*100}%`;updateHeroProgress();}};
   audioPlayer.onended=handleEnd;
 }
 
 function simPlay(durStr){
   clearInterval(playbackInterval);
-  if(!durStr||durStr==='--:--'){totalDuration=0;$('totalTime').textContent='--:--';$('currentTime').textContent='0:00';$('progressFill').style.width='0%';updateHeroProgress();return;}
+  if(!durStr||durStr==='--:--'){totalDuration=0;$('totalTime').textContent='--:--';$('currentTime').textContent='0:00';$('progressFill').style.width='0%';const kct=$('karaokeCurrentTime');if(kct)kct.textContent='0:00';const kpf=$('karaokeProgressFill');if(kpf)kpf.style.width='0%';updateHeroProgress();return;}
   const p=durStr.split(':');
-  if(p.length<2||isNaN(parseInt(p[0]))||isNaN(parseInt(p[1]))){totalDuration=0;$('currentTime').textContent='0:00';$('progressFill').style.width='0%';updateHeroProgress();return;}
+  if(p.length<2||isNaN(parseInt(p[0]))||isNaN(parseInt(p[1]))){totalDuration=0;$('currentTime').textContent='0:00';$('progressFill').style.width='0%';const kct=$('karaokeCurrentTime');if(kct)kct.textContent='0:00';const kpf=$('karaokeProgressFill');if(kpf)kpf.style.width='0%';updateHeroProgress();return;}
   totalDuration=parseInt(p[0])*60+parseInt(p[1]);
   currentPlaybackTime=0;
-  $('totalTime').textContent=durStr;$('currentTime').textContent='0:00';$('progressFill').style.width='0%';updateHeroProgress();
+  $('totalTime').textContent=durStr;$('currentTime').textContent='0:00';$('progressFill').style.width='0%';const ktt=$('karaokeTotalTime');if(ktt)ktt.textContent=durStr;const kct=$('karaokeCurrentTime');if(kct)kct.textContent='0:00';const kpf=$('karaokeProgressFill');if(kpf)kpf.style.width='0%';updateHeroProgress();
   playbackInterval=setInterval(()=>{
-    if(isPlaying){currentPlaybackTime+=0.1;totalPlayTime+=0.1;sessionPlayTime+=0.1;updateLyricHighlight(currentPlaybackTime);if(currentPlaybackTime>=totalDuration){$('currentTime').textContent=fmt(totalDuration);$('progressFill').style.width='100%';updateHeroProgress();handleEnd();return;}
-    $('currentTime').textContent=fmt(currentPlaybackTime);$('progressFill').style.width=`${(currentPlaybackTime/totalDuration)*100}%`;updateHeroProgress();
+    if(isPlaying){currentPlaybackTime+=0.1;totalPlayTime+=0.1;sessionPlayTime+=0.1;updateLyricHighlight(currentPlaybackTime);if(currentPlaybackTime>=totalDuration){$('currentTime').textContent=fmt(totalDuration);$('progressFill').style.width='100%';const kct=$('karaokeCurrentTime');if(kct)kct.textContent=fmt(totalDuration);const kpf=$('karaokeProgressFill');if(kpf)kpf.style.width='100%';updateHeroProgress();handleEnd();return;}
+    $('currentTime').textContent=fmt(currentPlaybackTime);$('progressFill').style.width=`${(currentPlaybackTime/totalDuration)*100}%`;const kct=$('karaokeCurrentTime');if(kct)kct.textContent=fmt(currentPlaybackTime);const kpf=$('karaokeProgressFill');if(kpf)kpf.style.width=`${(currentPlaybackTime/totalDuration)*100}%`;updateHeroProgress();
 }},100);
 }
 
@@ -160,6 +160,8 @@ function updatePlayBtn(){
   $('pauseIcon').style.display=isPlaying?'inline':'none';
   $('heroPlayIcon').style.display=isPlaying?'none':'inline';
   $('heroPauseIcon').style.display=isPlaying?'inline':'none';
+  const kpi=$('karaokePlayIcon');if(kpi)kpi.style.display=isPlaying?'none':'inline';
+  const kpa=$('karaokePauseIcon');if(kpa)kpa.style.display=isPlaying?'inline':'none';
 }
 function toggleShuffle(){isShuffle=!isShuffle;$('shuffleBtn').classList.toggle('active',isShuffle);const hs=$('heroShuffleBtn');if(hs)hs.classList.toggle('active',isShuffle);saveState();showToast('Shuffle '+(isShuffle?'On':'Off'));}
 function toggleRepeat(){repeatMode=(repeatMode+1)%3;$('repeatBtn').classList.toggle('active',repeatMode>0);$('repeatBtn').textContent=repeatMode===2?'↺¹':'↺';const hr=$('heroRepeatBtn');if(hr){hr.classList.toggle('active',repeatMode>0);hr.textContent=repeatMode===2?'↺¹':'↺';}saveState();const labels=['↺ Repeat Off','↺ Repeat All','↺¹ Repeat One'];showToast(labels[repeatMode]);}
@@ -182,6 +184,8 @@ function seekTo(e){
   currentPlaybackTime=pct*totalDuration;
   $('progressFill').style.width=`${pct*100}%`;
   $('currentTime').textContent=fmt(currentPlaybackTime);
+  const kpf=$('karaokeProgressFill');if(kpf)kpf.style.width=`${pct*100}%`;
+  const kct=$('karaokeCurrentTime');if(kct)kct.textContent=fmt(currentPlaybackTime);
   const hf=$('heroProgFill');if(hf)hf.style.width=`${pct*100}%`;
   const hc=$('heroCurrentTime');if(hc)hc.textContent=fmt(currentPlaybackTime);
   if(currentAudioFile)audioPlayer.currentTime=currentPlaybackTime;
@@ -196,6 +200,8 @@ function seekHero(e){
   $('heroCurrentTime').textContent=fmt(currentPlaybackTime);
   $('progressFill').style.width=`${pct*100}%`;
   $('currentTime').textContent=fmt(currentPlaybackTime);
+  const kpf=$('karaokeProgressFill');if(kpf)kpf.style.width=`${pct*100}%`;
+  const kct=$('karaokeCurrentTime');if(kct)kct.textContent=fmt(currentPlaybackTime);
   if(currentAudioFile)audioPlayer.currentTime=currentPlaybackTime;
   lastTrackedPos=currentPlaybackTime;
 }
@@ -240,6 +246,8 @@ function seekToLyricTime(time){
   $('currentTime').textContent=fmt(time);
   const pct=(time/totalDuration)*100;
   $('progressFill').style.width=`${pct}%`;
+  const kpf=$('karaokeProgressFill');if(kpf)kpf.style.width=`${pct}%`;
+  const kct=$('karaokeCurrentTime');if(kct)kct.textContent=fmt(time);
   updateHeroProgress();
   updateLyricHighlight(time);
 }
