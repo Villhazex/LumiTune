@@ -1123,8 +1123,8 @@ body[data-theme="mecha"] .recording-cancel:hover { background: rgba(232,50,50,0.
 
 /* ── SETTINGS PAGE ── */
 body[data-theme="mecha"] .settings-page {
-  max-width: 680px; width: 94%; padding: 0;
-  height: min(80vh, 620px); display: flex; flex-direction: column;
+  max-width: 1075px; width: 94%; padding: 0;
+  height: min(85vh, 875px); display: flex; flex-direction: column;
   overflow: hidden;
 }
 body[data-theme="mecha"] .settings-page-header {

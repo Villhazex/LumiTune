@@ -1107,8 +1107,8 @@ body[data-theme="blackwhite"] .settings-box { max-width: 420px; }
 body[data-theme="blackwhite"] .settings-grid { display: grid !important; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
 
 body[data-theme="blackwhite"] .settings-page {
-  max-width: 680px; width: 94%; padding: 0;
-  height: min(80vh, 620px); display: flex; flex-direction: column;
+  max-width: 1075px; width: 94%; padding: 0;
+  height: min(85vh, 875px); display: flex; flex-direction: column;
   overflow: hidden;
   background: #0a0a0a;
   border: 1px solid #2a2a2a;

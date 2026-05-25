@@ -1089,8 +1089,8 @@ body[data-theme="soft-pastel"] .toast-notif {
 
 /* ── SETTINGS ── */
 body[data-theme="soft-pastel"] .settings-page {
-  max-width: 680px; width: 94%; padding: 0;
-  height: min(80vh, 620px); display: flex; flex-direction: column;
+  max-width: 1075px; width: 94%; padding: 0;
+  height: min(85vh, 875px); display: flex; flex-direction: column;
   overflow: hidden;
   background: rgba(255,255,255,0.92); backdrop-filter: blur(20px);
   border-radius: 20px; border: 2px solid var(--border);
