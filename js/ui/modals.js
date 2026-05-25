@@ -1,0 +1,240 @@
+function showConfirm(msg){
+  return new Promise(resolve=>{
+    const o=$('confirmOverlay');
+    o.innerHTML=`<div class="modal-box">
+      <div class="modal-msg">${msg}</div>
+      <div class="modal-actions">
+        <button class="modal-btn" id="mc">Cancel</button>
+        <button class="modal-btn modal-ok" id="mo">Delete</button>
+      </div>
+    </div>`;
+    o.style.display='flex';
+    const close=r=>{o.style.display='none';resolve(r);};
+    const kh=e=>{if(e.key==='Escape')close(false);};
+    document.addEventListener('keydown',kh);
+    $('mc').onclick=()=>{document.removeEventListener('keydown',kh);close(false);};
+    $('mo').onclick=()=>{document.removeEventListener('keydown',kh);close(true);};
+  });
+}
+function showInput(label,def){
+  return new Promise(resolve=>{
+    const o=$('confirmOverlay');
+    o.innerHTML=`<div class="modal-box">
+      <div class="modal-msg">${label}</div>
+      <input type="text" class="modal-input" id="mi" value="${def||''}">
+      <div class="modal-actions">
+        <button class="modal-btn" id="mc">Cancel</button>
+        <button class="modal-btn modal-ok" id="mo">Create</button>
+      </div>
+    </div>`;
+    o.style.display='flex';
+    const inp=$('mi');inp.focus();inp.select();
+    const close=r=>{o.style.display='none';resolve(r);};
+    const kh=e=>{if(e.key==='Escape')close(null);if(e.key==='Enter')$('mo').click();};
+    document.addEventListener('keydown',kh);
+    $('mc').onclick=()=>{document.removeEventListener('keydown',kh);close(null);};
+    $('mo').onclick=()=>{document.removeEventListener('keydown',kh);close($('mi').value.trim()||null);};
+  });
+}
+function showMessage(msg,btn){
+  return new Promise(resolve=>{
+    const o=$('confirmOverlay');
+    o.innerHTML=`<div class="modal-box" style="text-align:center">
+      <div class="modal-msg">${msg}</div>
+      ${btn?`<div class="modal-actions" style="justify-content:center"><button class="modal-btn modal-ok" id="mo">${btn}</button></div>`:''}
+    </div>`;
+    o.style.display='flex';
+    const close=r=>{o.style.display='none';resolve(r);};
+    const kh=e=>{if(e.key==='Enter'||e.key==='Escape')$('mo')?.click();};
+    document.addEventListener('keydown',kh);
+    const b=$('mo');
+    if(b)b.onclick=()=>{document.removeEventListener('keydown',kh);close(true);};
+    else close(true);
+  });
+}
+function showRename(current){
+  return new Promise(resolve=>{
+    const o=$('confirmOverlay');
+    o.innerHTML=`<div class="modal-box">
+      <div class="modal-msg">Rename playlist</div>
+      <input type="text" class="modal-input" id="mi" value="${current||''}">
+      <div class="modal-actions">
+        <button class="modal-btn" id="mc">Cancel</button>
+        <button class="modal-btn modal-ok" id="mo">Save</button>
+      </div>
+    </div>`;
+    o.style.display='flex';
+    const inp=$('mi');inp.focus();inp.select();
+    const close=r=>{o.style.display='none';resolve(r);};
+    const kh=e=>{if(e.key==='Escape')close(null);if(e.key==='Enter')$('mo').click();};
+    document.addEventListener('keydown',kh);
+    $('mc').onclick=()=>{document.removeEventListener('keydown',kh);close(null);};
+    $('mo').onclick=()=>{document.removeEventListener('keydown',kh);close($('mi').value.trim()||null);};
+  });
+}
+function showLoading(msg){
+  const o=$('confirmOverlay');
+  o.innerHTML=`<div class="modal-box" style="text-align:center">
+    <div class="modal-msg">${msg}</div>
+  </div>`;
+  o.style.display='flex';
+  return text=>{
+    if(text===null){o.style.display='none';return;}
+    const m=o.querySelector('.modal-msg');
+    if(m)m.innerHTML=text;
+  };
+}
+function showPlaylistPicker(){
+  return new Promise(resolve=>{
+    const o=$('confirmOverlay');
+    const keys=Object.keys(playlists);
+    o.innerHTML=`<div class="modal-box picker-box">
+      <div class="modal-msg">Choose a playlist</div>
+      <div class="picker-list">${keys.map(k=>{
+        const pl=playlists[k];
+        return`<button class="picker-item" data-pick="${esc(k)}">
+          <span class="picker-emoji">${esc(pl.emoji||'♫')}</span>
+          <span class="picker-name">${esc(pl.name)}</span>
+          <span class="picker-count">${pl.songs.length} tracks</span>
+        </button>`;
+      }).join('')}</div>
+      <div class="modal-actions">
+        <button class="modal-btn" id="mc">Cancel</button>
+      </div>
+    </div>`;
+    o.style.display='flex';
+    const close=r=>{o.style.display='none';resolve(r);};
+    const kh=e=>{if(e.key==='Escape')close(null);};
+    document.addEventListener('keydown',kh);
+    o.querySelectorAll('.picker-item').forEach(el=>el.addEventListener('click',()=>{document.removeEventListener('keydown',kh);close(el.dataset.pick);}));
+    $('mc').onclick=()=>{document.removeEventListener('keydown',kh);close(null);};
+  });
+}
+function showMetadataEditor(playlistKey,index){
+  const pl=playlists[playlistKey];
+  const song=pl?.songs[index];
+  if(!song)return;
+  const o=$('confirmOverlay');
+  o.innerHTML=`<div class="modal-box metadata-box">
+    <div class="modal-msg">Edit Metadata</div>
+    <label class="modal-field-label" for="metaTitle">Title</label>
+    <input type="text" class="modal-input" id="metaTitle" value="${esc(song.title)}">
+    <label class="modal-field-label" for="metaArtist">Artist</label>
+    <input type="text" class="modal-input" id="metaArtist" value="${esc(song.artist)}">
+    <div class="metadata-grid">
+      <div>
+        <label class="modal-field-label" for="metaAlbum">Album</label>
+        <input type="text" class="modal-input" id="metaAlbum" value="${esc(song.album||'')}">
+      </div>
+      <div>
+        <label class="modal-field-label" for="metaGenre">Genre</label>
+        <input type="text" class="modal-input" id="metaGenre" value="${esc(song.genre||'')}">
+      </div>
+      <div>
+        <label class="modal-field-label" for="metaYear">Year</label>
+        <input type="text" class="modal-input" id="metaYear" value="${esc(song.year||'')}">
+      </div>
+      <div>
+        <label class="modal-field-label" for="metaDuration">Duration</label>
+        <input type="text" class="modal-input" id="metaDuration" value="${esc(song.duration||'--:--')}">
+      </div>
+    </div>
+    <div class="modal-hint">Changes update LumiTune's library metadata. The original audio file is left untouched.</div>
+    <div class="modal-actions">
+      <button class="modal-btn" id="mc">Cancel</button>
+      <button class="modal-btn modal-ok" id="mo">Save</button>
+    </div>
+  </div>`;
+  o.style.display='flex';
+  const close=()=>{o.style.display='none';};
+  const save=()=>{
+    const oldTitle=song.title,oldArtist=song.artist;
+    song.title=$('metaTitle').value.trim()||oldTitle||'Unknown';
+    song.artist=$('metaArtist').value.trim()||'Unknown';
+    song.album=$('metaAlbum').value.trim();
+    song.genre=$('metaGenre').value.trim();
+    song.year=$('metaYear').value.trim();
+    song.duration=$('metaDuration').value.trim()||'--:--';
+    song.metadataEdited=true;
+    if(normalizeMeta(oldTitle)!==normalizeMeta(song.title)||normalizeMeta(oldArtist)!==normalizeMeta(song.artist)){
+      deleteCachedLyrics(song);
+    }
+    if(playlistKey===currentPlaylist&&index===currentSongIndex){
+      $('trackTitle').textContent=song.title;
+      $('trackArtist').textContent=song.artist;
+      updateHeroSection();
+      fetchLyricsForSong(song);
+    }
+    libraryOrder=null;
+    renderSongList($('searchInput').value);
+    renderPlaylistGrid();
+    saveState();
+    close();
+  };
+  const kh=e=>{if(e.key==='Escape'){document.removeEventListener('keydown',kh);close();}if(e.key==='Enter'){e.preventDefault();document.removeEventListener('keydown',kh);save();}};
+  document.addEventListener('keydown',kh);
+  $('metaTitle').focus();$('metaTitle').select();
+  $('mc').onclick=()=>{document.removeEventListener('keydown',kh);close();};
+  $('mo').onclick=()=>{document.removeEventListener('keydown',kh);save();};
+  o.onclick=e=>{if(e.target===o){document.removeEventListener('keydown',kh);close();}};
+}
+function showSourcePicker(){
+  return new Promise(resolve=>{
+    const o=$('confirmOverlay');
+    o.innerHTML=`<div class="modal-box source-picker-box">
+      <div class="modal-msg">Add Track From</div>
+      <div class="source-picker-grid">
+        <button class="source-option" data-source="local">
+          <span class="source-icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 4a1 1 0 0 1 1-1h4l2 2h5a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4z"/></svg></span>
+          <span class="source-label">Local</span>
+          <span class="source-desc">Browse files</span>
+        </button>
+        <button class="source-option" data-source="youtube">
+          <span class="source-icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 2l10 6-10 6z"/></svg></span>
+          <span class="source-label">YouTube</span>
+          <span class="source-desc">Download audio</span>
+        </button>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn" id="mc">Cancel</button>
+      </div>
+    </div>`;
+    o.style.display='flex';
+    const close=r=>{o.style.display='none';resolve(r);};
+    const kh=e=>{if(e.key==='Escape')close(null);};
+    document.addEventListener('keydown',kh);
+    o.onclick=e=>{if(e.target===o){document.removeEventListener('keydown',kh);close(null);}};
+    o.querySelectorAll('.source-option').forEach(btn=>{btn.onclick=()=>{document.removeEventListener('keydown',kh);close(btn.dataset.source);};});
+    $('mc').onclick=()=>{document.removeEventListener('keydown',kh);close(null);};
+  });
+}
+function showNewPlaylistPicker(){
+  return new Promise(resolve=>{
+    const o=$('confirmOverlay');
+    o.innerHTML=`<div class="modal-box source-picker-box">
+      <div class="modal-msg">New Playlist</div>
+      <div class="source-picker-grid">
+        <button class="source-option" data-source="empty">
+          <span class="source-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg></span>
+          <span class="source-label">Empty</span>
+          <span class="source-desc">Create blank playlist</span>
+        </button>
+        <button class="source-option" data-source="songs">
+          <span class="source-icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 4a1 1 0 0 1 1-1h4l2 2h5a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4z"/></svg></span>
+          <span class="source-label">Add Songs</span>
+          <span class="source-desc">Select audio files</span>
+        </button>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn" id="mc">Cancel</button>
+      </div>
+    </div>`;
+    o.style.display='flex';
+    const close=r=>{o.style.display='none';resolve(r);};
+    const kh=e=>{if(e.key==='Escape')close(null);};
+    document.addEventListener('keydown',kh);
+    o.onclick=e=>{if(e.target===o){document.removeEventListener('keydown',kh);close(null);}};
+    o.querySelectorAll('.source-option').forEach(btn=>{btn.onclick=()=>{document.removeEventListener('keydown',kh);close(btn.dataset.source);};});
+    $('mc').onclick=()=>{document.removeEventListener('keydown',kh);close(null);};
+  });
+}
