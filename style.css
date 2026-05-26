@@ -1016,9 +1016,22 @@ body {
 .karaoke-controls-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 24px;
+  gap: 16px;
   width: 100%;
+}
+.karaoke-controls-left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: flex-start;
+}
+.karaoke-controls-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-end;
 }
 .karaoke-row {
   display: flex;
@@ -1087,7 +1100,6 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-left: auto;
 }
 .karaoke-offset-opts {
   display: flex;
@@ -1167,6 +1179,7 @@ body {
 }
 .karaoke-prog-track:hover .karaoke-prog-fill::after { opacity: 1; }
 .karaoke-btns {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;

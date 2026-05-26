@@ -335,6 +335,21 @@
       <span class="karaoke-time" id="karaokeTotalTime">0:00</span>
     </div>
     <div class="karaoke-controls-row">
+      <div class="karaoke-controls-left">
+        <div class="karaoke-row">
+          <span class="karaoke-label">Font</span>
+          <input type="range" class="karaoke-slider" id="karaokeFontSlider" min="24" max="80" value="40">
+          <span class="karaoke-value" id="karaokeFontVal">40px</span>
+        </div>
+        <div class="karaoke-row">
+          <span class="karaoke-label">Background</span>
+          <div class="karaoke-opts" id="karaokeBgOpts">
+            <button class="karaoke-opt" data-bg="dark">Dark</button>
+            <button class="karaoke-opt active" data-bg="dim">Dim</button>
+            <button class="karaoke-opt" data-bg="blur">Blur</button>
+          </div>
+        </div>
+      </div>
       <div class="karaoke-btns">
         <button class="karaoke-btn" id="karaokePrevBtn" title="Prev">⏮</button>
         <button class="karaoke-btn karaoke-play-btn" id="karaokePlayBtn">
@@ -343,27 +358,16 @@
         </button>
         <button class="karaoke-btn" id="karaokeNextBtn" title="Next">⏭</button>
       </div>
-      <div class="karaoke-row">
-        <span class="karaoke-label">Font</span>
-        <input type="range" class="karaoke-slider" id="karaokeFontSlider" min="24" max="80" value="40">
-        <span class="karaoke-value" id="karaokeFontVal">40px</span>
-      </div>
-      <div class="karaoke-row">
-        <span class="karaoke-label">Background</span>
-        <div class="karaoke-opts" id="karaokeBgOpts">
-          <button class="karaoke-opt" data-bg="dark">Dark</button>
-          <button class="karaoke-opt active" data-bg="dim">Dim</button>
-          <button class="karaoke-opt" data-bg="blur">Blur</button>
-        </div>
-      </div>
-      <div class="karaoke-offset-area">
-        <span class="karaoke-label">Offset</span>
-        <div class="karaoke-offset-opts">
-          <button class="offset-popover-btn karaoke-offset-btn" id="karaokeOffsetMinusBig" title="-0.5s">◀◀</button>
-          <button class="offset-popover-btn karaoke-offset-btn" id="karaokeOffsetMinus" title="-0.1s">◀</button>
-          <span class="karaoke-offset-val" id="karaokeOffsetLabel">+0.00s</span>
-          <button class="offset-popover-btn karaoke-offset-btn" id="karaokeOffsetPlus" title="+0.1s">▶</button>
-          <button class="offset-popover-btn karaoke-offset-btn" id="karaokeOffsetPlusBig" title="+0.5s">▶▶</button>
+      <div class="karaoke-controls-right">
+        <div class="karaoke-offset-area">
+          <span class="karaoke-label">Offset</span>
+          <div class="karaoke-offset-opts">
+            <button class="offset-popover-btn karaoke-offset-btn" id="karaokeOffsetMinusBig" title="-0.5s">◀◀</button>
+            <button class="offset-popover-btn karaoke-offset-btn" id="karaokeOffsetMinus" title="-0.1s">◀</button>
+            <span class="karaoke-offset-val" id="karaokeOffsetLabel">+0.00s</span>
+            <button class="offset-popover-btn karaoke-offset-btn" id="karaokeOffsetPlus" title="+0.1s">▶</button>
+            <button class="offset-popover-btn karaoke-offset-btn" id="karaokeOffsetPlusBig" title="+0.5s">▶▶</button>
+          </div>
         </div>
       </div>
     </div>
