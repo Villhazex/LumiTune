@@ -262,6 +262,7 @@ body {
   padding: 8px 14px;
   width: 100%;
   max-width: 1000px;
+  position: relative;
   transition: border-color 0.2s, background 0.2s;
 }
 .search-box:focus-within { border-color: var(--accent); background: var(--surface); }
