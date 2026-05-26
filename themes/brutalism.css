@@ -1031,7 +1031,7 @@ body[data-theme="brutalism"] .genre-pct { font-size: 9px; color: #777; width: 24
 
 /* ── BOTTOM BAR ── */
 body[data-theme="brutalism"] .bottom-bar {
-  height: 60px;
+  height: 84px;
   background: var(--surface);
   border-top: var(--border);
   display: grid;

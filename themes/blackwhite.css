@@ -937,17 +937,17 @@ body[data-theme="blackwhite"] .viz-bar:nth-child(5) { animation-delay: 0.08s; }
 
 body[data-theme="blackwhite"] .bottom-progress {
   display: flex; align-items: center; gap: 10px;
-  width: 100%; max-width: 560px;
+  width: 100%;
 }
-body[data-theme="blackwhite"] .bottom-time { font-size: 10px; color: #555; min-width: 26px; text-align: center; }
+body[data-theme="blackwhite"] .bottom-time { font-size: 11px; color: #555; min-width: 36px; text-align: center; }
 body[data-theme="blackwhite"] .bottom-prog-track {
-  flex: 1; height: 1px; background: #3d3d3d;
+  flex: 1; height: 3px; background: #3d3d3d;
   cursor: pointer; position: relative;
-  transition: height 0.1s;
-  border-radius: 0;
+  transition: height 0.12s;
+  border-radius: 2px;
 }
-body[data-theme="blackwhite"] .bottom-prog-track:hover { height: 3px; }
-body[data-theme="blackwhite"] .bottom-prog-fill { height: 100%; background: #f2ede6; pointer-events: none; border-radius: 0; }
+body[data-theme="blackwhite"] .bottom-prog-track:hover { height: 5px; }
+body[data-theme="blackwhite"] .bottom-prog-fill { height: 100%; background: #f2ede6; pointer-events: none; border-radius: 2px; }
 body[data-theme="blackwhite"] .bottom-prog-fill::after { display: none; }
 body[data-theme="blackwhite"] .bottom-prog-track:hover .bottom-prog-fill::after { display: none; }
 

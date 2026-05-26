@@ -890,15 +890,15 @@ body[data-theme="mecha"] .viz-bar:nth-child(4) { animation-delay: 0.22s; }
 body[data-theme="mecha"] .viz-bar:nth-child(5) { animation-delay: 0.08s; }
 @keyframes mecha-vbar { from { height: 2px; } to { height: 10px; } }
 
-body[data-theme="mecha"] .bottom-progress { display: flex; align-items: center; gap: 10px; width: 100%; max-width: 600px; }
-body[data-theme="mecha"] .bottom-time { font-size: 10px; color: rgba(240,234,216,0.4); min-width: 28px; text-align: center; letter-spacing: 0.06em; font-family: 'Bebas Neue', sans-serif; }
+body[data-theme="mecha"] .bottom-progress { display: flex; align-items: center; gap: 10px; width: 100%; }
+body[data-theme="mecha"] .bottom-time { font-size: 11px; color: rgba(240,234,216,0.4); min-width: 36px; text-align: center; letter-spacing: 0.06em; font-family: 'Bebas Neue', sans-serif; }
 body[data-theme="mecha"] .bottom-prog-track {
   flex: 1; height: 3px; background: rgba(255,255,255,0.1);
-  cursor: pointer; position: relative;
+  cursor: pointer; position: relative; border-radius: 2px;
   transition: height 0.12s;
 }
 body[data-theme="mecha"] .bottom-prog-track:hover { height: 5px; }
-body[data-theme="mecha"] .bottom-prog-fill { height: 100%; background: #e8c832; position: relative; pointer-events: none; }
+body[data-theme="mecha"] .bottom-prog-fill { height: 100%; background: #e8c832; position: relative; border-radius: 2px; pointer-events: none; }
 body[data-theme="mecha"] .bottom-prog-fill::after {
   content: ''; position: absolute; right: -4px; top: 50%;
   transform: translateY(-50%);
