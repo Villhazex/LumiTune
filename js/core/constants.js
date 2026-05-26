@@ -63,6 +63,7 @@ let isRecordingShortcut=false;
 let noAnim=false;
 let recordingShortcutKey=null;
 
+let searchTab='tracks';
 let recentPlays=[];
 let audioCtx=null;
 let gainNode=null;

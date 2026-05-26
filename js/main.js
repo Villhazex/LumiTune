@@ -138,6 +138,20 @@ $('heroVolSlider')?.addEventListener('input',function(){
   $('heroVolLabel').textContent='VOL '+Math.round(volume*100);
   updateVolIcon();saveState();
 });
+$('heroVolSlider')?.addEventListener('wheel',function(e){
+  e.preventDefault();
+  isMuted=false;
+  var step=0.05;
+  volume=Math.max(0,Math.min(1,volume+(e.deltaY<0?step:-step)));
+  setVolume(volume);
+});
+$('volBar')?.addEventListener('wheel',function(e){
+  e.preventDefault();
+  isMuted=false;
+  var step=0.05;
+  volume=Math.max(0,Math.min(1,volume+(e.deltaY<0?step:-step)));
+  setVolume(volume);
+});
 document.addEventListener('mousemove',e=>{
   if(isDraggingProgress)seekTo(e);
   if(isDraggingVolume)setVol(e);
@@ -325,7 +339,11 @@ $('searchInput').addEventListener('keydown',e=>{
     if(sel){sel.click();return;}
     if(e.target.value.trim()){
       addRecentSearch(e.target.value.trim());
-      renderSearchDropdown(e.target.value);
+      doSearch.cancel&&doSearch.cancel();
+      recordNav();
+      currentView='search';searchTab='tracks';
+      renderSongList(e.target.value.trim());
+      $('searchDropdown').classList.remove('show');
     }
     return;
   }
