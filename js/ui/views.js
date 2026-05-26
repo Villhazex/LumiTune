@@ -522,7 +522,7 @@ function switchTab(name, el){
 function updateUpNext(){
   const list=$('upNextList');if(!list)return;
   let html='';
-  const empty=$('upNextEmpty');if(empty)empty.style.display=queue.length?'none':'';
+  const empty=$('upNextEmpty');if(empty)empty.style.display=queue.length||currentQueueIdx>=0?'none':'';
   const actions=$('upNextActions');if(actions)actions.style.display=queue.length?'':'none';
   if(queue.length){
     html+=queue.map((item,i)=>{
@@ -541,6 +541,10 @@ function updateUpNext(){
         ${i>currentQueueIdx?`<button class="queue-del" data-qdel="${i}" title="Remove from queue">×</button>`:''}
       </div>`;
     }).join('');
+  }else if(currentQueueIdx<0&&currentSongIndex>=0){
+    const pl=playlists[currentPlaylist];
+    const name=pl?.name||'playlist';
+    html=`<div class="up-next-playing">♪ Playing from playlist <strong>${esc(name)}</strong></div>`;
   }
   list.innerHTML=html;
   const np=document.getElementById('nowPlayingRow');

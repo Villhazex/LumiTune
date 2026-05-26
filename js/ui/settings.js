@@ -60,6 +60,18 @@ function showSettingsModal(){
                 </label>
               </div>
             </div>
+            <div class="setting-row">
+              <div class="setting-row-label">
+                <span>Infinity Play</span>
+                <small>Continue playing from random playlists when queue or playlist ends</small>
+              </div>
+              <div class="setting-row-control">
+                <label class="toggle-switch">
+                  <input type="checkbox" id="sInfinityPlay"${infinityPlay?' checked':''}>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
           </div>`;
       },
       bind(){
@@ -76,6 +88,10 @@ function showSettingsModal(){
           noAnim=$('sNoAnim').checked;
           document.body.classList.toggle('no-anim',noAnim);
           localStorage.setItem('lumi-no-anim',noAnim?'1':'');
+        };
+        $('sInfinityPlay').onchange=()=>{
+          infinityPlay=$('sInfinityPlay').checked;
+          saveState();
         };
       }
     },

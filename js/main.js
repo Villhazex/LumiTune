@@ -169,11 +169,11 @@ document.addEventListener('mouseup',()=>{isDraggingProgress=false;isDraggingVolu
     const act=$('offsetActivator');
     if(pop&&act&&!act.contains(e.target)&&!pop.contains(e.target))pop.style.display='none';
   });
-  $('offsetMinusBig')?.addEventListener('click',()=>{adjustLyricOffset(-0.5,currentLyricOffsetSongId);$('offsetPopover')&&($('offsetPopover').style.display='none');});
-  $('offsetMinus')?.addEventListener('click',()=>{adjustLyricOffset(-0.1,currentLyricOffsetSongId);$('offsetPopover')&&($('offsetPopover').style.display='none');});
-  $('offsetReset')?.addEventListener('click',()=>{resetLyricOffset(currentLyricOffsetSongId);$('offsetPopover')&&($('offsetPopover').style.display='none');});
-  $('offsetPlus')?.addEventListener('click',()=>{adjustLyricOffset(0.1,currentLyricOffsetSongId);$('offsetPopover')&&($('offsetPopover').style.display='none');});
-  $('offsetPlusBig')?.addEventListener('click',()=>{adjustLyricOffset(0.5,currentLyricOffsetSongId);$('offsetPopover')&&($('offsetPopover').style.display='none');});
+  $('offsetMinusBig')?.addEventListener('click',()=>{adjustLyricOffset(-0.5,currentLyricOffsetSongId);});
+  $('offsetMinus')?.addEventListener('click',()=>{adjustLyricOffset(-0.1,currentLyricOffsetSongId);});
+  $('offsetReset')?.addEventListener('click',()=>{resetLyricOffset(currentLyricOffsetSongId);});
+  $('offsetPlus')?.addEventListener('click',()=>{adjustLyricOffset(0.1,currentLyricOffsetSongId);});
+  $('offsetPlusBig')?.addEventListener('click',()=>{adjustLyricOffset(0.5,currentLyricOffsetSongId);});
 
   function updateKaraokeOffsetLabel(){
     const lbl=$('karaokeOffsetLabel');
@@ -189,7 +189,7 @@ document.addEventListener('mouseup',()=>{isDraggingProgress=false;isDraggingVolu
     if(!container)return;
     karaokeActive=!karaokeActive;
     this.classList.toggle('active',karaokeActive);
-    container.style.display=karaokeActive?'':'none';
+    container.classList.toggle('show',karaokeActive);
     document.body.style.overflow=karaokeActive?'hidden':'';
     if(karaokeActive){
       syncKaraokeLyrics();
@@ -223,7 +223,7 @@ document.addEventListener('mouseup',()=>{isDraggingProgress=false;isDraggingVolu
   $('karaokeExitBtn')?.addEventListener('click',()=>{
     const container=$('karaokeContainer');
     const btn=$('karaokeBtn');
-    if(container)container.style.display='none';
+    if(container)container.classList.remove('show');
     if(btn)btn.classList.remove('active');
     karaokeActive=false;
     document.body.style.overflow='';
@@ -232,7 +232,7 @@ document.addEventListener('mouseup',()=>{isDraggingProgress=false;isDraggingVolu
     const container=$('karaokeContainer');
     const btn=$('karaokeBtn');
     const startBtn=$('karaokeStartBtn');
-    if(container)container.style.display='none';
+    if(container)container.classList.remove('show');
     if(btn)btn.classList.remove('active');
     if(startBtn)startBtn.textContent='▶ Start';
     karaokeActive=false;
@@ -380,7 +380,7 @@ $('searchDropdown').addEventListener('click',e=>{
   if(type==='track'){
     const pk=item.dataset.playlist;
     const idx=parseInt(item.dataset.index);
-    if(playlists[pk]&&playlists[pk].songs[idx])playSong(idx,pk,true);
+    if(playlists[pk]&&playlists[pk].songs[idx]){currentQueueIdx=-1;playSong(idx,pk,false);showToast('♪ Playing from '+esc(playlists[pk]?.name||'playlist'));}
     $('searchInput').value='';
     $('searchClear').classList.remove('show');
     $('searchDropdown').classList.remove('show');
@@ -424,11 +424,12 @@ $('songList').addEventListener('click',e=>{
   const card=e.target.closest('.pl-card,.playlist-card');
   if(card){recordNav();playlistsViewMode='detail';switchPlaylist(card.dataset.playlist);return;}
   const row=e.target.closest('.track-row');
-   if(row&&row.dataset.index!==undefined){
-     const plKey=row.dataset.playlist||currentPlaylist;
-     if(plKey==='__loose'){showToast('⊕ Add this song to a playlist first');return;}
-     playSong(parseInt(row.dataset.index),plKey,true);
-   }
+    if(row&&row.dataset.index!==undefined){
+      const plKey=row.dataset.playlist||currentPlaylist;
+      if(plKey==='__loose'){showToast('⊕ Add this song to a playlist first');return;}
+      currentQueueIdx=-1;playSong(parseInt(row.dataset.index),plKey,false);
+      showToast('♪ Playing from '+esc(playlists[plKey]?.name||'playlist'));
+    }
 });
 
 document.addEventListener('click',()=>{

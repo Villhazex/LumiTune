@@ -4,6 +4,14 @@
   --rpw: 300px;
 }
 
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 8px var(--accent-dim); }
+  50% { box-shadow: 0 0 20px var(--accent-dim); }
+}
 /* ── ACTIVE PRESS STATES ── */
 .ctrl-btn:active, .ctrl-play:active,
 .bottom-ctrl-btn:active, .bottom-play-btn:active,
@@ -372,7 +380,7 @@ body {
   font-size: 34px;
   transition: border-color 0.3s;
 }
-.album-art-hero.playing { border-color: var(--accent); }
+.album-art-hero.playing { border-color: var(--accent); animation: pulse-glow 2s ease-in-out infinite; }
 .album-art-hero .art-emoji { position: relative; z-index: 1; }
 .album-art-hero::after {
   content: '';
@@ -604,6 +612,9 @@ body {
 .track-row.dragging { opacity: 0.4; }
 .track-row.drag-over-top { border-top: 2px solid var(--accent); }
 .track-row.drag-over-bottom { border-bottom: 2px solid var(--accent); }
+.track-row { transition: transform 0.15s, box-shadow 0.15s; }
+.track-row:hover { transform: translateX(3px); }
+.track-row.active:hover { transform: translateX(3px); }
 .track-num { font-size: 12px; color: var(--text-dim); text-align: center; }
 .track-row.active .track-num { color: var(--accent); }
 .track-name-col { min-width: 0; }
@@ -867,6 +878,14 @@ body {
 }
 
 /* Karaoke Container */
+@keyframes karaoke-enter {
+  from { opacity: 0; transform: scale(1.08); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes karaoke-exit {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(1.08); }
+}
 .karaoke-container {
   position: fixed;
   inset: 0;
@@ -874,6 +893,14 @@ body {
   display: flex;
   flex-direction: column;
   background: #000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s;
+}
+.karaoke-container.show {
+  opacity: 1;
+  visibility: visible;
+  animation: karaoke-enter 0.3s ease-out;
 }
 .karaoke-exit-btn {
   position: absolute;
@@ -1449,6 +1476,11 @@ body {
   text-align: center; padding: 40px 0;
   font-size: 12px; color: var(--text-dim); letter-spacing: 0.08em;
 }
+.up-next-playing {
+  text-align: center; padding: 24px 0;
+  font-size: 13px; color: var(--text-muted);
+}
+.up-next-playing strong { color: var(--accent); }
 
 .up-next-section-label {
   padding: 8px 4px 4px;
@@ -1477,8 +1509,9 @@ body {
   padding: 8px;
   border-radius: 8px;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.15s, transform 0.15s;
 }
+.queue-item:hover { transform: translateX(3px); }
 .queue-item:hover { background: var(--surface2); }
 .queue-item.active {
   background: var(--accent-dim);

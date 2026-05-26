@@ -34,6 +34,7 @@ function saveState(){
     localStorage.setItem('lumi-rec',JSON.stringify(recentPlaylists));
     localStorage.setItem('lumi-src',JSON.stringify(recentSearches));
     localStorage.setItem('lumi-pt',String(totalPlayTime));
+    localStorage.setItem('lumi-infinity',String(infinityPlay));
   }catch(e){}
 }
 async function loadState(){
@@ -97,6 +98,7 @@ async function loadState(){
     if(Array.isArray(rec))recentPlaylists=rec.filter(k=>typeof k==='string');
     const src=JSON.parse(localStorage.getItem('lumi-src')||'[]');
     if(Array.isArray(src))recentSearches=src.filter(s=>typeof s==='string');
+    infinityPlay=localStorage.getItem('lumi-infinity')==='true';
   }catch(e){console.warn(e);}
 }
 

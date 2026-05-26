@@ -117,26 +117,39 @@ function simPlay(durStr){
 }},100);
 }
 
+function stopPlayback(){
+  isPlaying=false;updatePlayBtn();
+  $('albumArt').classList.remove('playing');$('vizBars').classList.remove('active');
+  updateHeroSection();renderSongList($('searchInput').value);showLyricsNone();updateUpNext();
+}
+function playRandomSong(){
+  const allKeys=Object.keys(playlists).filter(k=>(playlists[k]?.songs||[]).length>0);
+  if(!allKeys.length){stopPlayback();return;}
+  const key=allKeys[Math.floor(Math.random()*allKeys.length)];
+  const songs=playlists[key].songs;
+  const idx=Math.floor(Math.random()*songs.length);
+  playSong(idx,key);
+}
 function handleEnd(){
   clearInterval(playbackInterval);
   const songs=(playlists[currentPlaylist]?.songs)||[];
   if(repeatMode===2){playSong(currentSongIndex);return;}
   const nextIdx=currentQueueIdx+1;
-  if(queue.length>0&&nextIdx<queue.length){currentQueueIdx=nextIdx;playSong(queue[currentQueueIdx].songIndex,queue[currentQueueIdx].playlistKey);return;}
+  if(currentQueueIdx>=0&&queue.length>0&&nextIdx<queue.length){currentQueueIdx=nextIdx;playSong(queue[currentQueueIdx].songIndex,queue[currentQueueIdx].playlistKey);return;}
+  if(currentQueueIdx>=0&&queue.length>0){if(infinityPlay){playRandomSong();}else{stopPlayback();}return;}
   if(repeatMode===1||currentSongIndex<songs.length-1){playNext();return;}
-  isPlaying=false;updatePlayBtn();
-  $('albumArt').classList.remove('playing');$('vizBars').classList.remove('active');
-  updateHeroSection();renderSongList($('searchInput').value);showLyricsNone();updateUpNext();
+  if(infinityPlay){playRandomSong();}else{stopPlayback();}
 }
 
 function playNext(){
   const nextIdx=(currentQueueIdx>=0?currentQueueIdx:-1)+1;
-  if(queue.length>0&&nextIdx<queue.length){
+  if(currentQueueIdx>=0&&queue.length>0&&nextIdx<queue.length){
     currentQueueIdx=nextIdx;
     playSong(queue[nextIdx].songIndex,queue[nextIdx].playlistKey);
     return;
   }
-  const songs=playlists[currentPlaylist].songs;if(!songs.length)return;
+  if(currentQueueIdx>=0&&queue.length>0){if(infinityPlay){playRandomSong();}else{stopPlayback();}return;}
+  const songs=playlists[currentPlaylist]?.songs;if(!songs.length){if(infinityPlay){playRandomSong();}else{stopPlayback();}return;}
   let next;
   if(isShuffle){do{next=Math.floor(Math.random()*songs.length);}while(next===currentSongIndex&&songs.length>1);}
   else next=(currentSongIndex+1)%songs.length;
