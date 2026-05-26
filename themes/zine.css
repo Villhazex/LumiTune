@@ -284,7 +284,7 @@ body[data-theme="zine"] .track-artist-hero {
 }
 
 body[data-theme="zine"] .progress-bar-wrap {
-  height: 3px;
+  height: 7px;
   background: var(--surface3);
 }
 body[data-theme="zine"] .progress-bar-fill {
@@ -292,8 +292,8 @@ body[data-theme="zine"] .progress-bar-fill {
 }
 body[data-theme="zine"] .progress-bar-fill::after {
   content: '';
-  position: absolute; right: -4px; top: -4px;
-  width: 10px; height: 10px;
+  position: absolute; right: -5px; top: -4px;
+  width: 13px; height: 13px;
   background: var(--accent);
   opacity: 0;
   clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
@@ -819,14 +819,14 @@ body[data-theme="zine"] .bottom-play-btn {
 body[data-theme="zine"] .bottom-play-btn:hover { opacity: 0.85; color: var(--bg) !important; background: var(--accent) !important; }
 
 body[data-theme="zine"] .bottom-prog-track {
-  height: 2px;
+  height: 5px;
   background: var(--surface3);
 }
 body[data-theme="zine"] .bottom-prog-fill { background: var(--accent); }
 body[data-theme="zine"] .bottom-prog-fill::after {
   content: '';
-  position: absolute; right: -3px; top: 50%; transform: translateY(-50%);
-  width: 7px; height: 7px;
+  position: absolute; right: -5px; top: -3px;
+  width: 10px; height: 10px;
   background: var(--accent);
   opacity: 0;
   clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);

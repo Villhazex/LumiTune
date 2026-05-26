@@ -53,16 +53,16 @@ function showShortcutsModal(){
     o.innerHTML=`<div class="modal-box shortcuts-modal">
       <div class="shortcuts-header">
         <div class="modal-msg">Keyboard Shortcuts</div>
-        <button class="shortcut-reset-all" id="resetAllShortcuts">Reset All to Default</button>
+        <button class="shortcut-reset-all" id="resetAllShortcuts" title="Reset all shortcuts">Reset All to Default</button>
       </div>
       <div class="shortcuts-list">${catsHtml}</div>
       <div class="shortcuts-recording" id="recordingIndicator" style="display:none">
         <div class="recording-pulse"></div>
         <span>Press new shortcut combination...</span>
-        <button class="recording-cancel" id="cancelRecording">Cancel</button>
+        <button class="recording-cancel" id="cancelRecording" title="Cancel">Cancel</button>
       </div>
       <div class="modal-actions">
-        <button class="modal-btn modal-ok" id="closeShortcuts">Close</button>
+        <button class="modal-btn modal-ok" id="closeShortcuts" title="Close">Close</button>
       </div>
     </div>`;
     o.style.display='flex';

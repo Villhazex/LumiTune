@@ -34,7 +34,7 @@ function showSettingsModal(){
                 <small>Backup all playlists to a JSON file</small>
               </div>
               <div class="setting-row-control">
-                <button class="setting-btn" id="sExport">⬇ Export</button>
+                <button class="setting-btn" id="sExport" title="Export playlists to JSON">⬇ Export</button>
               </div>
             </div>
             <div class="setting-row">
@@ -43,7 +43,7 @@ function showSettingsModal(){
                 <small>Restore playlists from a JSON backup</small>
               </div>
               <div class="setting-row-control">
-                <button class="setting-btn" id="sImport">⬆ Import</button>
+                <button class="setting-btn" id="sImport" title="Import playlists from JSON backup">⬆ Import</button>
               </div>
             </div>
           </div>
@@ -87,7 +87,7 @@ function showSettingsModal(){
           const active=t===currentTheme;
           const label=t.charAt(0).toUpperCase()+t.slice(1);
           const swatch={default:'#0e0c0a',retro:'#f2e8d5',zine:'#1a1612',neurophism:'#e0dbd5',synthwave:'#0a0014',brutalism:'#0A0A0A',shibuya:'#0d0b0b',mecha:'#f0ead8'}[t]||'#888';
-          return`<button class="theme-option${active?' active':''}" data-theme="${t}">
+          return`<button class="theme-option${active?' active':''}" data-theme="${t}" title="Apply ${label} theme">
             <span class="theme-option-swatch" style="background:${swatch}"></span>
             <span class="theme-option-label">${label}</span>
             ${active?'<span class="theme-option-check">✓</span>':''}
@@ -166,7 +166,7 @@ function showSettingsModal(){
           <div class="settings-section-desc">View available keyboard shortcuts</div>
           <div class="setting-group">
             <div class="shortcuts-inline-list">${listHtml}</div>
-            <button class="setting-btn primary" id="sCustomizeShortcuts">⌨ Customize Shortcuts</button>
+            <button class="setting-btn primary" id="sCustomizeShortcuts" title="Customize keyboard shortcuts">⌨ Customize Shortcuts</button>
           </div>`;
       },
       bind(){
@@ -200,12 +200,12 @@ function showSettingsModal(){
   o.innerHTML=`<div class="modal-box settings-page">
     <div class="settings-page-header">
       <div class="modal-msg">Settings</div>
-      <button class="modal-btn modal-ok" id="mc">Close</button>
+      <button class="modal-btn modal-ok" id="mc" title="Close settings">Close</button>
     </div>
     <div class="settings-body">
       <div class="settings-sidebar">
         ${Object.entries(sections).map(([key,sec])=>`
-          <button class="settings-nav-item${key===currentSection?' active':''}" data-section="${key}">
+          <button class="settings-nav-item${key===currentSection?' active':''}" data-section="${key}" title="Open ${sec.label} settings">
             <span class="settings-nav-icon">${sec.icon}</span>
             <span>${sec.label}</span>
           </button>

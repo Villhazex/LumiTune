@@ -334,11 +334,11 @@ body[data-theme="blackwhite"] .track-artist-hero {
 
 body[data-theme="blackwhite"] .progress-area { display: flex; flex-direction: column; gap: 6px; max-width: none; }
 body[data-theme="blackwhite"] .progress-bar-wrap {
-  width: 100%; height: 2px;
+  width: 100%; height: 7px;
   background: #3d3d3d;
   cursor: pointer;
   position: relative;
-  border-radius: 0;
+  border-radius: 3px;
 }
 body[data-theme="blackwhite"] .progress-bar-fill {
   height: 100%;
@@ -941,12 +941,12 @@ body[data-theme="blackwhite"] .bottom-progress {
 }
 body[data-theme="blackwhite"] .bottom-time { font-size: 11px; color: #555; min-width: 36px; text-align: center; }
 body[data-theme="blackwhite"] .bottom-prog-track {
-  flex: 1; height: 3px; background: #3d3d3d;
+  flex: 1; height: 5px; background: #3d3d3d;
   cursor: pointer; position: relative;
   transition: height 0.12s;
-  border-radius: 2px;
+  border-radius: 3px;
 }
-body[data-theme="blackwhite"] .bottom-prog-track:hover { height: 5px; }
+body[data-theme="blackwhite"] .bottom-prog-track:hover { height: 7px; }
 body[data-theme="blackwhite"] .bottom-prog-fill { height: 100%; background: #f2ede6; pointer-events: none; border-radius: 2px; }
 body[data-theme="blackwhite"] .bottom-prog-fill::after { display: none; }
 body[data-theme="blackwhite"] .bottom-prog-track:hover .bottom-prog-fill::after { display: none; }

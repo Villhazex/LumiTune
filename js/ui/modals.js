@@ -4,8 +4,8 @@ function showConfirm(msg){
     o.innerHTML=`<div class="modal-box">
       <div class="modal-msg">${msg}</div>
       <div class="modal-actions">
-        <button class="modal-btn" id="mc">Cancel</button>
-        <button class="modal-btn modal-ok" id="mo">Delete</button>
+        <button class="modal-btn" id="mc" title="Cancel">Cancel</button>
+        <button class="modal-btn modal-ok" id="mo" title="Confirm">Delete</button>
       </div>
     </div>`;
     o.style.display='flex';
@@ -23,8 +23,8 @@ function showInput(label,def){
       <div class="modal-msg">${label}</div>
       <input type="text" class="modal-input" id="mi" value="${def||''}">
       <div class="modal-actions">
-        <button class="modal-btn" id="mc">Cancel</button>
-        <button class="modal-btn modal-ok" id="mo">Create</button>
+        <button class="modal-btn" id="mc" title="Cancel">Cancel</button>
+        <button class="modal-btn modal-ok" id="mo" title="Create">Create</button>
       </div>
     </div>`;
     o.style.display='flex';
@@ -41,7 +41,7 @@ function showMessage(msg,btn){
     const o=$('confirmOverlay');
     o.innerHTML=`<div class="modal-box" style="text-align:center">
       <div class="modal-msg">${msg}</div>
-      ${btn?`<div class="modal-actions" style="justify-content:center"><button class="modal-btn modal-ok" id="mo">${btn}</button></div>`:''}
+      ${btn?`<div class="modal-actions" style="justify-content:center"><button class="modal-btn modal-ok" id="mo" title="Dismiss">${btn}</button></div>`:''}
     </div>`;
     o.style.display='flex';
     const close=r=>{o.style.display='none';resolve(r);};
@@ -59,8 +59,8 @@ function showRename(current){
       <div class="modal-msg">Rename playlist</div>
       <input type="text" class="modal-input" id="mi" value="${current||''}">
       <div class="modal-actions">
-        <button class="modal-btn" id="mc">Cancel</button>
-        <button class="modal-btn modal-ok" id="mo">Save</button>
+        <button class="modal-btn" id="mc" title="Cancel">Cancel</button>
+        <button class="modal-btn modal-ok" id="mo" title="Save">Save</button>
       </div>
     </div>`;
     o.style.display='flex';
@@ -92,14 +92,14 @@ function showPlaylistPicker(){
       <div class="modal-msg">Choose a playlist</div>
       <div class="picker-list">${keys.map(k=>{
         const pl=playlists[k];
-        return`<button class="picker-item" data-pick="${esc(k)}">
+        return`<button class="picker-item" data-pick="${esc(k)}" title="Select playlist">
           <span class="picker-emoji">${esc(pl.emoji||'♫')}</span>
           <span class="picker-name">${esc(pl.name)}</span>
           <span class="picker-count">${pl.songs.length} tracks</span>
         </button>`;
       }).join('')}</div>
       <div class="modal-actions">
-        <button class="modal-btn" id="mc">Cancel</button>
+        <button class="modal-btn" id="mc" title="Cancel">Cancel</button>
       </div>
     </div>`;
     o.style.display='flex';
@@ -148,8 +148,8 @@ function showMetadataEditor(playlistKey,index){
     </div>
     <div class="modal-hint">Changes update LumiTune's library metadata. The original audio file is left untouched.</div>
     <div class="modal-actions">
-      <button class="modal-btn" id="mc">Cancel</button>
-      <button class="modal-btn modal-ok" id="mo">Save</button>
+      <button class="modal-btn" id="mc" title="Cancel">Cancel</button>
+      <button class="modal-btn modal-ok" id="mo" title="Save">Save</button>
     </div>
   </div>`;
   o.style.display='flex';
@@ -191,19 +191,19 @@ function showSourcePicker(){
     o.innerHTML=`<div class="modal-box source-picker-box">
       <div class="modal-msg">Add Track From</div>
       <div class="source-picker-grid">
-        <button class="source-option" data-source="local">
+        <button class="source-option" data-source="local" title="Local files">
           <span class="source-icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 4a1 1 0 0 1 1-1h4l2 2h5a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4z"/></svg></span>
           <span class="source-label">Local</span>
           <span class="source-desc">Browse files</span>
         </button>
-        <button class="source-option" data-source="youtube">
+        <button class="source-option" data-source="youtube" title="YouTube import">
           <span class="source-icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 2l10 6-10 6z"/></svg></span>
           <span class="source-label">YouTube</span>
           <span class="source-desc">Download audio</span>
         </button>
       </div>
       <div class="modal-actions">
-        <button class="modal-btn" id="mc">Cancel</button>
+        <button class="modal-btn" id="mc" title="Cancel">Cancel</button>
       </div>
     </div>`;
     o.style.display='flex';
@@ -221,19 +221,19 @@ function showNewPlaylistPicker(){
     o.innerHTML=`<div class="modal-box source-picker-box">
       <div class="modal-msg">New Playlist</div>
       <div class="source-picker-grid">
-        <button class="source-option" data-source="empty">
+        <button class="source-option" data-source="empty" title="Empty playlist">
           <span class="source-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg></span>
           <span class="source-label">Empty</span>
           <span class="source-desc">Create blank playlist</span>
         </button>
-        <button class="source-option" data-source="songs">
+        <button class="source-option" data-source="songs" title="Add from files">
           <span class="source-icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 4a1 1 0 0 1 1-1h4l2 2h5a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4z"/></svg></span>
           <span class="source-label">Add Songs</span>
           <span class="source-desc">Select audio files</span>
         </button>
       </div>
       <div class="modal-actions">
-        <button class="modal-btn" id="mc">Cancel</button>
+        <button class="modal-btn" id="mc" title="Cancel">Cancel</button>
       </div>
     </div>`;
     o.style.display='flex';

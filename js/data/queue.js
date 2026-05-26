@@ -42,7 +42,7 @@ function renderQueue(){
     o.innerHTML=`<div class="modal-box source-picker-box">
       <div class="modal-msg">Up Next</div>
       <div style="text-align:center;padding:24px 0;font-size:12px;color:var(--text3)">Queue is empty</div>
-      <div class="modal-actions"><button class="modal-btn modal-ok" id="mc">Close</button></div>
+      <div class="modal-actions"><button class="modal-btn modal-ok" id="mc" title="Close">Close</button></div>
     </div>`;
   }else{
     const remaining=currentQueueIdx>=0?queue.length-currentQueueIdx-1:queue.length;
@@ -57,13 +57,13 @@ function renderQueue(){
           <span class="drag-handle">≡</span>
           <span class="queue-info"><span class="queue-title">${esc(song.title)}</span><span class="queue-artist">${esc(song.artist)}</span></span>
           <span class="queue-pl">${esc(pl?.name||'')}</span>
-          ${i>currentQueueIdx?`<button class="queue-del" data-qdel="${i}">×</button>`:''}
+          ${i>currentQueueIdx?`<button class="queue-del" data-qdel="${i}" title="Remove from queue">×</button>`:''}
         </div>`;
       }).join('')}</div>
       <div class="modal-actions">
-        <button class="modal-btn" id="queueSaveModal">Save</button>
-        <button class="modal-btn" id="queueClear">Clear</button>
-        <button class="modal-btn modal-ok" id="mc">Close</button>
+        <button class="modal-btn" id="queueSaveModal" title="Save queue as playlist">Save</button>
+        <button class="modal-btn" id="queueClear" title="Clear queue">Clear</button>
+        <button class="modal-btn modal-ok" id="mc" title="Close">Close</button>
       </div>
     </div>`;
     const ql=o.querySelector('.queue-list');

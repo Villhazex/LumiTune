@@ -15,9 +15,9 @@ function renderSearchDropdown(term){
       ${recentSearches.map(s=>`<div class="search-dropdown-item" data-type="recent" data-term="${esc(s)}">
         <span class="srch-icon">⌕</span>
         <span class="srch-term">${esc(s)}</span>
-        <button class="srch-remove" data-remove="${esc(s)}">×</button>
+        <button class="srch-remove" data-remove="${esc(s)}" title="Remove term">×</button>
       </div>`).join('')}
-      <button class="search-dropdown-clear">Clear all</button>`;
+      <button class="search-dropdown-clear" title="Clear all">Clear all</button>`;
     dd.classList.add('show');
     return;
   }

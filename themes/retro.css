@@ -226,10 +226,10 @@ body[data-theme="retro"] .track-artist-hero {
 }
 
 body[data-theme="retro"] .progress-bar-wrap {
-  height: 4px;
+  height: 7px;
   background: var(--paper2);
   border: 1px solid var(--line2);
-  border-radius: 0;
+  border-radius: 3px;
   box-shadow: inset 0 1px 2px var(--shadow2);
 }
 body[data-theme="retro"] .progress-bar-fill {
@@ -238,8 +238,8 @@ body[data-theme="retro"] .progress-bar-fill {
 }
 body[data-theme="retro"] .progress-bar-fill::after {
   content: '';
-  position: absolute; right: -4px; top: 50%; transform: translateY(-50%);
-  width: 6px; height: 10px;
+  position: absolute; right: -5px; top: -4px;
+  width: 13px; height: 13px;
   background: var(--rust);
   border: 1px solid var(--ink);
   border-radius: 0;
@@ -621,7 +621,7 @@ body[data-theme="retro"] .bottom-play-btn {
 body[data-theme="retro"] .bottom-play-btn:hover { opacity: 1 !important; }
 
 body[data-theme="retro"] .bottom-prog-track {
-  height: 3px;
+  height: 5px;
   background: rgba(200,160,60,0.25);
 }
 body[data-theme="retro"] .bottom-prog-fill { background: var(--gold2); }

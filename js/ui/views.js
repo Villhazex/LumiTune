@@ -57,11 +57,11 @@ function makeRow(song,origIdx,isActive,isLiked,plKey,showDel,extra){
   const statusBadge=isActive
     ?`<span class="badge ${isPlaying?'badge-playing':'badge-paused'}"><span class="badge-dot"></span>${isPlaying?'Playing':'Paused'}</span>`
     :'';
-  const moreItems=`<button class="dropdown-item" data-qadd="${origIdx}" data-qpl="${plKey}">Add to queue</button>
-    <button class="dropdown-item" data-addpl="${origIdx}" data-addpl-pl="${plKey}">Add to playlist</button>
-    <button class="dropdown-item" data-movepl="${origIdx}" data-movepl-pl="${plKey}">Move to playlist</button>
-    <button class="dropdown-item" data-edit="${origIdx}" data-edit-pl="${plKey}">Edit metadata</button>
-    ${showDel?`<div class="dropdown-divider"></div><button class="dropdown-item danger" data-del="${origIdx}">Delete</button>`:''}`;
+  const moreItems=`<button class="dropdown-item" data-qadd="${origIdx}" data-qpl="${plKey}" title="Add to queue">Add to queue</button>
+    <button class="dropdown-item" data-addpl="${origIdx}" data-addpl-pl="${plKey}" title="Add to playlist">Add to playlist</button>
+    <button class="dropdown-item" data-movepl="${origIdx}" data-movepl-pl="${plKey}" title="Move to playlist">Move to playlist</button>
+    <button class="dropdown-item" data-edit="${origIdx}" data-edit-pl="${plKey}" title="Edit metadata">Edit metadata</button>
+    ${showDel?`<div class="dropdown-divider"></div><button class="dropdown-item danger" data-del="${origIdx}" title="Delete track">Delete</button>`:''}`;
   return`<div class="track-row ${isActive?'active':''}" draggable="true" data-index="${origIdx}" data-playlist="${plKey}">
     <div class="t-num ${isActive&&isPlaying?'playing':''}">${isActive&&isPlaying?'<div class="eq-bars"><span></span><span></span><span></span></div>':num}</div>
     <div class="t-info">
@@ -70,7 +70,7 @@ function makeRow(song,origIdx,isActive,isLiked,plKey,showDel,extra){
     </div>
     <div class="t-extra">${extra}</div>
     <div class="t-actions">
-      <button class="like-btn ${isLiked?'liked':''}" data-song-id="${song.id}">${isLiked?'★':'☆'}</button>
+      <button class="like-btn ${isLiked?'liked':''}" data-song-id="${song.id}" title="Like">${isLiked?'★':'☆'}</button>
       <div class="track-more-wrap">
         <button class="track-more-btn" data-more="${origIdx}" title="More">⋮</button>
         <div class="track-more-dropdown">${moreItems}</div>
@@ -272,14 +272,14 @@ function getDuplicateGroups(){
 function renderBulkBar(songs){
   const selected=bulkSelected.size;
   return`<div class="bulk-bar">
-    <button class="bulk-btn" data-bulk-action="select-all">Select visible</button>
-    <button class="bulk-btn" data-bulk-action="clear">Clear</button>
+    <button class="bulk-btn" data-bulk-action="select-all" title="Select all visible">Select visible</button>
+    <button class="bulk-btn" data-bulk-action="clear" title="Clear selection">Clear</button>
     <span class="bulk-count">${selected} selected</span>
-    <button class="bulk-btn" data-bulk-action="playlist" ${selected?'':'disabled'}>Add to playlist</button>
-    <button class="bulk-btn" data-bulk-action="move" ${selected?'':'disabled'}>Move to playlist</button>
-    <button class="bulk-btn" data-bulk-action="favorite" ${selected?'':'disabled'}>Favorite</button>
-    <button class="bulk-btn" data-bulk-action="queue" ${selected?'':'disabled'}>Queue</button>
-    <button class="bulk-btn danger" data-bulk-action="delete" ${selected?'':'disabled'}>Delete</button>
+    <button class="bulk-btn" data-bulk-action="playlist" ${selected?'':'disabled'} title="Add to playlist">Add to playlist</button>
+    <button class="bulk-btn" data-bulk-action="move" ${selected?'':'disabled'} title="Move to playlist">Move to playlist</button>
+    <button class="bulk-btn" data-bulk-action="favorite" ${selected?'':'disabled'} title="Favorite selected">Favorite</button>
+    <button class="bulk-btn" data-bulk-action="queue" ${selected?'':'disabled'} title="Add to queue">Queue</button>
+    <button class="bulk-btn danger" data-bulk-action="delete" ${selected?'':'disabled'} title="Delete selected">Delete</button>
   </div>`;
 }
 
@@ -538,7 +538,7 @@ function updateUpNext(){
           <div class="queue-name${i==currentQueueIdx?' active':''}">${esc(song.title)}</div>
           <div class="queue-sub">${esc(song.artist)}</div>
         </div>
-        ${i>currentQueueIdx?`<button class="queue-del" data-qdel="${i}">×</button>`:''}
+        ${i>currentQueueIdx?`<button class="queue-del" data-qdel="${i}" title="Remove from queue">×</button>`:''}
       </div>`;
     }).join('');
   }

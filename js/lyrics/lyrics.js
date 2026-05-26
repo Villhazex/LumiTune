@@ -156,7 +156,7 @@ function renderLyricLines(lines,showEdit){
     const roma=esc(l.romaji||'');
     if(lyricsMode==='romaji'&&roma)return `<div class="lyric-line" data-idx="${i}">${roma}</div>`;
     return `<div class="lyric-line" data-idx="${i}">${orig}</div>`;
-  }).join('')+(showEdit?`<div class="lyrics-actions" style="margin-top:20px"><button class="lyrics-add-btn primary" id="lyricEditBtn">Edit Lyrics</button><button class="lyrics-add-btn" id="lyricDeleteBtn" style="border-color:rgba(255,80,80,0.25);color:var(--text-dim)">Delete Lyrics</button></div>`:'');
+  }).join('')+(showEdit?`<div class="lyrics-actions" style="margin-top:20px"><button class="lyrics-add-btn primary" id="lyricEditBtn" title="Edit lyrics">Edit Lyrics</button><button class="lyrics-add-btn" id="lyricDeleteBtn" style="border-color:rgba(255,80,80,0.25);color:var(--text-dim)" title="Delete lyrics">Delete Lyrics</button></div>`:'');
 }
 async function renderLyrics(data,showEdit){
   const el=$('lyricsContent');if(!el)return;
@@ -184,7 +184,7 @@ async function renderLyrics(data,showEdit){
   }
   if(data.plainLyrics){
     const lines=data.plainLyrics.split('\n').filter(l=>l.trim());
-    el.innerHTML=lines.map(l=>`<div class="lyric-line">${esc(l.trim())}</div>`).join('')+(showEdit?`<div class="lyrics-actions" style="margin-top:20px"><button class="lyrics-add-btn primary" id="lyricEditBtn">Edit Lyrics</button><button class="lyrics-add-btn" id="lyricDeleteBtn" style="border-color:rgba(255,80,80,0.25);color:var(--text-dim)">Delete Lyrics</button></div>`:'');
+    el.innerHTML=lines.map(l=>`<div class="lyric-line">${esc(l.trim())}</div>`).join('')+(showEdit?`<div class="lyrics-actions" style="margin-top:20px"><button class="lyrics-add-btn primary" id="lyricEditBtn" title="Edit lyrics">Edit Lyrics</button><button class="lyrics-add-btn" id="lyricDeleteBtn" style="border-color:rgba(255,80,80,0.25);color:var(--text-dim)" title="Delete lyrics">Delete Lyrics</button></div>`:'');
     syncKaraokeLyrics();
     return;
   }
@@ -297,11 +297,11 @@ function showLyricsNotFound(song){
   </div>
 </div>
 <div class="lyrics-actions">
-  <button class="lyrics-add-btn primary" id="lyricEditMeta">Edit Metadata</button>
+  <button class="lyrics-add-btn primary" id="lyricEditMeta" title="Edit metadata">Edit Metadata</button>
   <a class="lyrics-add-btn" href="https://lrclib.net/" target="_blank" rel="noopener">Open LRCLIB Search</a>
   <a class="lyrics-add-btn" href="${apiUrl}" target="_blank" rel="noopener">Check Exact Match</a>
-  <button class="lyrics-add-btn" id="lyricAddPlain">Add Plain Lyrics</button>
-  <button class="lyrics-add-btn" id="lyricAddTimestamp">Add Timestamp Lyrics</button>
+  <button class="lyrics-add-btn" id="lyricAddPlain" title="Add plain lyrics">Add Plain Lyrics</button>
+  <button class="lyrics-add-btn" id="lyricAddTimestamp" title="Add timed lyrics">Add Timestamp Lyrics</button>
 </div>`;
   setTimeout(()=>{
     $('lyricEditMeta')?.addEventListener('click',()=>{
@@ -319,8 +319,8 @@ function showAddPlainLyricsModal(song,existing){
     <div class="modal-hint">Paste your lyrics below, one line per verse.</div>
     <textarea class="modal-textarea" id="lyricTextarea" placeholder="Hello world&#10;This is my song&#10;Another lyric line">${existing?esc(existing):''}</textarea>
     <div class="modal-actions">
-      <button class="modal-btn" id="mc">Cancel</button>
-      <button class="modal-btn modal-ok" id="mo">Save</button>
+      <button class="modal-btn" id="mc" title="Cancel">Cancel</button>
+      <button class="modal-btn modal-ok" id="mo" title="Save lyrics">Save</button>
     </div>
   </div>`;
   o.style.display='flex';
@@ -341,8 +341,8 @@ function showAddTimestampLyricsModal(song,existing){
     <textarea class="modal-textarea" id="lyricTextarea" style="min-height:200px">${esc(template)}</textarea>
     <div class="modal-hint">Tips: ask AI to generate synced .lrc lyrics for "${esc(song.title)}" using this format.</div>
     <div class="modal-actions">
-      <button class="modal-btn" id="mc">Cancel</button>
-      <button class="modal-btn modal-ok" id="mo">Save</button>
+      <button class="modal-btn" id="mc" title="Cancel">Cancel</button>
+      <button class="modal-btn modal-ok" id="mo" title="Save lyrics">Save</button>
     </div>
   </div>`;
   o.style.display='flex';
