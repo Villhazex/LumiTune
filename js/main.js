@@ -356,7 +356,7 @@ $('searchDropdown').addEventListener('click',e=>{
   if(remove){
     e.stopPropagation();
     const term=remove.dataset.remove;
-    recentSearches=recentSearches.filter(s=>s!==term);
+    recentSearches=recentSearches.filter(s=>(typeof s==='string'?s:s.term)!==term);
     saveState();
     renderSearchDropdown($('searchInput').value);
     return;
@@ -380,7 +380,20 @@ $('searchDropdown').addEventListener('click',e=>{
   if(type==='track'){
     const pk=item.dataset.playlist;
     const idx=parseInt(item.dataset.index);
-    if(playlists[pk]&&playlists[pk].songs[idx]){currentQueueIdx=-1;playSong(idx,pk,false);showToast('♪ Playing from '+esc(playlists[pk]?.name||'playlist'));}
+    if(playlists[pk]&&idx>=0&&playlists[pk].songs[idx]){currentQueueIdx=-1;playSong(idx,pk,false);showToast('♪ Playing from '+esc(playlists[pk]?.name||'playlist'));}
+    $('searchInput').value='';
+    $('searchClear').classList.remove('show');
+    $('searchDropdown').classList.remove('show');
+    return;
+  }
+  if(type==='recent-track'){
+    const songId=item.dataset.songId;
+    let found=false;
+    for(const[pk,pl]of Object.entries(playlists)){
+      const idx=pl.songs.indexOf(songId);
+      if(idx!==-1){currentQueueIdx=-1;playSong(idx,pk,false);showToast('♪ Playing from '+esc(pl.name||'playlist'));found=true;break;}
+    }
+    if(!found)showToast('Song not found');
     $('searchInput').value='';
     $('searchClear').classList.remove('show');
     $('searchDropdown').classList.remove('show');

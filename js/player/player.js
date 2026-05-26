@@ -60,6 +60,7 @@ async function playSong(index,playlistKey,addToQueue){
     if(cover){song.cover=cover;saveState();}
   }
   incrementPlayCount(song.id,song.title,song.artist);
+  trackRecentPlay(song,currentPlaylist);
   $('trackTitle').textContent=song.title;
   $('trackArtist').textContent=song.artist;
   const aa=$('albumArt');

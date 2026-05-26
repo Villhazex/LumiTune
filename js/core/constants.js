@@ -63,6 +63,7 @@ let isRecordingShortcut=false;
 let noAnim=false;
 let recordingShortcutKey=null;
 
+let recentPlays=[];
 let audioCtx=null;
 let gainNode=null;
 let analyserNode=null;

@@ -37,6 +37,7 @@ function saveState(){
     localStorage.setItem('lumi-infinity',String(infinityPlay));
     localStorage.setItem('lumi-stabilize',String(audioStabilize));
     localStorage.setItem('lumi-loudness-target',String(loudnessTarget));
+    localStorage.setItem('lumi-recent-plays',JSON.stringify(recentPlays));
   }catch(e){}
 }
 async function loadState(){
@@ -99,7 +100,9 @@ async function loadState(){
     const rec=JSON.parse(localStorage.getItem('lumi-rec')||'[]');
     if(Array.isArray(rec))recentPlaylists=rec.filter(k=>typeof k==='string');
     const src=JSON.parse(localStorage.getItem('lumi-src')||'[]');
-    if(Array.isArray(src))recentSearches=src.filter(s=>typeof s==='string');
+    if(Array.isArray(src))recentSearches=src.map(s=>typeof s==='string'?{term:s,time:0}:s).filter(s=>s&&s.term);
+    const rp=JSON.parse(localStorage.getItem('lumi-recent-plays')||'[]');
+    if(Array.isArray(rp))recentPlays=rp.filter(p=>p&&p.id);
     infinityPlay=localStorage.getItem('lumi-infinity')==='true';
     audioStabilize=localStorage.getItem('lumi-stabilize')==='true';
     const lt=parseFloat(localStorage.getItem('lumi-loudness-target'));
