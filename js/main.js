@@ -32,7 +32,8 @@ uq.addEventListener('dragstart',e=>{
   upNextDragSrc=parseInt(item.dataset.qi);
   item.classList.add('dragging');
   e.dataTransfer.effectAllowed='move';
-  e.dataTransfer.setData('text/plain',JSON.stringify({qi:upNextDragSrc}));
+  e.dataTransfer.setData('text/plain','true');
+  e.stopPropagation();
 });
 uq.addEventListener('dragover',e=>{
   if(upNextDragSrc===null)return;
@@ -44,20 +45,26 @@ uq.addEventListener('dragover',e=>{
   else target.classList.add('drag-over-bottom');
 });
 uq.addEventListener('drop',e=>{
-  if(upNextDragSrc===null)return;
+  if(upNextDragSrc===null){console.log('SIDE-DROP: upNextDragSrc is null');return;}
   e.preventDefault();
-  const target=e.target.closest('.queue-item');if(!target)return;
+  const target=e.target.closest('.queue-item');if(!target){console.log('SIDE-DROP: no target found');return;}
   const targetIdx=parseInt(target.dataset.qi);
-  if(isNaN(targetIdx))return;
+  if(isNaN(targetIdx)){console.log('SIDE-DROP: targetIdx is NaN');return;}
+  console.log('SIDE-DROP: src=%s target=%s', upNextDragSrc, targetIdx);
   if(targetIdx!==upNextDragSrc){
     const overTop=target.classList.contains('drag-over-top');
-    const newPos=overTop?targetIdx:targetIdx+1;
+    let newPos=overTop?targetIdx:targetIdx+1;
+    if(targetIdx>upNextDragSrc)newPos--;
+    console.log('SIDE-DROP: overTop=%s newPos=%s queue.len=%s', overTop, newPos, queue.length);
     const [item]=queue.splice(upNextDragSrc,1);
     queue.splice(newPos,0,item);
+    console.log('SIDE-DROP: after splice queue=%o', queue);
     if(upNextDragSrc===currentQueueIdx)currentQueueIdx=newPos;
     else if(upNextDragSrc<currentQueueIdx&&newPos>=currentQueueIdx)currentQueueIdx--;
     else if(upNextDragSrc>currentQueueIdx&&newPos<=currentQueueIdx)currentQueueIdx++;
     updateUpNext();updateQueueUI();
+  }else{
+    console.log('SIDE-DROP: target matches source, skipping');
   }
   upNextDragSrc=null;
   uq.querySelectorAll('.queue-item').forEach(el=>el.classList.remove('dragging','drag-over-top','drag-over-bottom'));
@@ -273,54 +280,7 @@ document.addEventListener('mouseup',()=>{isDraggingProgress=false;isDraggingVolu
   }
   $('karaokeProgressBar')?.addEventListener('click',seekKaraoke);
 
-   let dragSourceIdx=null;
-  const ov=$('confirmOverlay');
-  ['dragstart','dragover','drop','dragend'].forEach(evt=>{
-    ov.addEventListener(evt,e=>{
-      const list=e.target.closest('.queue-list');
-      if(!list||!ov.querySelector('.queue-list'))return;
-      if(evt==='dragstart'){
-        const item=e.target.closest('.queue-item');
-        if(!item)return;
-        dragSourceIdx=parseInt(item.dataset.qi);
-        item.classList.add('dragging');
-        e.dataTransfer.effectAllowed='move';
-        e.dataTransfer.setData('text/plain',JSON.stringify({qi:dragSourceIdx}));
-      }else if(evt==='dragover'){
-        if(dragSourceIdx===null)return;
-        e.preventDefault();
-        e.dataTransfer.dropEffect='move';
-        ov.querySelectorAll('.queue-item').forEach(el=>el.classList.remove('drag-over-top','drag-over-bottom'));
-        const target=e.target.closest('.queue-item');
-        if(!target)return;
-        const rect=target.getBoundingClientRect();
-        if(e.clientY<rect.top+rect.height/2)target.classList.add('drag-over-top');
-        else target.classList.add('drag-over-bottom');
-      }else if(evt==='drop'){
-        if(dragSourceIdx===null)return;
-        e.preventDefault();
-        const target=e.target.closest('.queue-item');
-        if(!target)return;
-        const targetIdx=parseInt(target.dataset.qi);
-        if(targetIdx!==dragSourceIdx){
-          const overTop=target.classList.contains('drag-over-top');
-          const newPos=overTop?targetIdx:targetIdx+1;
-          const [item]=queue.splice(dragSourceIdx,1);
-          queue.splice(newPos,0,item);
-          if(dragSourceIdx===currentQueueIdx)currentQueueIdx=newPos;
-          else if(dragSourceIdx<currentQueueIdx&&newPos>=currentQueueIdx)currentQueueIdx--;
-          else if(dragSourceIdx>currentQueueIdx&&newPos<=currentQueueIdx)currentQueueIdx++;
-          renderQueue();
-          updateQueueUI();
-        }
-        dragSourceIdx=null;
-        ov.querySelectorAll('.queue-item').forEach(el=>el.classList.remove('dragging','drag-over-top','drag-over-bottom'));
-      }else if(evt==='dragend'){
-        dragSourceIdx=null;
-        ov.querySelectorAll('.queue-item').forEach(el=>el.classList.remove('dragging','drag-over-top','drag-over-bottom'));
-      }
-    });
-  });
+
   $('sortTitle')?.addEventListener('click',()=>toggleSort('title'));
   $('sortDuration')?.addEventListener('click',()=>toggleSort('duration'));
   $('settingsBtn').addEventListener('click',showSettingsModal);
@@ -523,7 +483,11 @@ const sl=$('songList');
 let upNextDragCount=0;
 const unp=$('tab-queue');
 if(unp){
-  unp.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='copy';});
+  unp.addEventListener('dragover',e=>{
+    e.preventDefault();
+    if(e.dataTransfer.effectAllowed==='all'||e.dataTransfer.effectAllowed==='copy'||e.dataTransfer.effectAllowed==='uninitialized')
+      e.dataTransfer.dropEffect='copy';
+  });
   unp.addEventListener('dragenter',()=>{upNextDragCount++;unp.classList.add('drag-over');});
   unp.addEventListener('dragleave',()=>{upNextDragCount--;if(upNextDragCount<=0){upNextDragCount=0;unp.classList.remove('drag-over');}});
   unp.addEventListener('drop',e=>{

@@ -66,6 +66,47 @@ function renderQueue(){
         <button class="modal-btn modal-ok" id="mc">Close</button>
       </div>
     </div>`;
+    const ql=o.querySelector('.queue-list');
+    if(ql)(function(){
+      let mds=null;
+      ql.addEventListener('dragstart',e=>{
+        const item=e.target.closest('.queue-item');if(!item)return;
+        mds=parseInt(item.dataset.qi);item.classList.add('dragging');
+        e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain','true');
+      });
+      ql.addEventListener('dragover',e=>{
+        if(mds===null)return;e.preventDefault();e.dataTransfer.dropEffect='move';
+        ql.querySelectorAll('.queue-item').forEach(el=>el.classList.remove('drag-over-top','drag-over-bottom'));
+        const t=e.target.closest('.queue-item');if(!t)return;
+        const r=t.getBoundingClientRect();
+        if(e.clientY<r.top+r.height/2)t.classList.add('drag-over-top');else t.classList.add('drag-over-bottom');
+      });
+      ql.addEventListener('drop',e=>{
+        if(mds===null){console.log('MODAL-DROP: mds is null');return;}
+        e.preventDefault();
+        const t=e.target.closest('.queue-item');if(!t){console.log('MODAL-DROP: no target');return;}
+        const ti=parseInt(t.dataset.qi);
+        console.log('MODAL-DROP: src=%s target=%s', mds, ti);
+        if(ti!==mds){
+          const ot=t.classList.contains('drag-over-top');
+          let np=ot?ti:ti+1;
+          if(ti>mds)np--;
+          console.log('MODAL-DROP: overTop=%s np=%s queue.len=%s', ot, np, queue.length);
+          const [it]=queue.splice(mds,1);queue.splice(np,0,it);
+          console.log('MODAL-DROP: after splice queue=%o', queue);
+          if(mds===currentQueueIdx)currentQueueIdx=np;
+          else if(mds<currentQueueIdx&&np>=currentQueueIdx)currentQueueIdx--;
+          else if(mds>currentQueueIdx&&np<=currentQueueIdx)currentQueueIdx++;
+          renderQueue();updateQueueUI();
+        }else{
+          console.log('MODAL-DROP: target matches source, skipping');
+        }
+        mds=null;ql.querySelectorAll('.queue-item').forEach(el=>el.classList.remove('dragging','drag-over-top','drag-over-bottom'));
+      });
+      ql.addEventListener('dragend',()=>{
+        mds=null;ql.querySelectorAll('.queue-item').forEach(el=>el.classList.remove('dragging','drag-over-top','drag-over-bottom'));
+      });
+    })();
   }
   o.style.display='flex';
   if(o._qkh)document.removeEventListener('keydown',o._qkh);

@@ -143,8 +143,10 @@ function playNext(){
   playSong(next);
 }
 function playPrev(){
-  const songs=playlists[currentPlaylist].songs;if(!songs.length)return;
-  if(currentPlaybackTime>3){currentPlaybackTime=0;if(currentAudioFile)audioPlayer.currentTime=0;else simPlay(songs[currentSongIndex]?.duration);return;}
+  if(currentPlaybackTime>3){currentPlaybackTime=0;if(currentAudioFile)audioPlayer.currentTime=0;else{const s=playlists[currentPlaylist]?.songs;if(s)simPlay(s[currentSongIndex]?.duration);}return;}
+  const prevIdx=currentQueueIdx-1;
+  if(queue.length>0&&prevIdx>=0){currentQueueIdx=prevIdx;playSong(queue[prevIdx].songIndex,queue[prevIdx].playlistKey);return;}
+  const songs=playlists[currentPlaylist]?.songs;if(!songs||!songs.length)return;
   playSong((currentSongIndex-1+songs.length)%songs.length);
 }
 
