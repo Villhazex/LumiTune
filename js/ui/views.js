@@ -511,11 +511,12 @@ function renderPlaylists(filter){
 
 function updateHeroSection(){
   const hs=$('heroSection');
-  if(!playlists[currentPlaylist]||currentView!=='home'){
+  const targetPl=currentPlaylistPlaying||currentPlaylist;
+  if(!playlists[targetPl]||currentView!=='home'){
     hs.style.display='none';return;
   }
-  const pl=playlists[currentPlaylist];
-  const song=getSong(pl.songs[currentSongIndex]);
+  const pl=playlists[targetPl];
+  const song=currentPlaylistPlaying?getSong(pl.songs[currentSongIndex]):null;
   $('heroTitle').textContent=song?song.title:'Select a track';
   $('heroArtist').textContent=song?song.artist:'Pick a song to start listening';
   const heroArt=$('heroArt');
