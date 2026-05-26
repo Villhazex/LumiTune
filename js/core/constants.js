@@ -63,6 +63,13 @@ let isRecordingShortcut=false;
 let noAnim=false;
 let recordingShortcutKey=null;
 
+let audioCtx=null;
+let gainNode=null;
+let analyserNode=null;
+let loudnessTarget=-18;
+let audioStabilize=false;
+let loudnessInterval=null;
+
 const SHORTCUTS={
   playPause:{code:'Space',modifiers:[],label:'Play / Pause',category:'Playback'},
   nextTrack:{code:'ArrowRight',modifiers:['Shift'],label:'Next Track',category:'Playback'},

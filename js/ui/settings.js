@@ -72,6 +72,30 @@ function showSettingsModal(){
                 </label>
               </div>
             </div>
+          </div>
+          <div class="setting-group">
+            <div class="setting-row">
+              <div class="setting-row-label">
+                <span>Audio Stabilize</span>
+                <small>Normalize volume across songs based on loudness</small>
+              </div>
+              <div class="setting-row-control">
+                <label class="toggle-switch">
+                  <input type="checkbox" id="sAudioStabilize"${audioStabilize?' checked':''}>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-row-label">
+                <span>Target Loudness</span>
+                <small>Reference loudness level in dB</small>
+              </div>
+              <div class="setting-row-control" style="display:flex;align-items:center;gap:8px">
+                <input type="range" id="sLoudnessTarget" min="-30" max="-10" step="1" value="${loudnessTarget}" class="setting-slider">
+                <span class="setting-slider-val" id="sLoudnessVal">${loudnessTarget} dB</span>
+              </div>
+            </div>
           </div>`;
       },
       bind(){
@@ -92,6 +116,26 @@ function showSettingsModal(){
         $('sInfinityPlay').onchange=()=>{
           infinityPlay=$('sInfinityPlay').checked;
           saveState();
+        };
+        $('sAudioStabilize').onchange=()=>{
+          audioStabilize=$('sAudioStabilize').checked;
+          saveState();
+          if(audioStabilize){
+            if(currentAudioFile&&isPlaying){initAudioChain();applyGain(getSong(playlists[currentPlaylist]?.songs?.[currentSongIndex]));measureLoudness(getSong(playlists[currentPlaylist]?.songs?.[currentSongIndex]));}
+          }else{
+            clearInterval(loudnessInterval);
+            loudnessInterval=null;
+            if(gainNode)gainNode.gain.value=1;
+          }
+        };
+        $('sLoudnessTarget').oninput=()=>{
+          loudnessTarget=parseInt($('sLoudnessTarget').value);
+          $('sLoudnessVal').textContent=loudnessTarget+' dB';
+          saveState();
+          if(audioStabilize&&currentAudioFile&&isPlaying){
+            const song=getSong(playlists[currentPlaylist]?.songs?.[currentSongIndex]);
+            if(song)applyGain(song);
+          }
         };
       }
     },

@@ -35,6 +35,8 @@ function saveState(){
     localStorage.setItem('lumi-src',JSON.stringify(recentSearches));
     localStorage.setItem('lumi-pt',String(totalPlayTime));
     localStorage.setItem('lumi-infinity',String(infinityPlay));
+    localStorage.setItem('lumi-stabilize',String(audioStabilize));
+    localStorage.setItem('lumi-loudness-target',String(loudnessTarget));
   }catch(e){}
 }
 async function loadState(){
@@ -99,6 +101,9 @@ async function loadState(){
     const src=JSON.parse(localStorage.getItem('lumi-src')||'[]');
     if(Array.isArray(src))recentSearches=src.filter(s=>typeof s==='string');
     infinityPlay=localStorage.getItem('lumi-infinity')==='true';
+    audioStabilize=localStorage.getItem('lumi-stabilize')==='true';
+    const lt=parseFloat(localStorage.getItem('lumi-loudness-target'));
+    if(!isNaN(lt))loudnessTarget=Math.max(-30,Math.min(-10,lt));
   }catch(e){console.warn(e);}
 }
 

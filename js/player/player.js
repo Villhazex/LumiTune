@@ -98,6 +98,9 @@ function playReal(file,song){
   audioPlayer.src=URL.createObjectURL(file);
   audioPlayer.volume=isMuted?0:volume;
   audioPlayer.play().catch(()=>{});
+  clearInterval(loudnessInterval);
+  loudnessInterval=null;
+  if(audioStabilize){initAudioChain();applyGain(song);measureLoudness(song);}
   audioPlayer.onloadedmetadata=()=>{totalDuration=audioPlayer.duration;$('totalTime').textContent=fmt(totalDuration);$('heroTotalTime').textContent=fmt(totalDuration);const ktt=$('karaokeTotalTime');if(ktt)ktt.textContent=fmt(totalDuration);song.duration=fmt(totalDuration);const activeRow=$('songList')?.querySelector('.track-row.active');if(activeRow){const extra=activeRow.querySelector('.t-extra');if(extra)extra.textContent=song.duration;}};
   audioPlayer.ontimeupdate=()=>{if(!isDraggingProgress){currentPlaybackTime=audioPlayer.currentTime;if(isPlaying){const delta=currentPlaybackTime-lastTrackedPos;if(delta>0&&delta<5){totalPlayTime+=delta;sessionPlayTime+=delta;}}lastTrackedPos=currentPlaybackTime;updateLyricHighlight(currentPlaybackTime);$('currentTime').textContent=fmt(currentPlaybackTime);$('progressFill').style.width=`${(currentPlaybackTime/totalDuration)*100}%`;const kct=$('karaokeCurrentTime');if(kct)kct.textContent=fmt(currentPlaybackTime);const kpf=$('karaokeProgressFill');if(kpf)kpf.style.width=`${(currentPlaybackTime/totalDuration)*100}%`;updateHeroProgress();}};
   audioPlayer.onended=handleEnd;
@@ -117,6 +120,59 @@ function simPlay(durStr){
 }},100);
 }
 
+function initAudioChain(){
+  if(!audioCtx){
+    audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    gainNode=audioCtx.createGain();
+    analyserNode=audioCtx.createAnalyser();
+    analyserNode.fftSize=2048;
+  }
+  if(audioCtx.state==='suspended')audioCtx.resume();
+  if(window.audioSourceNode)return;
+  try{
+    window.audioSourceNode=audioCtx.createMediaElementSource(audioPlayer);
+    window.audioSourceNode.connect(gainNode);
+    gainNode.connect(analyserNode);
+    analyserNode.connect(audioCtx.destination);
+  }catch(e){console.warn('Audio chain init failed:',e);}
+}
+function destroyAudioChain(){
+  clearInterval(loudnessInterval);
+  loudnessInterval=null;
+  if(analyserNode){try{analyserNode.disconnect();}catch(e){}}
+  if(gainNode){try{gainNode.disconnect();}catch(e){}}
+  if(window.audioSourceNode){try{window.audioSourceNode.disconnect();}catch(e){}window.audioSourceNode=null;}
+  if(audioCtx){audioCtx.close().catch(()=>{});audioCtx=null;gainNode=null;analyserNode=null;}
+}
+function applyGain(song){
+  if(!gainNode||!audioStabilize){if(gainNode)gainNode.gain.value=1;return;}
+  if(song.loudness==null){gainNode.gain.value=1;return;}
+  const gainDb=loudnessTarget-song.loudness;
+  const clampedDb=Math.max(-12,Math.min(12,gainDb));
+  gainNode.gain.value=Math.pow(10,clampedDb/20);
+}
+function measureLoudness(song){
+  clearInterval(loudnessInterval);
+  if(!analyserNode||!audioStabilize)return;
+  const bufferLength=analyserNode.frequencyBinCount;
+  const dataArray=new Uint8Array(bufferLength);
+  let measureCount=0;
+  let totalRms=0;
+  loudnessInterval=setInterval(()=>{
+    analyserNode.getByteTimeDomainData(dataArray);
+    let sum=0;
+    for(let i=0;i<bufferLength;i++){const v=(dataArray[i]-128)/128;sum+=v*v;}
+    const rms=Math.sqrt(sum/bufferLength);
+    if(rms>0.001){totalRms+=rms;measureCount++;}
+    if(measureCount>=60){
+      clearInterval(loudnessInterval);
+      loudnessInterval=null;
+      const avgRms=totalRms/measureCount;
+      song.loudness=Math.max(-60,Math.min(0,20*Math.log10(avgRms)));
+      saveState();
+    }
+  },100);
+}
 function stopPlayback(){
   isPlaying=false;updatePlayBtn();
   $('albumArt').classList.remove('playing');$('vizBars').classList.remove('active');
@@ -132,6 +188,8 @@ function playRandomSong(){
 }
 function handleEnd(){
   clearInterval(playbackInterval);
+  clearInterval(loudnessInterval);
+  loudnessInterval=null;
   const songs=(playlists[currentPlaylist]?.songs)||[];
   if(repeatMode===2){playSong(currentSongIndex);return;}
   const nextIdx=currentQueueIdx+1;
