@@ -76,3 +76,5 @@ server.js       Express backend
 - No loading spinner for bulk operations on large playlists.
 - Audio volume slider unstyled in some themes.
 - When no songs exist (new user), hero is hidden — handle `currentSongIndex === -1`.
+- Playlist source card condition in `updateUpNext()` (`views.js:651`): `currentSongIndex>=0 && (currentQueueIdx<0 || currentQueueIdx+1>=queue.length)`. Verified correct — card renders when playing last queue item (cQI+1 >= qLen) or when queue is exhausted (cQI < 0).
+- `currentQueueIdx` is NOT reset when queue exhausts and a playlist song starts — it stays at the last queue item index. This is harmless because the cardinality condition `cQI+1 >= qLen` remains true.
