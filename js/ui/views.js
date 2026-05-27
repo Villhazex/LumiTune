@@ -632,32 +632,27 @@ function updateUpNext(){
   const actions=$('upNextActions');if(actions)actions.style.display=queue.length?'':'none';
   const isOnQueueSong=currentQueueIdx>=0&&currentQueueIdx<queue.length&&queue[currentQueueIdx]&&queue[currentQueueIdx].songIndex===currentSongIndex&&queue[currentQueueIdx].playlistKey===(currentPlaylistPlaying||currentPlaylist);
   const showPlCard=currentSongIndex>=0&&!isOnQueueSong;
-  if(showPlCard)playlistCardActive=true;
-  else if(!showPlCard&&!isOnQueueSong)playlistCardActive=false;
-  if(playlistCardActive){
-    const pl=playlists[currentPlaylistPlaying||currentPlaylist];
-    const name=pl?.name||'playlist';
-    const cardCls='queue-item '+(showPlCard?'active':'queue-history');
-    html+=`<div class="${cardCls}" style="cursor:default;pointer-events:none;margin:0 0 4px"${showPlCard?' id="nowPlayingRow"':''}>
-      <span class="queue-drag-handle" style="cursor:default;opacity:0.3">≡</span>
-      <div class="queue-thumb"><svg viewBox="0 0 16 16"><path d="M2 3h8l2 3h2v8H2z" fill="currentColor"/></svg></div>
-      <div class="queue-info">
-        <div class="queue-name" style="color:var(--accent2)${showPlCard?'':';opacity:0.5'}">♪ Playing from playlist</div>
-        <div class="queue-sub">${esc(name)}</div>
-      </div>
-    </div>`;
-  }
-  if(queue.length){
-    html+=queue.map((item,i)=>{
+  const lastIdx=playlistCardHistory.length-1;
+  const items=[];
+  for(let i=0;i<queue.length;i++)items.push({type:'queue',i,atPos:i});
+  for(let j=0;j<playlistCardHistory.length;j++)items.push({type:'card',j,atPos:playlistCardHistory[j].atPos});
+  items.sort((a,b)=>{
+    if(a.atPos!==b.atPos)return a.atPos-b.atPos;
+    return a.type==='queue'?-1:1;
+  });
+  for(const it of items){
+    if(it.type==='queue'){
+      const i=it.i;
+      const item=queue[i];
       const pl=playlists[item.playlistKey];
       const song=getSong(pl?.songs[item.songIndex]);
-      if(!song)return'';
+      if(!song)continue;
       let cls='queue-item';
       if(i<currentQueueIdx||(i===currentQueueIdx&&!isOnQueueSong))cls+=' queue-history';
       else if(i===currentQueueIdx&&isOnQueueSong)cls+=' active';
       const draggable=i>currentQueueIdx?'draggable="true"':'';
       const isNpr=i===currentQueueIdx&&isOnQueueSong?' id="nowPlayingRow"':'';
-      return`<div class="${cls}" ${draggable} data-qi="${i}"${isNpr}>
+      html+=`<div class="${cls}" ${draggable} data-qi="${i}"${isNpr}>
         ${i>currentQueueIdx?`<span class="queue-drag-handle">≡</span>`:''}
         <div class="queue-thumb"><svg viewBox="0 0 16 16"><path d="M2 3h8l2 3h2v8H2z" fill="currentColor"/></svg></div>
         <div class="queue-info">
@@ -666,7 +661,20 @@ function updateUpNext(){
         </div>
         ${i>currentQueueIdx?`<button class="queue-del" data-qdel="${i}" title="Remove from queue">×</button>`:''}
       </div>`;
-    }).join('');
+    }else{
+      const j=it.j;
+      const entry=playlistCardHistory[j];
+      const isActive=showPlCard&&j===lastIdx;
+      const cardCls='queue-item '+(isActive?'active':'queue-history');
+      html+=`<div class="${cardCls}" style="cursor:default;pointer-events:none;margin:0 0 4px"${isActive?' id="nowPlayingRow"':''}>
+        <span class="queue-drag-handle" style="cursor:default;opacity:0.3">≡</span>
+        <div class="queue-thumb"><svg viewBox="0 0 16 16"><path d="M2 3h8l2 3h2v8H2z" fill="currentColor"/></svg></div>
+        <div class="queue-info">
+          <div class="queue-name" style="color:var(--accent2)${isActive?'':';opacity:0.5'}">♪ Playing from playlist</div>
+          <div class="queue-sub">${esc(entry.name)}</div>
+        </div>
+      </div>`;
+    }
   }
   list.innerHTML=html;
   const np=document.getElementById('nowPlayingRow');

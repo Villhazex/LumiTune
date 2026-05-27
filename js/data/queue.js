@@ -10,9 +10,10 @@ function removeFromQueue(index){
   queue.splice(index,1);
   if(index<currentQueueIdx)currentQueueIdx--;
   else if(index===currentQueueIdx)currentQueueIdx=-1;
+  for(let entry of playlistCardHistory){if(index<=entry.atPos)entry.atPos--;}
   renderQueue();updateQueueUI();updateUpNext();
 }
-function clearQueue(){queue=[];currentQueueIdx=-1;playlistCardActive=false;updateQueueUI();updateUpNext();}
+function clearQueue(){queue=[];currentQueueIdx=-1;playlistCardHistory=[];updateQueueUI();updateUpNext();}
 async function saveQueueToPlaylist(){
   if(!queue.length)return;
   const name=await showInput('Playlist name:','Queue - '+new Date().toLocaleDateString());
