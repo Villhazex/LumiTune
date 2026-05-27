@@ -41,6 +41,7 @@ function renderPlaylistGrid(){
 }
 
 function renderSongList(filter=''){
+  const el=$('songList');if(el&&el._vCleanup){el._vCleanup();el._vCleanup=null;}
   showSkeleton();
   if(currentView!=='home')$('heroSection').style.display='none';
   if(currentView!=='search'){

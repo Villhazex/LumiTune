@@ -21,6 +21,7 @@ function setVirtualSongList(items,renderFn){
     const start=Math.max(0,Math.floor(scrollTop/itemHeight)-buffer);
     const end=Math.min(items.length,Math.ceil((scrollTop+viewH)/itemHeight)+buffer);
     if(start===lastStart&&end===lastEnd)return;
+
     lastStart=start;lastEnd=end;
     el.innerHTML='';
     el.style.height=items.length*itemHeight+'px';
