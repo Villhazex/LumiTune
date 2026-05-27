@@ -63,13 +63,14 @@ function showSettingsModal(){
             <div class="setting-row">
               <div class="setting-row-label">
                 <span>Infinity Play</span>
-                <small>Continue playing from random playlists when queue or playlist ends</small>
+                <small>Continue playing when queue or playlist ends</small>
               </div>
               <div class="setting-row-control">
-                <label class="toggle-switch">
-                  <input type="checkbox" id="sInfinityPlay"${infinityPlay?' checked':''}>
-                  <span class="toggle-slider"></span>
-                </label>
+                <select id="sInfinityMode" class="setting-select">
+                  <option value="off"${infinityMode==='off'?' selected':''}>Off</option>
+                  <option value="song"${infinityMode==='song'?' selected':''}>Random Song</option>
+                  <option value="playlist"${infinityMode==='playlist'?' selected':''}>Random Playlist</option>
+                </select>
               </div>
             </div>
           </div>
@@ -113,9 +114,10 @@ function showSettingsModal(){
           document.body.classList.toggle('no-anim',noAnim);
           localStorage.setItem('lumi-no-anim',noAnim?'1':'');
         };
-        $('sInfinityPlay').onchange=()=>{
-          infinityPlay=$('sInfinityPlay').checked;
+        $('sInfinityMode').onchange=()=>{
+          infinityMode=$('sInfinityMode').value;
           saveState();
+          updateInfinityIndicator();
         };
         $('sAudioStabilize').onchange=()=>{
           audioStabilize=$('sAudioStabilize').checked;

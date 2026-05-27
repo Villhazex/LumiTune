@@ -179,13 +179,20 @@ function stopPlayback(){
   $('albumArt').classList.remove('playing');$('vizBars').classList.remove('active');
   updateHeroSection();renderSongList($('searchInput').value);showLyricsNone();updateUpNext();
 }
-function playRandomSong(){
+function playRandom(){
   const allKeys=Object.keys(playlists).filter(k=>(playlists[k]?.songs||[]).length>0);
   if(!allKeys.length){stopPlayback();return;}
-  const key=allKeys[Math.floor(Math.random()*allKeys.length)];
-  const songs=playlists[key].songs;
-  const idx=Math.floor(Math.random()*songs.length);
-  playSong(idx,key);
+  if(infinityMode==='playlist'){
+    const key=allKeys[Math.floor(Math.random()*allKeys.length)];
+    playSong(0,key);
+  }else{
+    const others=allKeys.filter(k=>k!==currentPlaylist);
+    const pool=others.length?others:allKeys;
+    const key=pool[Math.floor(Math.random()*pool.length)];
+    const songs=playlists[key].songs;
+    const idx=Math.floor(Math.random()*songs.length);
+    playSong(idx,key);
+  }
 }
 function handleEnd(){
   clearInterval(playbackInterval);
@@ -195,9 +202,9 @@ function handleEnd(){
   if(repeatMode===2){playSong(currentSongIndex);return;}
   const nextIdx=currentQueueIdx+1;
   if(currentQueueIdx>=0&&queue.length>0&&nextIdx<queue.length){currentQueueIdx=nextIdx;playSong(queue[currentQueueIdx].songIndex,queue[currentQueueIdx].playlistKey);return;}
-  if(currentQueueIdx>=0&&queue.length>0){if(infinityPlay){playRandomSong();}else{stopPlayback();}return;}
+  if(currentQueueIdx>=0&&queue.length>0){if(infinityMode!=='off'){playRandom();}else{stopPlayback();}return;}
   if(repeatMode===1||currentSongIndex<songs.length-1){playNext();return;}
-  if(infinityPlay){playRandomSong();}else{stopPlayback();}
+  if(infinityMode!=='off'){playRandom();}else{stopPlayback();}
 }
 
 function playNext(){
@@ -207,8 +214,8 @@ function playNext(){
     playSong(queue[nextIdx].songIndex,queue[nextIdx].playlistKey);
     return;
   }
-  if(currentQueueIdx>=0&&queue.length>0){if(infinityPlay){playRandomSong();}else{stopPlayback();}return;}
-  const songs=playlists[currentPlaylist]?.songs;if(!songs.length){if(infinityPlay){playRandomSong();}else{stopPlayback();}return;}
+  if(currentQueueIdx>=0&&queue.length>0){if(infinityMode!=='off'){playRandom();}else{stopPlayback();}return;}
+  const songs=playlists[currentPlaylist]?.songs;if(!songs.length){if(infinityMode!=='off'){playRandom();}else{stopPlayback();}return;}
   let next;
   if(isShuffle){do{next=Math.floor(Math.random()*songs.length);}while(next===currentSongIndex&&songs.length>1);}
   else next=(currentSongIndex+1)%songs.length;

@@ -672,6 +672,14 @@ function updateUpNext(){
   const count=$('queueCount');if(count)count.textContent=remaining+' tracks';
 }
 
+function updateInfinityIndicator(){
+  const btn=$('infinityBtn');
+  if(!btn)return;
+  btn.style.display='';
+  btn.textContent=infinityMode==='off'?'∞':'∞';
+  btn.title=infinityMode==='off'?'Infinity: Off':infinityMode==='song'?'Infinity: Random Song':'Infinity: Random Playlist';
+  btn.classList.toggle('active',infinityMode!=='off');
+}
 /* ── STATS PANEL ── */
 function getQueueAllItems(){
   var filter=$('searchInput').value.trim().toLowerCase();

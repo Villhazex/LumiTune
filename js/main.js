@@ -568,6 +568,7 @@ async function init(){
     if(!playlists[currentPlaylist]){const keys=Object.keys(playlists);currentPlaylist=keys.length?keys[0]:'';}
     if(localStorage.getItem('lumi-no-anim')){noAnim=true;document.body.classList.add('no-anim');}
     renderPlaylistNav();renderPlaylistGrid();switchView('home');
+    updateInfinityIndicator();
     $('shuffleBtn').classList.toggle('active',isShuffle);
     const hs=$('heroShuffleBtn');if(hs)hs.classList.toggle('active',isShuffle);
     $('repeatBtn').classList.toggle('active',repeatMode>0);
@@ -588,3 +589,11 @@ setTimeout(()=>{
   if(s){s.style.opacity='0';setTimeout(()=>s.remove(),400);}
 },3000);
 addEventListener('beforeunload',()=>{localStorage.setItem('lumi-pt',String(totalPlayTime));});
+$('infinityBtn')?.addEventListener('click',()=>{
+  const modes=['off','song','playlist'];
+  const idx=modes.indexOf(infinityMode);
+  infinityMode=modes[(idx+1)%modes.length];
+  saveState();
+  updateInfinityIndicator();
+  showToast(infinityMode==='off'?'∞ Infinity Off':infinityMode==='song'?'∞ Random Song':'∞ Random Playlist',1200);
+});

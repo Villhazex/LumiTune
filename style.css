@@ -2207,6 +2207,8 @@ body {
 .setting-slider::-webkit-slider-thumb{appearance:none;width:14px;height:14px;background:var(--accent);border-radius:50%;cursor:pointer;border:none}
 .setting-slider:focus{outline:none}
 .setting-slider-val{font-size:12px;color:var(--text-muted);min-width:36px;text-align:right;font-family:'DM Mono',monospace}
+.setting-select{background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 24px 6px 10px;font-size:12px;cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;font-family:inherit;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
+.setting-select:focus{border-color:var(--accent)}
 
 /* ── TOGGLE SWITCH ── */
 .toggle-switch { position: relative; display: inline-block; width: 40px; height: 22px; cursor: pointer; }
