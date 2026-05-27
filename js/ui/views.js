@@ -58,7 +58,6 @@ function renderSongList(filter=''){
 }
 
 function makeRow(song,origIdx,isActive,isLiked,plKey,showDel,extra){
-  const num=isActive&&isPlaying?'▶':String(origIdx+1).padStart(2,'0');
   const statusBadge=isActive
     ?`<span class="badge ${isPlaying?'badge-playing':'badge-paused'}"><span class="badge-dot"></span>${isPlaying?'Playing':'Paused'}</span>`
     :'';
@@ -68,7 +67,6 @@ function makeRow(song,origIdx,isActive,isLiked,plKey,showDel,extra){
     <button class="dropdown-item" data-edit="${origIdx}" data-edit-pl="${plKey}" title="Edit metadata">Edit metadata</button>
     ${showDel?`<div class="dropdown-divider"></div><button class="dropdown-item danger" data-del="${origIdx}" title="Delete track">Delete</button>`:''}`;
   return`<div class="track-row ${isActive?'active':''}" draggable="true" data-index="${origIdx}" data-playlist="${plKey}">
-    <div class="t-num ${isActive&&isPlaying?'playing':''}">${isActive&&isPlaying?'<div class="eq-bars"><span></span><span></span><span></span></div>':num}</div>
     <div class="t-info">
       <span class="t-title">${song.title}</span>
       <span class="t-artist">${song.artist}${statusBadge?' ':''}${statusBadge}</span>
@@ -308,6 +306,17 @@ function renderAlbums(filter){
   }).join('')}</div>`;
 }
 
+function getRecentlyPlayedSongs(){
+  const all=allLibrarySongs();
+  const map=new Map();
+  all.forEach(s=>map.set(String(s.id),s));
+  const res=[];
+  for(const p of recentPlays){
+    const s=map.get(String(p.id));
+    if(s)res.push(s);
+  }
+  return res;
+}
 function getSmartSets(){
   const all=allLibrarySongs();
   const plays=getMonthPlays();
@@ -315,7 +324,7 @@ function getSmartSets(){
   const userLyrics=(()=>{try{return JSON.parse(localStorage.getItem('lumi-ulyrics')||'{}');}catch(e){return{};}})();
   return{
     recentlyAdded:{name:'Recently Added',sub:'Newest tracks in your library',songs:[...all].sort((a,b)=>songAddedAt(b)-songAddedAt(a)).slice(0,50)},
-    mostPlayed:{name:'Most Played',sub:'Top tracks this month',songs:[...all].sort((a,b)=>(plays[String(b.id)]||0)-(plays[String(a.id)]||0)).filter(s=>(plays[String(s.id)]||0)>0).slice(0,50)},
+    recentlyPlayed:{name:'Recently Played',sub:'Recently played tracks',songs:getRecentlyPlayedSongs()},
     neverPlayed:{name:'Never Played',sub:'Tracks with no plays this month',songs:all.filter(s=>!plays[String(s.id)])},
     missingLyrics:{name:'Missing Lyrics',sub:'No custom or cached lyrics yet',songs:all.filter(s=>!userLyrics[String(s.id)]&&!cache[String(s.id)])},
     looseSongs:{name:'Loose Songs',sub:'Tracks not in any playlist',songs:getLooseSongs()}
@@ -600,7 +609,7 @@ function toggleSort(col){
       if(va===0&&a[col]!=='0:00')va=Infinity;
       if(vb===0&&b[col]!=='0:00')vb=Infinity;
     }else{va=String(va).toLowerCase();vb=String(vb).toLowerCase();}
-    const res=typeof va==='number'?va-vb:va.localeCompare(vb);
+    const res=typeof va==='number'?va-vb:va.localeCompare(vb,undefined,{numeric:true});
     return sortAsc?res:-res;
   });
   if(curId)currentSongIndex=pl.songs.indexOf(curId);
@@ -738,9 +747,10 @@ function getQueueAllItems(){
           items.push({playlistKey:pk,songIndex:i});
       });
     });
-  }else if(currentView==='smart'){
-    var loose=getLooseSongs();
-    loose.forEach(function(_,i){items.push({playlistKey:'__loose',songIndex:i});});
+  }else if(currentView==='smart'&&selectedSmart&&selectedSmart!=='looseSongs'){
+    var sets=getSmartSets();
+    var smart=sets[selectedSmart];
+    if(smart)smart.songs.forEach(function(song){items.push({playlistKey:song.playlistKey,songIndex:song.songIndex});});
   }else if(currentView==='artists'&&selectedArtist){
     var artistSongs=allLibrarySongs().filter(function(s){return(String(s.artist||'Unknown').trim()||'Unknown')===selectedArtist;});
     artistSongs.forEach(function(s){items.push({playlistKey:s.playlistKey,songIndex:s.songIndex});});

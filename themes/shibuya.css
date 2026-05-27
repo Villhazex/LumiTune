@@ -529,7 +529,7 @@ body[data-theme="shibuya"] .bulk-check { width: 11px; height: 11px; margin-right
 body[data-theme="shibuya"] .track-list-wrap { padding: 0 20px 12px; }
 body[data-theme="shibuya"] .track-list-header {
   display: grid;
-  grid-template-columns: 30px 1fr 80px auto;
+  grid-template-columns: 1fr 80px auto;
   gap: 10px;
   font-size: 10px; color: var(--text-dim);
   letter-spacing: 0.14em; text-transform: uppercase;
@@ -541,7 +541,7 @@ body[data-theme="shibuya"] .track-list-header {
 
 body[data-theme="shibuya"] .track-row {
   display: grid;
-  grid-template-columns: 30px 1fr 80px auto;
+  grid-template-columns: 1fr 80px auto;
   gap: 10px;
   align-items: center;
   padding: 9px 10px;

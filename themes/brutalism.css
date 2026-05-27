@@ -621,7 +621,7 @@ body[data-theme="brutalism"] .card-count {
 body[data-theme="brutalism"] .track-list-wrap { padding: 0; }
 body[data-theme="brutalism"] .track-list-header {
   display: grid;
-  grid-template-columns: 40px 1fr 120px 60px auto;
+  grid-template-columns: 1fr 120px 60px auto;
   gap: 0;
   border-bottom: 1px solid var(--text);
   padding: 0;
@@ -639,7 +639,7 @@ body[data-theme="brutalism"] .track-list-header span:last-child { border-right: 
 
 body[data-theme="brutalism"] .track-row {
   display: grid;
-  grid-template-columns: 40px 1fr 120px 60px auto;
+  grid-template-columns: 1fr 120px 60px auto;
   align-items: center;
   border-bottom: 1px solid #2A2A2A;
   border-top: 1px solid #2A2A2A;

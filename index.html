@@ -129,6 +129,20 @@
         <div class="now-playing-label">Now Playing</div>
         <div class="track-title-hero" id="heroTitle">Select a track</div>
         <div class="track-artist-hero" id="heroArtist">Awaiting input</div>
+        <div class="hero-actions">
+          <button class="hero-like" id="heroLikeBtn" title="Like">☆</button>
+          <div class="track-more-wrap">
+            <button class="track-more-btn hero-more-btn" id="heroMoreBtn" title="More">⋮</button>
+            <div class="track-more-dropdown" id="heroMoreDropdown">
+              <button class="dropdown-item" id="heroQadd" data-hero-action="queue" title="Add to queue">Add to queue</button>
+              <button class="dropdown-item" id="heroAddpl" data-hero-action="addpl" title="Add to playlist">Add to playlist</button>
+              <button class="dropdown-item" id="heroMovepl" data-hero-action="movepl" title="Move to playlist">Move to playlist</button>
+              <button class="dropdown-item" id="heroEdit" data-hero-action="edit" title="Edit metadata">Edit metadata</button>
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item danger" id="heroDel" data-hero-action="del" title="Delete track">Delete</button>
+            </div>
+          </div>
+        </div>
         <div class="progress-area">
           <div class="progress-bar-wrap" id="heroProgBar"><div class="progress-bar-fill" id="heroProgFill"></div></div>
           <div class="progress-times"><span id="heroCurrentTime">0:00</span><span id="heroTotalTime">0:00</span></div>
@@ -166,7 +180,6 @@
     <!-- TRACK LIST -->
     <div class="track-list-wrap">
       <div class="track-list-header" id="trackHeader">
-        <span>#</span>
         <span class="sortable" id="sortTitle">Title</span>
         <span>Album</span>
         <span class="sortable" id="sortDuration"></span>

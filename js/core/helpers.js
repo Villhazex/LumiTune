@@ -97,7 +97,7 @@ function groupSongsBy(field){
     if(!map.has(key))map.set(key,[]);
     map.get(key).push(song);
   }
-  return [...map.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
+  return [...map.entries()].sort((a,b)=>a[0].localeCompare(b[0],undefined,{numeric:true}));
 }
 
 function readID3Tags(file){

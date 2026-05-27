@@ -386,10 +386,10 @@ body[data-theme="retro"] .track-list-header {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 8px; color: var(--line2);
   letter-spacing: 0.12em;
-  grid-template-columns: 26px 1fr 90px 70px;
+  grid-template-columns: 1fr 90px 70px;
 }
 body[data-theme="retro"] .track-row {
-  grid-template-columns: 26px 1fr 90px auto;
+  grid-template-columns: 1fr 90px auto;
   padding: 9px 10px;
   border-radius: 0;
   border-bottom: 1px solid rgba(196,176,144,0.35);

@@ -537,7 +537,7 @@ body[data-theme="synthwave"] .bulk-check { width: 12px; height: 12px; margin-rig
 body[data-theme="synthwave"] .track-list-wrap { padding: 0 26px 12px; position: relative; z-index: 1; }
 body[data-theme="synthwave"] .track-list-header {
   display: grid;
-  grid-template-columns: 32px 1fr 80px auto;
+  grid-template-columns: 1fr 80px auto;
   gap: 10px;
   font-family: 'Orbitron', sans-serif;
   font-size: 9px; color: var(--text-dim);
@@ -549,7 +549,7 @@ body[data-theme="synthwave"] .track-list-header {
 
 body[data-theme="synthwave"] .track-row {
   display: grid;
-  grid-template-columns: 32px 1fr 80px auto;
+  grid-template-columns: 1fr 80px auto;
   gap: 10px;
   align-items: center;
   padding: 9px 12px;

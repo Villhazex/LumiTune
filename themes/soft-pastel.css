@@ -491,7 +491,7 @@ body[data-theme="soft-pastel"] .track-list-wrap { padding: 0 0 12px; }
 
 body[data-theme="soft-pastel"] .track-list-header {
   display: grid;
-  grid-template-columns: 28px 1fr 90px 60px;
+  grid-template-columns: 1fr 90px 60px;
   gap: 10px; padding: 0 12px 8px;
   font-size: 9px; font-weight: 800; color: var(--text3);
   letter-spacing: 0.14em; text-transform: uppercase;
@@ -524,7 +524,7 @@ body[data-theme="soft-pastel"] .bulk-check { width: 12px; height: 12px; margin-r
 
 body[data-theme="soft-pastel"] .track-row {
   display: grid;
-  grid-template-columns: 28px 1fr 90px 60px;
+  grid-template-columns: 1fr 90px 60px;
   gap: 10px; align-items: center;
   padding: 10px 12px; border-radius: 8px;
   cursor: pointer; transition: all 0.15s;

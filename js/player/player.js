@@ -259,6 +259,8 @@ function updateLikeBtn(){
   const liked=favorites.has(songId);
   $('likeBtn').classList.toggle('liked',liked);
   $('likeBtn').textContent=liked?'★':'☆';
+  const hlb=$('heroLikeBtn');
+  if(hlb){hlb.classList.toggle('liked',liked);hlb.textContent=liked?'★':'☆';}
 }
 function seekTo(e){
   const rect=$('progressBar').getBoundingClientRect();

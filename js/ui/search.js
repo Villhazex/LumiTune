@@ -48,7 +48,7 @@ function trackRecentPlay(song,playlistKey){
   if(!song||!song.id)return;
   recentPlays=recentPlays.filter(p=>p.id!==song.id);
   recentPlays.unshift({id:song.id,title:song.title,artist:song.artist,playlistKey,time:Date.now()});
-  if(recentPlays.length>10)recentPlays.pop();
+  if(recentPlays.length>200)recentPlays.pop();
   saveState();
 }
 function renderSearchDropdown(term){

@@ -7,7 +7,7 @@ const open = (...args) =>
 
 
 const app=express();
-const PORT=3002;
+const PORT=3001;
 const BIN=path.join(require.resolve('yt-dlp-exec/package.json'),'..','bin','yt-dlp.exe');
 
 
