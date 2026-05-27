@@ -38,7 +38,7 @@ async function handleYouTubeImport(){
     const{blob,title,author}=await fetchYouTubeAudio(id);
     loading2(`<div class="yt-loading"><div class="yt-spinner"></div><div class="yt-step">Step 4 of 4</div><div>Saving to ${esc(pl.name||'playlist')}&hellip;</div></div>`);
     await dbStore(fk,blob);
-    songs[sid]={id:sid,title:title||info.title||'Unknown',artist:author||info.author_name||'YouTube',album:'YouTube',genre:'',year:'',duration:'--:--',addedAt:new Date().toISOString(),file:blob,fileKey:fk,cover:info.thumbnail_url||undefined};
+    songs[sid]={id:sid,title:title||info.title||'Unknown',artist:author||info.author_name||'YouTube',album:'YouTube',genre:'',year:'',duration:'--:--',addedAt:new Date().toISOString(),file:blob,fileKey:fk,cover:info.thumbnail_url||undefined,sourceUrl:url};
     pl.songs.push(String(sid));
     pl.sub=`${pl.songs.length} tracks`;
     if(currentPlaylist===targetKey)renderSongList($('searchInput').value);

@@ -316,6 +316,7 @@ document.addEventListener('mouseup',()=>{isDraggingProgress=false;isDraggingVolu
     else if(action==='movepl')handleMoveToPlaylist(currentPlaylist,currentSongIndex);
     else if(action==='edit')showMetadataEditor(currentPlaylist,currentSongIndex);
     else if(action==='del')handleDeleteTrack(currentSongIndex);
+    else if(action==='download')handleDownload(currentPlaylist,currentSongIndex);
     $('heroMoreDropdown').classList.remove('show');
   });
   $('togglePanelBtn').addEventListener('click',()=>{
@@ -469,6 +470,7 @@ $('songList').addEventListener('click',e=>{
   const movepl=e.target.closest('[data-movepl]');if(movepl){handleMoveToPlaylist(movepl.dataset.moveplPl,parseInt(movepl.dataset.movepl));return;}
   const edit=e.target.closest('[data-edit]');if(edit){showMetadataEditor(edit.dataset.editPl,parseInt(edit.dataset.edit));return;}
   const delTrack=e.target.closest('[data-del]');if(delTrack){handleDeleteTrack(parseInt(delTrack.dataset.del));return;}
+  const dload=e.target.closest('[data-download]');if(dload){handleDownload(dload.dataset.downloadPl,parseInt(dload.dataset.download));return;}
    const artist=e.target.closest('[data-artist]');if(artist){recordNav();selectedArtist=artist.dataset.artist;currentView='artists';renderSongList($('searchInput').value);return;}
    const album=e.target.closest('[data-album]');if(album){recordNav();selectedAlbum=album.dataset.album;currentView='albums';renderSongList($('searchInput').value);return;}
    const smart=e.target.closest('[data-smart]');if(smart){recordNav();selectedSmart=smart.dataset.smart;currentView='smart';renderSongList($('searchInput').value);return;}
@@ -576,6 +578,37 @@ document.addEventListener('keydown',e=>{
     if(matchShortcut(e,sc)){e.preventDefault();executeShortcutAction(action);return;}
   }
 });
+
+function handleDownload(plKey,idx){
+  let songs;
+  if(plKey==='__loose')songs=getLooseSongs();
+  else{const pl=playlists[plKey];if(!pl)return;songs=pl.songs;}
+  const songId=songs[idx];if(songId===undefined)return;
+  const song=getSong(songId);if(!song)return;
+  const name=`${song.title} - ${song.artist}`.replace(/[<>:"/\\|?*]/g,'_');
+  if(song.sourceUrl){
+    const a=document.createElement('a');
+    a.href=`/api/download-mp3?url=${encodeURIComponent(song.sourceUrl)}`;
+    a.download=`${name}.mp3`;
+    document.body.appendChild(a);a.click();a.remove();
+    showToast(`⬇ Downloading ${song.title}...`);
+  }else if(song.file){
+    const ct=song.file.type;
+    let ext='mp3';
+    if(ct.includes('mpeg'))ext='mp3';
+    else if(ct.includes('wav'))ext='wav';
+    else if(ct.includes('flac'))ext='flac';
+    else if(ct.includes('ogg'))ext='ogg';
+    else if(ct.includes('mp4'))ext='m4a';
+    else if(ct.includes('aac'))ext='aac';
+    const url=URL.createObjectURL(song.file);
+    const a=document.createElement('a');
+    a.href=url;a.download=`${name}.${ext}`;
+    document.body.appendChild(a);a.click();a.remove();
+    URL.revokeObjectURL(url);
+    showToast(`⬇ Downloaded ${song.title}`);
+  }else showToast('No audio data to download');
+}
 
 async function init(){
   playlists={};

@@ -65,6 +65,7 @@ function makeRow(song,origIdx,isActive,isLiked,plKey,showDel,extra){
     <button class="dropdown-item" data-addpl="${origIdx}" data-addpl-pl="${plKey}" title="Add to playlist">Add to playlist</button>
     <button class="dropdown-item" data-movepl="${origIdx}" data-movepl-pl="${plKey}" title="Move to playlist">Move to playlist</button>
     <button class="dropdown-item" data-edit="${origIdx}" data-edit-pl="${plKey}" title="Edit metadata">Edit metadata</button>
+    <button class="dropdown-item" data-download="${origIdx}" data-download-pl="${plKey}" title="Download MP3">Download MP3</button>
     ${showDel?`<div class="dropdown-divider"></div><button class="dropdown-item danger" data-del="${origIdx}" title="Delete track">Delete</button>`:''}`;
   return`<div class="track-row ${isActive?'active':''}" draggable="true" data-index="${origIdx}" data-playlist="${plKey}">
     <div class="t-info">

@@ -63,6 +63,29 @@ app.get('/api/download',async(req,res)=>{
   }catch(e){if(!res.headersSent)res.status(500).json({error:e.message});}
 });
 
+app.get('/api/download-mp3',async(req,res)=>{
+  try{
+    const url=req.query.url;
+    if(!url)return res.status(400).json({error:'Missing url'});
+    const info=await ytRun([
+      url,'--dump-json','--no-check-certificates','--no-warnings',
+      '--prefer-free-formats','--skip-download'
+    ]);
+    res.header('Content-Type','audio/mpeg');
+    res.header('X-Title',encodeURIComponent(info.title));
+    res.header('X-Author',encodeURIComponent(info.uploader||info.channel||''));
+    const cp=spawn(BIN,[
+      url,'-x','--audio-format','mp3','--audio-quality','0','-o','-',
+      '--no-check-certificates','--no-warnings','--prefer-free-formats'
+    ]);
+    let err='';
+    cp.stderr.on('data',c=>err+=c);
+    cp.stdout.pipe(res);
+    cp.on('error',(e)=>{if(!res.headersSent)res.status(500).json({error:e.message});});
+    cp.on('close',code=>{if(code&&!res.headersSent)res.status(500).json({error:`yt-dlp exited ${code}`});});
+  }catch(e){if(!res.headersSent)res.status(500).json({error:e.message});}
+});
+
 // app.listen(PORT,()=>console.log(`LumiTune server running on http://localhost:${PORT}`));
 app.listen(PORT, async () => {
   const url = `http://localhost:${PORT}`;
