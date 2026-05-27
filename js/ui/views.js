@@ -103,10 +103,11 @@ function renderHome(filter){
       const isActive=song.playlistKey===currentPlaylist&&song.songIndex===currentSongIndex;
       return makeRow(song,song.songIndex,isActive,favorites.has(String(song.id)),song.playlistKey,false,playlists[song.playlistKey]?.name||song.playlistKey);
     });
+    updateHeroSection();
     return;
   }
   const pl=playlists[currentPlaylist];
-  if(!pl){$('secTitle').textContent='Tracklist';$('secCount').textContent='0 tracks';$('songList').innerHTML='';$('heroSection').style.display='none';return;}
+  if(!pl){$('secTitle').textContent='Tracklist';$('secCount').textContent='0 tracks';$('songList').innerHTML='';updateHeroSection();return;}
   const songIds=pl.songs;
   $('secTitle').textContent=pl.name;
   $('secCount').textContent=songIds.length+' tracks';
@@ -512,11 +513,11 @@ function renderPlaylists(filter){
 function updateHeroSection(){
   const hs=$('heroSection');
   const targetPl=currentPlaylistPlaying||currentPlaylist;
-  if(!playlists[targetPl]||currentView!=='home'){
+  if(currentView!=='home'){
     hs.style.display='none';return;
   }
   const pl=playlists[targetPl];
-  const song=currentPlaylistPlaying?getSong(pl.songs[currentSongIndex]):null;
+  const song=currentPlaylistPlaying&&pl?getSong(pl.songs[currentSongIndex]):null;
   $('heroTitle').textContent=song?song.title:'Select a track';
   $('heroArtist').textContent=song?song.artist:'Pick a song to start listening';
   const heroArt=$('heroArt');

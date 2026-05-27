@@ -44,7 +44,9 @@ async function handleDeletePlaylist(key){
   if(DEFAULT_KEYS.includes(key))return;
   if(!(await showConfirm(`Delete "${playlists[key].name}"?`)))return;
   const isCur=currentPlaylist===key;
-  delete playlists[key];renderPlaylistNav();renderPlaylistGrid();saveState();
+  featuredKeys=null;delete playlists[key];
+  renderPlaylistNav();renderPlaylistGrid();saveState();
+  renderSongList($('searchInput').value);
   if(isCur){
     audioPlayer.pause();
     if(currentAudioFile){URL.revokeObjectURL(audioPlayer.src);audioPlayer.src='';currentAudioFile=null;}
@@ -54,7 +56,8 @@ async function handleDeletePlaylist(key){
     $('trackTitle').textContent='Select a track';$('trackArtist').textContent='Awaiting input';
     $('progressFill').style.width='0%';$('currentTime').textContent='0:00';$('totalTime').textContent='0:00';
     $('heroSection').style.display='none';
-    const keys=Object.keys(playlists);if(keys.length)switchPlaylist(keys[0]);
+    const keys=Object.keys(playlists);
+    if(keys.length)switchPlaylist(keys[0]);else currentPlaylist='';
   }
 }
 

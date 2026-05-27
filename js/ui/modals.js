@@ -88,6 +88,33 @@ function showPlaylistPicker(){
   return new Promise(resolve=>{
     const o=$('confirmOverlay');
     const keys=Object.keys(playlists);
+    if(!keys.length){
+      o.innerHTML=`<div class="modal-box source-picker-box" style="text-align:center">
+        <div class="modal-msg">No playlists yet</div>
+        <div style="padding:16px 0;font-size:12px;color:var(--text3)">Create a playlist first to add tracks.</div>
+        <div class="source-picker-grid" style="grid-template-columns:1fr">
+          <button class="source-option" id="createPlaylistBtn" title="Create new playlist">
+            <span class="source-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg></span>
+            <span class="source-label">Create New Playlist</span>
+            <span class="source-desc">Make a new playlist to add tracks into</span>
+          </button>
+        </div>
+        <div class="modal-actions" style="justify-content:center">
+          <button class="modal-btn" id="mc" title="Cancel">Cancel</button>
+        </div>
+      </div>`;
+      o.style.display='flex';
+      $('createPlaylistBtn').onclick=async()=>{
+        const name=await showInput('Playlist name:','My Playlist');
+        if(!name){o.style.display='none';resolve(null);return;}
+        const key='custom-'+Date.now();
+        playlists[key]={name,emoji:'📂',color:'#D4522A',sub:'0 tracks',songs:[]};
+        switchPlaylist(key);
+        o.style.display='none';resolve(key);
+      };
+      $('mc').onclick=()=>{o.style.display='none';resolve(null);};
+      return;
+    }
     o.innerHTML=`<div class="modal-box picker-box">
       <div class="modal-msg">Choose a playlist</div>
       <div class="picker-list">${keys.map(k=>{
