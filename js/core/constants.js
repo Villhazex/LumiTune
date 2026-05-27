@@ -34,6 +34,7 @@ let queue=[];
 let currentQueueIdx=-1;
 let karaokeActive=false;
 let infinityMode='off';
+let playlistCardActive=false;
 // let dragProgressSource='bottom';
 let libraryOrder=null;
 let selectedArtist='';

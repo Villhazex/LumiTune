@@ -12,7 +12,7 @@ function removeFromQueue(index){
   else if(index===currentQueueIdx)currentQueueIdx=-1;
   renderQueue();updateQueueUI();updateUpNext();
 }
-function clearQueue(){queue=[];currentQueueIdx=-1;updateQueueUI();updateUpNext();}
+function clearQueue(){queue=[];currentQueueIdx=-1;playlistCardActive=false;updateQueueUI();updateUpNext();}
 async function saveQueueToPlaylist(){
   if(!queue.length)return;
   const name=await showInput('Playlist name:','Queue - '+new Date().toLocaleDateString());

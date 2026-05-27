@@ -200,8 +200,8 @@ function handleEnd(){
   loudnessInterval=null;
   const songs=(playlists[currentPlaylist]?.songs)||[];
   if(repeatMode===2){playSong(currentSongIndex);return;}
-  const nextIdx=currentQueueIdx+1;
-  if(currentQueueIdx>=0&&queue.length>0&&nextIdx<queue.length){currentQueueIdx=nextIdx;playSong(queue[currentQueueIdx].songIndex,queue[currentQueueIdx].playlistKey);return;}
+  const nextIdx=(currentQueueIdx>=0?currentQueueIdx:-1)+1;
+  if(queue.length>0&&nextIdx<queue.length){currentQueueIdx=nextIdx;playSong(queue[currentQueueIdx].songIndex,queue[currentQueueIdx].playlistKey);return;}
   if(currentQueueIdx>=0&&queue.length>0){if(infinityMode!=='off'){playRandom();}else{stopPlayback();}return;}
   if(repeatMode===1||currentSongIndex<songs.length-1){playNext();return;}
   if(infinityMode!=='off'){playRandom();}else{stopPlayback();}
@@ -209,7 +209,7 @@ function handleEnd(){
 
 function playNext(){
   const nextIdx=(currentQueueIdx>=0?currentQueueIdx:-1)+1;
-  if(currentQueueIdx>=0&&queue.length>0&&nextIdx<queue.length){
+  if(queue.length>0&&nextIdx<queue.length){
     currentQueueIdx=nextIdx;
     playSong(queue[nextIdx].songIndex,queue[nextIdx].playlistKey);
     return;
