@@ -429,20 +429,20 @@ body[data-theme="zine"] .playlist-card .card-count {
 }
 
 /* ── TRACK LIST ── */
-body[data-theme="zine"] .track-list-wrap { padding: 0 22px 12px; }
+body[data-theme="zine"] .track-list-wrap { padding: 0 26px 12px; }
 body[data-theme="zine"] .track-list-header {
   font-family: 'Barlow Condensed', sans-serif;
   font-weight: 700;
   font-size: 9px; color: var(--text-dim);
   letter-spacing: 0.2em; text-transform: uppercase;
-  padding: 0 10px 8px;
+  padding: 0 14px 8px;
   border-bottom: 1px solid var(--border-soft);
   margin-bottom: 4px;
 }
 body[data-theme="zine"] .track-row {
   border-left: 2px solid transparent;
   gap: 10px;
-  padding: 9px 10px;
+  padding: 10px 14px;
 }
 body[data-theme="zine"] .track-row:hover { background: rgba(232,224,208,0.03); border-left-color: var(--border-soft); }
 body[data-theme="zine"] .track-row.active { background: rgba(212,245,66,0.05); border-left-color: var(--accent); }

@@ -2030,7 +2030,9 @@ body {
 .drag-handle { cursor: grab; color: var(--text-dim); font-size: 14px; flex-shrink: 0; padding: 0 6px; line-height: 1; }
 
 .toast-notif {
-  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(10px);
+  position: fixed; bottom: 80px; left: 0; right: 0;
+  width: fit-content; margin: 0 auto;
+  transform: translateY(10px);
   background: var(--surface3); border: 1px solid var(--accent);
   color: var(--text); padding: 12px 20px; border-radius: 8px;
   font-family: 'DM Mono', monospace; font-size: 12px;

@@ -494,9 +494,8 @@ body[data-theme="retro"] .lyric-line {
 body[data-theme="retro"] .lyric-line:hover { color: var(--ink); }
 body[data-theme="retro"] .lyric-line.active-lyric,
 body[data-theme="retro"] .lyric-line.active {
-  font-size: 12px; font-weight: 700; font-style: italic;
+  font-size: 12px; font-weight: 700;
   color: var(--rust);
-  border-left: 2px solid var(--rust);
   padding-left: 8px;
 }
 
@@ -604,10 +603,11 @@ body[data-theme="retro"] .bottom-like { color: #8a6420; font-size: 14px; }
 body[data-theme="retro"] .bottom-like:hover { color: #f0d080; }
 body[data-theme="retro"] .bottom-ctrl-btn {
   color: #c8a050; font-size: 14px;
-  width: auto; height: auto;
+  width: 34px; height: 34px;
   border-radius: 0;
   background: none;
 }
+body[data-theme="retro"] .bottom-ctrls { gap: 10px; }
 body[data-theme="retro"] .bottom-ctrl-btn:hover { color: #f0d080; background: none; }
 body[data-theme="retro"] .bottom-play-btn {
   width: 32px !important; height: 32px !important;

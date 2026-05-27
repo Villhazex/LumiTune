@@ -646,7 +646,7 @@ body[data-theme="brutalism"] .track-row {
   cursor: pointer;
   transition: none;
   min-height: 44px;
-  padding: 0;
+  padding: 0 0 0 8px;
   border-radius: 0;
   gap: 0;
 }
@@ -670,7 +670,7 @@ body[data-theme="brutalism"] .track-row:hover .track-num { color: var(--accent);
 body[data-theme="brutalism"] .track-row.active .track-num { color: var(--accent); }
 
 body[data-theme="brutalism"] .track-name-col {
-  padding: 8px 12px;
+  padding: 8px 16px;
   min-width: 0;
   border-right: 1px solid #2A2A2A;
 }
@@ -842,7 +842,6 @@ body[data-theme="brutalism"] .lyric-line.active {
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.02em;
-  border-left: 3px solid var(--accent);
   padding-left: 8px;
   transform: none;
 }

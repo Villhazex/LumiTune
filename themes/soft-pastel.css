@@ -1078,7 +1078,8 @@ body[data-theme="soft-pastel"] .fade-in { animation: sp-fadeUp 0.4s ease both; }
 
 /* ── TOAST ── */
 body[data-theme="soft-pastel"] .toast-notif {
-  position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(10px);
+  position: fixed; bottom: 90px; left: 0; right: 0; width: fit-content; margin: 0 auto;
+  transform: translateY(10px);
   background: linear-gradient(135deg, var(--purple-mid), var(--pink));
   color: white; padding: 11px 22px; border-radius: 20px;
   font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 800;
