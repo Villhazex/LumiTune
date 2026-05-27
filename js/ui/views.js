@@ -647,10 +647,20 @@ function updateUpNext(){
         ${i>currentQueueIdx?`<button class="queue-del" data-qdel="${i}" title="Remove from queue">×</button>`:''}
       </div>`;
     }).join('');
-  }else if(currentQueueIdx<0&&currentSongIndex>=0){
-    const pl=playlists[currentPlaylist];
+  }
+  const showPlCard=currentSongIndex>=0&&(currentQueueIdx<0||currentQueueIdx+1>=queue.length);
+  if(showPlCard){
+    const pl=playlists[currentPlaylistPlaying||currentPlaylist];
     const name=pl?.name||'playlist';
-    html=`<div class="up-next-playing">♪ Playing from playlist <strong>${esc(name)}</strong></div>`;
+    const gap=queue.length?'style="margin-top:4px"':'';
+    html+=`<div class="queue-item active" ${gap} style="cursor:default;pointer-events:none">
+      <span class="queue-drag-handle" style="cursor:default;opacity:0.3">≡</span>
+      <div class="queue-thumb"><svg viewBox="0 0 16 16"><path d="M2 3h8l2 3h2v8H2z" fill="currentColor"/></svg></div>
+      <div class="queue-info">
+        <div class="queue-name" style="color:var(--accent2)">♪ Playing from playlist</div>
+        <div class="queue-sub">${esc(name)}</div>
+      </div>
+    </div>`;
   }
   list.innerHTML=html;
   const np=document.getElementById('nowPlayingRow');
