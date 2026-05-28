@@ -80,14 +80,9 @@ async function convertLinesToRomaji(lines){
 async function fetchLyrics(title,artist){
   if(lyricsAbort){lyricsAbort.abort();}
   lyricsAbort=new AbortController();
-  const url=`https://lrclib.net/api/get?artist_name=${encodeURIComponent(artist)}&track_name=${encodeURIComponent(title)}`;
+  const url=`https://lrclib.net/api/search?artist_name=${encodeURIComponent(artist)}&track_name=${encodeURIComponent(title)}`;
   try{
     const r=await fetch(url,{signal:lyricsAbort.signal});
-    if(r.ok)return await r.json();
-  }catch(e){if(e.name==='AbortError')return null;}
-  const searchUrl=`https://lrclib.net/api/search?artist_name=${encodeURIComponent(artist)}&track_name=${encodeURIComponent(title)}`;
-  try{
-    const r=await fetch(searchUrl,{signal:lyricsAbort.signal});
     if(r.ok){const arr=await r.json();return arr.length?arr[0]:null;}
   }catch(e){if(e.name==='AbortError')return null;}
   return null;
@@ -381,18 +376,9 @@ async function fetchLyricsForSong(song){
   lastLyricsSong=song;
   loadLyricOffsetForSong(song.id);
   showLyricsLoading();
-  await initKuroshiro();
+  initKuroshiro();
   let title=song.title;
   let artist=song.artist;
-  if(!song.metadataEdited&&song.file&&typeof jsmediatags!=='undefined'){
-    const tags=await readID3Tags(song.file);
-    if(lyricsSongId!==song.id)return;
-    if(tags){
-      if(tags.title)title=tags.title;
-      if(tags.artist)artist=tags.artist;
-    }
-  }
-  if(lyricsSongId!==song.id)return;
   const user=getUserLyrics(song.id);
   if(user){
     await renderLyrics(user.type==='synced'?{syncedLyrics:user.lyrics}:{plainLyrics:user.lyrics},true);
@@ -404,7 +390,17 @@ async function fetchLyricsForSong(song){
     await renderLyrics(cached);
     return;
   }
-  const data=await fetchLyrics(title,artist);
+  const readTags=!song.metadataEdited&&song.file&&typeof jsmediatags!=='undefined'?readID3Tags(song.file):null;
+  const dataPromise=fetchLyrics(title,artist);
+  if(readTags){
+    const tags=await readTags;
+    if(lyricsSongId!==song.id)return;
+    if(tags){
+      if(tags.title)title=tags.title;
+      if(tags.artist)artist=tags.artist;
+    }
+  }
+  const data=await dataPromise;
   if(lyricsSongId!==song.id)return;
   if(!data){showLyricsNotFound(song);return;}
   saveCachedLyrics(song,title,artist,data);

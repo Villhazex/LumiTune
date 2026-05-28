@@ -3,11 +3,16 @@
 mod db;
 mod metadata;
 mod scanner;
+mod worker;
 
 use std::path::PathBuf;
 use std::process::Command;
 use serde::Serialize;
 use tauri::Manager;
+
+struct AppPaths {
+    covers_dir: PathBuf,
+}
 
 #[derive(Serialize)]
 struct VideoInfo {
@@ -212,22 +217,29 @@ fn pick_folder() -> Result<Option<String>, String> {
 fn scan_library(db: tauri::State<db::Database>, path: String) -> Result<Vec<scanner::ScannedFile>, String> {
     let files = scanner::scan_folder(std::path::Path::new(&path))?;
     for f in &files {
-        db.upsert_file(&f.path, f.size, f.modified)?;
+        db.upsert_file(&f.path, f.size, f.modified, &f.audio_hash)?;
     }
     Ok(files)
 }
 
 #[tauri::command]
-fn identify_next(db: tauri::State<db::Database>, acoustid_key: String) -> Result<Option<metadata::IdentificationResult>, String> {
-    let pending = db.get_pending_files()?;
-    let file = match pending.into_iter().next() {
+fn identify_next(db: tauri::State<db::Database>, acoustid_key: String, paths: tauri::State<AppPaths>) -> Result<Option<metadata::IdentificationResult>, String> {
+    // Priority: pending files first, then needs_review
+    let file = match db.get_pending_files()?.into_iter().next() {
         Some(f) => f,
-        None => return Ok(None),
+        None => match db.get_needs_review_files()?.into_iter().next() {
+            Some(f) => f,
+            None => return Ok(None),
+        },
     };
-    match metadata::identify_file(&db, file.id, &file.path, &acoustid_key) {
+
+    db.update_file_attempt(file.id)?;
+
+    let covers_dir = paths.covers_dir.to_string_lossy().to_string();
+    match metadata::identify_file(&db, file.id, &file.path, &acoustid_key, &file.audio_hash, &covers_dir) {
         Ok(r) => Ok(Some(r)),
         Err(e) => {
-            db.update_file_status(file.id, "failed")?;
+            db.update_file_error(file.id, &e)?;
             Ok(Some(metadata::IdentificationResult {
                 file_id: file.id,
                 path: file.path,
@@ -240,17 +252,19 @@ fn identify_next(db: tauri::State<db::Database>, acoustid_key: String) -> Result
                 duration: None,
                 cover_data_base64: None,
                 cover_mime: None,
+                cover_path: None,
                 method: String::new(),
                 confidence: None,
                 error: Some(e),
                 fallback_reason: None,
+                reliability: "low".into(),
             }))
         }
     }
 }
 
 #[tauri::command]
-fn get_scan_stats(db: tauri::State<db::Database>) -> Result<(i64, i64, i64), String> {
+fn get_scan_stats(db: tauri::State<db::Database>) -> Result<(i64, i64, i64, i64), String> {
     db.get_stats()
 }
 
@@ -269,6 +283,47 @@ fn read_file_bytes(path: String) -> Result<Vec<u8>, String> {
     std::fs::read(&path).map_err(|e| format!("Read file: {}", e))
 }
 
+#[tauri::command]
+fn read_cover(cover_path: String) -> Result<Vec<u8>, String> {
+    std::fs::read(&cover_path).map_err(|e| format!("Read cover: {}", e))
+}
+
+// ── Worker queue commands ──
+
+#[tauri::command]
+fn start_queue(queue: tauri::State<worker::WorkerQueue>, acoustid_key: String, concurrency: u8) -> Result<(), String> {
+    let c = concurrency.max(1).min(8) as usize;
+    queue.start(acoustid_key, c)
+}
+
+#[tauri::command]
+fn stop_queue(queue: tauri::State<worker::WorkerQueue>) -> Result<(), String> {
+    queue.stop();
+    Ok(())
+}
+
+#[tauri::command]
+fn pause_queue(queue: tauri::State<worker::WorkerQueue>) -> Result<(), String> {
+    queue.pause();
+    Ok(())
+}
+
+#[tauri::command]
+fn resume_queue(queue: tauri::State<worker::WorkerQueue>) -> Result<(), String> {
+    queue.resume();
+    Ok(())
+}
+
+#[tauri::command]
+fn get_queue_status(queue: tauri::State<worker::WorkerQueue>) -> Result<worker::QueueStatus, String> {
+    Ok(queue.status())
+}
+
+#[tauri::command]
+fn drain_processed(queue: tauri::State<worker::WorkerQueue>) -> Result<Vec<metadata::IdentificationResult>, String> {
+    Ok(queue.drain_processed())
+}
+
 fn main() {
     tauri::Builder::default()
         .setup(|app| {
@@ -279,13 +334,24 @@ fn main() {
             let db_path = app_dir.join("lumitune.db");
             let database = db::Database::open(&db_path)
                 .map_err(|e| format!("Failed to open DB: {}", e))?;
+            let worker_db = db::Database::open(&db_path)
+                .map_err(|e| format!("Failed to open worker DB: {}", e))?;
             app.manage(database);
+
+            let covers_dir = app_dir.join("covers");
+            std::fs::create_dir_all(&covers_dir).ok();
+            app.manage(AppPaths { covers_dir: covers_dir.clone() });
+
+            let queue = worker::WorkerQueue::new(worker_db, covers_dir.to_string_lossy().to_string());
+            app.manage(queue);
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             yt_info, yt_download, yt_download_mp3,
             tb_minimize, tb_maximize, tb_close, tb_is_maximized,
-            scan_library, identify_next, get_scan_stats, get_pending_ids, pick_folder, read_file_bytes, retry_failed,
+            scan_library, identify_next, get_scan_stats, get_pending_ids, pick_folder, read_file_bytes, read_cover, retry_failed,
+            start_queue, stop_queue, pause_queue, resume_queue, get_queue_status, drain_processed,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

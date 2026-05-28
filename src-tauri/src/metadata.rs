@@ -1,8 +1,9 @@
 use std::path::Path;
 use std::process::Command;
 use std::sync::mpsc;
+use std::sync::Mutex;
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use lofty::prelude::*;
 use lofty::read_from_path;
@@ -11,6 +12,22 @@ use base64::Engine;
 use crate::db::{Database, MetadataEntry};
 
 const FPCALC_NAME: &str = "fpcalc.exe";
+
+// ── MusicBrainz rate limiter (1 req/sec) ──
+
+static LAST_MB_CALL: Mutex<Option<Instant>> = Mutex::new(None);
+
+fn throttle_api() {
+    if let Ok(mut last) = LAST_MB_CALL.lock() {
+        if let Some(t) = *last {
+            let elapsed = t.elapsed();
+            if elapsed < Duration::from_millis(1100) {
+                std::thread::sleep(Duration::from_millis(1100) - elapsed);
+            }
+        }
+        *last = Some(Instant::now());
+    }
+}
 
 // ── fpcalc ──
 
@@ -125,9 +142,66 @@ pub fn is_garbage_tags(tags: &Id3Tags) -> bool {
     garbage.contains(&artist.as_str()) || garbage.contains(&title.as_str())
 }
 
+fn normalize_title(s: &str) -> String {
+    let mut s = s.trim().to_lowercase();
+
+    // Strip parenthesized/bracketed suffixes iteratively
+    let suffixes = [
+        "(official video)", "(official lyric video)", "(official music video)",
+        "[official video]", "[official lyric video]", "[official music video]",
+        "(official audio)", "[official audio]", "(lyrics)", "[lyrics]",
+        "(lyric video)", "(audio)", "(official)", "(hd)",
+        "[hd]", "(music video)", "[music video]",
+    ];
+    loop {
+        let mut changed = false;
+        for suf in &suffixes {
+            if s.ends_with(suf) {
+                s = s[..s.len() - suf.len()].trim().to_string();
+                changed = true;
+                break;
+            }
+        }
+        if !changed {
+            break;
+        }
+    }
+
+    // Strip " - feat." / " - ft." / " - featuring" trailers
+    if let Some(idx) = s.rfind(" - ") {
+        let after = s[idx + 3..].trim().to_string();
+        let tags = ["feat", "feat.", "ft", "ft.", "featuring", "with"];
+        if tags.iter().any(|t| after.starts_with(t)) {
+            s = s[..idx].trim().to_string();
+        }
+    }
+
+    // Strip remaster/remastered annotations
+    for suf in &["(remastered)", "(remaster)", "remastered", "remaster"] {
+        if s.ends_with(suf) {
+            s = s[..s.len() - suf.len()].trim().to_string();
+            break;
+        }
+    }
+
+    // Collapse whitespace
+    let mut prev = ' ';
+    s = s.chars()
+        .filter(|c| {
+            let b = *c != ' ' || prev != ' ';
+            prev = *c;
+            b
+        })
+        .collect::<String>()
+        .trim()
+        .to_string();
+
+    s
+}
+
 fn titles_match(a: &str, b: &str) -> bool {
-    let a = a.trim().to_lowercase();
-    let b = b.trim().to_lowercase();
+    let a = normalize_title(a);
+    let b = normalize_title(b);
     a == b || a.starts_with(&b) || b.starts_with(&a)
 }
 
@@ -260,6 +334,8 @@ struct MbMedia {
 }
 
 fn lookup_musicbrainz(recording_id: &str) -> Result<Option<(String, String, Option<String>, Option<i32>, Option<String>)>, String> {
+    throttle_api();
+
     let client = reqwest::blocking::Client::builder()
         .timeout(Duration::from_secs(15))
         .build()
@@ -300,20 +376,14 @@ fn lookup_musicbrainz(recording_id: &str) -> Result<Option<(String, String, Opti
         }
     }
 
-    let mut genre: Option<String> = None;
-    let tag_map = rec.tags.iter()
-        .filter_map(|t| t.name.as_ref().map(|n| n.to_lowercase()))
-        .collect::<Vec<_>>();
-    if !tag_map.is_empty() {
-        genre = Some(tag_map.join(", "));
-    }
-
     Ok(Some((title, artist, album, year, release_id)))
 }
 
 // ── Cover Art Archive ──
 
 fn fetch_cover(release_mbid: &str) -> Result<Option<(Vec<u8>, String)>, String> {
+    throttle_api();
+
     let client = reqwest::blocking::Client::builder()
         .timeout(Duration::from_secs(10))
         .build()
@@ -439,14 +509,47 @@ pub struct IdentificationResult {
     pub duration: Option<i64>,
     pub cover_data_base64: Option<String>,
     pub cover_mime: Option<String>,
+    pub cover_path: Option<String>,
     pub method: String,
     pub confidence: Option<f64>,
     pub error: Option<String>,
     pub fallback_reason: Option<String>,
+    pub reliability: String,
 }
 
 fn cover_to_b64(data: &[u8]) -> String {
     base64::engine::general_purpose::STANDARD.encode(data)
+}
+
+fn reliability(source: &str, confidence: Option<f64>) -> &'static str {
+    match source {
+        "acoustid" if confidence.map_or(false, |c| c >= 0.9) => "high",
+        "acoustid" => "medium",
+        "cache" | "audio_hash" if confidence.map_or(false, |c| c >= 0.9) => "high",
+        "cache" | "audio_hash" => "medium",
+        "id3" => "medium",
+        "hybrid" => "medium",
+        "filename" => "low",
+        _ => "low",
+    }
+}
+
+fn save_cover(data: &[u8], mime: &str, musicbrainz_id: &str, covers_dir: &str) -> String {
+    let ext = match mime {
+        "image/png" => "png",
+        "image/apng" => "png",
+        "image/webp" => "webp",
+        "image/gif" => "gif",
+        _ => "jpg",
+    };
+    let filename = format!("{}.{}", musicbrainz_id, ext);
+    let path_str = format!("{}/{}", covers_dir, filename);
+    let path = std::path::Path::new(&path_str);
+    if !path.exists() {
+        std::fs::create_dir_all(covers_dir).ok();
+        std::fs::write(path, data).ok();
+    }
+    path_str
 }
 
 pub fn identify_file(
@@ -454,23 +557,48 @@ pub fn identify_file(
     file_id: i64,
     path: &str,
     acoustid_key: &str,
+    audio_hash: &str,
+    covers_dir: &str,
 ) -> Result<IdentificationResult, String> {
-    eprintln!("[LUMI] identify_file start: path={:?}, file_id={}, has_key={}", path, file_id, !acoustid_key.is_empty());
 
     // Read ID3 tags (fallback if AcoustID fails)
     let tags = read_id3(path).unwrap_or_default();
     let has_tags = has_minimal_tags(&tags);
-    eprintln!("[LUMI] id3 tags: title={:?}, artist={:?}, has_tags={}", tags.title, tags.artist, has_tags);
     let mut fallback_reason: Option<String> = None;
     let mut acoustid_artist: Option<String> = None;
 
+    // Audio hash cache: skip fpcalc if same audio already identified
+    if !audio_hash.is_empty() {
+        if let Ok(Some(cached)) = db.find_identified_by_audio_hash(audio_hash) {
+            db.link_identification(file_id, cached.id, cached.confidence, "audio_hash", true)?;
+            db.update_file_status(file_id, "identified")?;
+            return Ok(IdentificationResult {
+                file_id,
+                path: path.to_string(),
+                success: true,
+                title: cached.title,
+                artist: cached.artist,
+                album: cached.album,
+                year: cached.year,
+                genre: cached.genre,
+                duration: None,
+                cover_data_base64: cached.cover_data.as_ref().map(|d| cover_to_b64(d)),
+                cover_mime: cached.cover_mime,
+                cover_path: cached.cover_path,
+                method: "audio_hash".into(),
+                confidence: cached.confidence,
+                error: None,
+                fallback_reason: None,
+                reliability: reliability("audio_hash", cached.confidence).into(),
+            });
+        }
+    }
+
     // Try fpcalc → AcoustID (takes priority over ID3 tags)
     if let Ok((fingerprint, duration)) = run_fpcalc(path) {
-        eprintln!("[LUMI] fpcalc OK: duration={}, fingerprint_len={}", duration, fingerprint.len());
 
         // Cache hit? Use it directly.
         if let Some(cached) = db.find_by_fingerprint(&fingerprint)? {
-            eprintln!("[LUMI] cache HIT: title={:?}, artist={:?}", cached.title, cached.artist);
             db.link_identification(file_id, cached.id, cached.confidence, "cache", true)?;
             db.update_file_status(file_id, "identified")?;
             return Ok(IdentificationResult {
@@ -485,22 +613,21 @@ pub fn identify_file(
                 duration: Some(duration),
                 cover_data_base64: cached.cover_data.as_ref().map(|d| cover_to_b64(d)),
                 cover_mime: cached.cover_mime,
+                cover_path: cached.cover_path,
                 method: "cache".into(),
                 confidence: cached.confidence,
                 error: None,
                 fallback_reason: None,
+                reliability: reliability("cache", cached.confidence).into(),
             });
         }
-        eprintln!("[LUMI] cache MISS");
 
         // AcoustID lookup (even if ID3 exists, to get better metadata)
         if !acoustid_key.is_empty() {
-            eprintln!("[LUMI] calling lookup_acoustid...");
             let acoustid_results = match lookup_acoustid(&fingerprint, duration, acoustid_key) {
                 Ok(results) => results,
                 Err(e) => {
                     fallback_reason = Some(format!("acoustid error: {}", e));
-                    eprintln!("[LUMI] acoustid ERROR: {:?}", e);
                     let _ = db.cache_metadata(&MetadataEntry {
                         id: 0,
                         file_id: Some(file_id),
@@ -509,7 +636,7 @@ pub fn identify_file(
                         title: String::new(),
                         artist: String::new(),
                         album: None, year: None, genre: None,
-                        cover_data: None, cover_mime: None,
+                        cover_data: None, cover_mime: None, cover_path: None,
                         musicbrainz_id: None, acoustid_id: None,
                         confidence: None,
                     });
@@ -519,8 +646,6 @@ pub fn identify_file(
 
             if !acoustid_results.is_empty() {
                 let (mb_id, confidence, title_from_aid, artist_from_aid) = &acoustid_results[0];
-                eprintln!("[LUMI] acoustid OK: {} results, first: score={}, title={:?}, artist={:?}",
-                    acoustid_results.len(), confidence, title_from_aid, artist_from_aid);
 
                 // Tiered approval: high confidence ≥0.7 always accepted,
                 // medium 0.4-0.7 only if ID3 is garbage (avoid overwriting correct ID3)
@@ -528,20 +653,13 @@ pub fn identify_file(
                     || (*confidence >= 0.4 && (!has_tags || is_garbage_tags(&tags)));
 
                 if use_acoustid {
-                    eprintln!("[LUMI] USE acoustid: confidence={}, method={}",
-                        confidence,
-                        if *confidence >= 0.7 { "high-confidence" } else { "mid-confidence+garbage-ID3" }
-                    );
 
                     // Get MusicBrainz data
-                    eprintln!("[LUMI] calling lookup_musicbrainz: mb_id={:?}", mb_id);
                     let (title, artist, album, year, release_id) = match lookup_musicbrainz(mb_id) {
                         Ok(Some(r)) => {
-                            eprintln!("[LUMI] musicbrainz OK: title={:?}, artist={:?}", r.0, r.1);
                             r
                         }
                         _ => {
-                            eprintln!("[LUMI] musicbrainz FAIL/None, using acoustid title/artist");
                             (title_from_aid.clone(), artist_from_aid.clone(), None, None, None)
                         }
                     };
@@ -560,13 +678,16 @@ pub fn identify_file(
                         || titles_match(&title, known_title);
 
                     if cross_check_ok {
-                        // Fetch cover art
-                        let (cover_data, cover_mime) = match release_id {
+                        // Fetch cover art and save to disk
+                        let (cover_data, cover_mime, cover_path) = match release_id {
                             Some(ref rid) => match fetch_cover(rid) {
-                                Ok(Some((data, mime))) => (Some(data), Some(mime)),
-                                _ => (None, None),
+                                Ok(Some((data, mime))) => {
+                                    let cp = save_cover(&data, &mime, rid, covers_dir);
+                                    (Some(data), Some(mime), Some(cp))
+                                }
+                                _ => (None, None, None),
                             },
-                            None => (None, None),
+                            None => (None, None, None),
                         };
 
                         // Cache result
@@ -582,15 +703,15 @@ pub fn identify_file(
                             genre: None,
                             cover_data,
                             cover_mime,
+                            cover_path: cover_path.clone(),
                             musicbrainz_id: Some(mb_id.clone()),
                             acoustid_id: Some(acoustid_results[0].0.clone()),
                             confidence: Some(*confidence),
                         };
                         let meta_id = db.cache_metadata(&entry)?;
                         db.link_identification(file_id, meta_id, Some(*confidence), "acoustid", *confidence >= 0.9)?;
-                        db.update_file_status(file_id, if *confidence >= 0.9 { "identified" } else { "pending" })?;
+                        db.update_file_status(file_id, if *confidence >= 0.9 { "identified" } else { "needs_review" })?;
 
-                        eprintln!("[LUMI] RETURN acoustid: title={:?}, artist={:?}, confidence={}", title, artist, confidence);
                         return Ok(IdentificationResult {
                             file_id,
                             path: path.to_string(),
@@ -603,10 +724,12 @@ pub fn identify_file(
                             duration: Some(duration),
                             cover_data_base64: entry.cover_data.as_ref().map(|d| cover_to_b64(d)),
                             cover_mime: entry.cover_mime.clone(),
+                            cover_path: entry.cover_path.clone(),
                             method: "acoustid".into(),
                             confidence: Some(*confidence),
                             error: None,
                             fallback_reason: None,
+                            reliability: reliability("acoustid", Some(*confidence)).into(),
                         });
                     } else {
                         acoustid_artist = Some(artist.clone());
@@ -614,31 +737,25 @@ pub fn identify_file(
                             "acoustid: confidence {:.3} but title differs from '{}' (known='{}')",
                             confidence, title, known_title
                         ));
-                        eprintln!("[LUMI] acoustid CROSS-CHECK REJECT: {}", fallback_reason.as_ref().unwrap());
                     }
                 } else {
                     let reason = if *confidence >= 0.4 { "good ID3 exists" } else { "below threshold 0.4" };
                     fallback_reason = Some(format!("acoustid: confidence {:.3} ({})", confidence, reason));
-                    eprintln!("[LUMI] acoustid SKIP: confidence={}, reason={}", confidence, reason);
                 }
             } else {
                 if fallback_reason.is_none() {
                     fallback_reason = Some("acoustid: no matching results".into());
                 }
-                eprintln!("[LUMI] acoustid: empty results (no match)");
             }
         } else {
             fallback_reason = Some("acoustid: no API key".into());
-            eprintln!("[LUMI] acoustid SKIP: key is empty");
         }
     } else {
         fallback_reason = Some("fpcalc failed".into());
-        eprintln!("[LUMI] fpcalc FAILED");
     }
 
     // Fallback 1: ID3 tags (if they exist)
     if has_tags {
-        eprintln!("[LUMI] FALLBACK id3: title={:?}, artist={:?}", tags.title, tags.artist);
         let entry = MetadataEntry {
             id: 0,
             file_id: Some(file_id),
@@ -651,6 +768,7 @@ pub fn identify_file(
             genre: tags.genre.clone(),
             cover_data: tags.cover_data.clone(),
             cover_mime: tags.cover_mime.clone(),
+            cover_path: None,
             musicbrainz_id: None,
             acoustid_id: None,
             confidence: Some(1.0),
@@ -670,15 +788,16 @@ pub fn identify_file(
             duration: None,
             cover_data_base64: tags.cover_data.as_ref().map(|d| cover_to_b64(d)),
             cover_mime: tags.cover_mime,
+            cover_path: None,
             method: "id3".into(),
             confidence: Some(1.0),
             error: None,
             fallback_reason: fallback_reason.clone(),
+            reliability: reliability("id3", Some(1.0)).into(),
         });
     }
 
     // Fallback 2: filename parsing
-    eprintln!("[LUMI] FALLBACK filename");
     let (title, artist) = parse_filename(path);
     let filename_artist = artist.or_else(|| {
         acoustid_artist.as_ref().and_then(|a| {
@@ -703,6 +822,7 @@ pub fn identify_file(
         genre: None,
         cover_data: None,
         cover_mime: None,
+        cover_path: None,
         musicbrainz_id: None,
         acoustid_id: None,
         confidence: Some(0.2),
@@ -710,7 +830,6 @@ pub fn identify_file(
     let meta_id = db.cache_metadata(&entry)?;
     db.link_identification(file_id, meta_id, Some(0.2), &entry.source, false)?;
     db.update_file_status(file_id, "identified")?;
-    eprintln!("[LUMI] RETURN {}: title={:?}, artist={:?}", entry.source, entry.title, entry.artist);
     Ok(IdentificationResult {
         file_id,
         path: path.to_string(),
@@ -723,9 +842,11 @@ pub fn identify_file(
         duration: None,
         cover_data_base64: None,
         cover_mime: None,
+        cover_path: None,
         method: entry.source.clone(),
         confidence: Some(0.2),
         error: None,
         fallback_reason: fallback_reason.clone(),
+        reliability: reliability(&entry.source, Some(0.2)).into(),
     })
 }

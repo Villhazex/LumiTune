@@ -103,9 +103,10 @@ function groupSongsBy(field){
 function readID3Tags(file){
   return new Promise(res=>{
     if(!file||typeof jsmediatags==='undefined'){res(null);return;}
+    const timer=setTimeout(()=>res(null),1500);
     jsmediatags.read(file,{
-      onSuccess:t=>res(t.tags),
-      onError:()=>res(null)
+      onSuccess:t=>{clearTimeout(timer);res(t.tags);},
+      onError:()=>{clearTimeout(timer);res(null);}
     });
   });
 }

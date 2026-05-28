@@ -665,6 +665,7 @@ async function init(){
     });
     inv('tb_is_maximized').then(r=>$('tb-max').textContent=r?'❐':'□').catch(e=>showToast('err: '+e));
   }
+  initKuroshiro().catch(()=>{});
 }
 init();
 setTimeout(()=>{

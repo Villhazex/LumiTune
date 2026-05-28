@@ -303,42 +303,18 @@ function showSettingsModal(){
             let results=null;
             if(acoustidKey&&files.length>0){
               status.textContent='Starting identification...';
-              btn.disabled=true;
-              btn.textContent='⏳ Identifying...';
-              const pending=await inv('get_pending_ids');
-              const total=pending.length;
-              results=[];
-              if(total>0){
-                showToast(`🔍 Identifying ${total} files...`);
-                for(let i=0;i<total;i++){
-                  const result=await inv('identify_next',{acoustidKey});
-                  if(!result)break;
-                  results.push(result);
-                  const pct=((i+1)/total*100).toFixed(0);
-                  fill.style.width=pct+'%';
-                  txt.textContent=`${i+1} / ${total}`;
-                  if(result.success){
-                status.textContent=`✅ ${esc(result.title)} — ${esc(result.artist)} (${result.method})${result.fallback_reason?' ['+esc(result.fallback_reason)+']':''}`;
-                  }else{
-                    const name=result.path.split('\\').pop().split('/').pop();
-                    status.textContent=`❌ ${esc(name)} — ${result.error||'failed'}`;
-                  }
-                }
-              }
+              results=await runQueueCollect(prog,fill,txt,status,acoustidKey,3);
             }
             btn.textContent='📂 Scan Folder';
             btn.disabled=false;
             prog.style.display='none';
             const folderName=folder.split('\\').pop().split('/').pop()||'Music';
             createPlaylistFromScan(files,results,folderName);
-            const ok=results?results.filter(r=>r.success).length:0;
-            if(results!==null){
+            if(results&&results.length>0){
+              const ok=results.filter(r=>r.success).length;
               const failed=results.filter(r=>!r.success);
               let msg=`Identified ${ok}/${results.length} → "${esc(folderName)}"`;
-              if(failed.length>0){
-                const firstErr=failed[0].error||'unknown error';
-                msg+=` | ${failed.length} failed: ${esc(firstErr)}`;
-              }
+              if(failed.length>0)msg+=` | ${failed.length} failed: ${esc(failed[0].error||'?')}`;
               status.textContent=msg;
             }else{
               status.textContent=`Added ${files.length} files to "${esc(folderName)}"`;
@@ -359,42 +335,21 @@ function showSettingsModal(){
           btn.disabled=true;
           btn.textContent='⏳ Identifying...';
           try{
-            const reset=await inv('retry_failed');
-            const pending=await inv('get_pending_ids');
-            const total=pending.length;
-            if(total===0){
-              btn.textContent='🔍 Identify All';btn.disabled=false;prog.style.display='none';
-              status.textContent='No pending files';
-              return;
-            }
-            let ok=0;const results=[];
-            showToast(`🔍 Identifying ${total} files...`);
-            for(let i=0;i<total;i++){
-              const result=await inv('identify_next',{acoustidKey});
-              if(!result)break;
-              results.push(result);
-              const pct=((i+1)/total*100).toFixed(0);
-              fill.style.width=pct+'%';
-              txt.textContent=`${i+1} / ${total}`;
-              if(result.success){
-                ok++;
-                status.textContent=`✅ ${esc(result.title)} — ${esc(result.artist)} (${result.method})`;
-              }else{
-                const name=result.path.split('\\').pop().split('/').pop();
-                status.textContent=`❌ ${esc(name)} — ${result.error||'failed'}`;
-              }
-            }
+            await inv('retry_failed');
+            const results=await runQueueCollect(prog,fill,txt,status,acoustidKey,3);
             btn.textContent='🔍 Identify All';btn.disabled=false;
             prog.style.display='none';
-            const files=results.map(r=>({path:r.path}));
-            createPlaylistFromScan(files,results,'Identified Music');
-            let msg=`Identified ${ok}/${results.length} → "Identified Music"`;
-            const failed=results.filter(r=>!r.success);
-            if(failed.length>0){
-              const firstErr=failed[0].error||'unknown error';
-              msg+=` | ${failed.length} failed: ${esc(firstErr)}`;
+            if(results.length>0){
+              const files=results.map(r=>({path:r.path}));
+              createPlaylistFromScan(files,results,'Identified Music');
+              const ok=results.filter(r=>r.success).length;
+              const failed=results.filter(r=>!r.success);
+              let msg=`Identified ${ok}/${results.length} → "Identified Music"`;
+              if(failed.length>0)msg+=` | ${failed.length} failed: ${esc(failed[0].error||'?')}`;
+              status.textContent=msg;
+            }else{
+              status.textContent='No pending files';
             }
-            status.textContent=msg;
             refreshStats();
           }catch(e){
             btn.textContent='🔍 Identify All';btn.disabled=false;
@@ -465,8 +420,45 @@ async function refreshStats(){
   try{
     const stats=await inv('get_scan_stats');
     const el=$('scanStats');
-    if(el)el.textContent=`📊 Total: ${stats[0]} | ✅ Identified: ${stats[1]} | ❌ Failed: ${stats[2]}`;
+    if(el){
+      let parts=[`📊 Total: ${stats[0]}`,`✅ Identified: ${stats[1]}`];
+      if(stats[2]>0)parts.push(`🔍 Needs review: ${stats[2]}`);
+      parts.push(`❌ Failed: ${stats[3]}`);
+      el.textContent=parts.join(' | ');
+    }
   }catch(e){}
+}
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+
+async function runQueueCollect(progEl,fillEl,txtEl,statusEl,key,concurrency){
+  await inv('start_queue',{acoustidKey:key,concurrency});
+  const results=[];
+  try{
+    while(true){
+      await sleep(250);
+      const qs=await inv('get_queue_status');
+      if(!qs.running)break;
+      const total=qs.total;
+      const done=qs.completed+qs.errors.length;
+      fillEl.style.width=(total>0?(done/total*100).toFixed(0):'0')+'%';
+      txtEl.textContent=`${done} / ${total}`;
+      const drain=await inv('drain_processed');
+      if(drain.length>0){
+        const last=drain[drain.length-1];
+        const b={high:'🟢',medium:'🟡',low:'⚪'}[last.reliability]||'⚪';
+        statusEl.textContent=`${b} ${esc(last.title)} — ${esc(last.artist)} (${last.method})${last.fallback_reason?' ['+esc(last.fallback_reason)+']':''}`;
+      }
+      if(qs.errors.length>0){
+        const e=qs.errors[qs.errors.length-1];
+        statusEl.textContent='❌ '+esc(e);
+      }
+      results.push(...drain);
+    }
+  }finally{
+    await inv('stop_queue').catch(()=>{});
+  }
+  return results;
 }
 
 function createPlaylistFromScan(files,results,playlistName){
