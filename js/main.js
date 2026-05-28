@@ -587,11 +587,25 @@ function handleDownload(plKey,idx){
   const song=getSong(songId);if(!song)return;
   const name=`${song.title} - ${song.artist}`.replace(/[<>:"/\\|?*]/g,'_');
   if(song.sourceUrl){
-    const a=document.createElement('a');
-    a.href=`/api/download-mp3?url=${encodeURIComponent(song.sourceUrl)}`;
-    a.download=`${name}.mp3`;
-    document.body.appendChild(a);a.click();a.remove();
-    showToast(`⬇ Downloading ${song.title}...`);
+    if(isTauri()){
+      (async()=>{
+        try{
+          const res=await window.__TAURI__.invoke('yt_download_mp3',{url:song.sourceUrl});
+          const blob=new Blob([new Uint8Array(res.bytes)],{type:'audio/mpeg'});
+          const url=URL.createObjectURL(blob);
+          const a=document.createElement('a');a.href=url;a.download=`${name}.mp3`;
+          document.body.appendChild(a);a.click();a.remove();
+          URL.revokeObjectURL(url);
+          showToast(`⬇ Downloaded ${song.title}`);
+        }catch(e){showToast('Download failed');}
+      })();
+    }else{
+      const a=document.createElement('a');
+      a.href=`/api/download-mp3?url=${encodeURIComponent(song.sourceUrl)}`;
+      a.download=`${name}.mp3`;
+      document.body.appendChild(a);a.click();a.remove();
+      showToast(`⬇ Downloading ${song.title}...`);
+    }
   }else if(song.file){
     const ct=song.file.type;
     let ext='mp3';

@@ -6,3 +6,8 @@ example.html
 Lumitune.zip
 Design/
 .aider*
+task.txt
+src-tauri/target/
+src-tauri/resources/
+dist/
+app-icon.png

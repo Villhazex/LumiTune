@@ -4,13 +4,22 @@ function extractYouTubeId(url){
 }
 
 async function fetchYouTubeInfo(videoId){
-  const r=await fetch(`${YT_SERVER}/api/info?url=https://www.youtube.com/watch?v=${videoId}`);
+  const url=`https://www.youtube.com/watch?v=${videoId}`;
+  if(isTauri()){
+    return await window.__TAURI__.invoke('yt_info',{url});
+  }
+  const r=await fetch(`${YT_SERVER}/api/info?url=${url}`);
   if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||`Server returned ${r.status}`);}
   return r.json();
 }
 
 async function fetchYouTubeAudio(videoId){
-  const r=await fetch(`${YT_SERVER}/api/download?url=https://www.youtube.com/watch?v=${videoId}`);
+  const url=`https://www.youtube.com/watch?v=${videoId}`;
+  if(isTauri()){
+    const res=await window.__TAURI__.invoke('yt_download',{url});
+    return{blob:new Blob([new Uint8Array(res.bytes)],{type:res.mime}),title:res.title,author:res.author};
+  }
+  const r=await fetch(`${YT_SERVER}/api/download?url=${url}`);
   if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||`Server returned ${r.status}`);}
   const title=decodeURIComponent(r.headers.get('X-Title')||'');
   const author=decodeURIComponent(r.headers.get('X-Author')||'');

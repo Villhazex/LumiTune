@@ -107,5 +107,6 @@ const SHORTCUTS={
  };
 
 const $=id=>document.getElementById(id);
+const isTauri=()=>typeof window!=='undefined'&&window.__TAURI__;
 const YT_SERVER='http://localhost:3001';
 const LYRICS_CACHE_KEY='lumi-lyrics-cache';
