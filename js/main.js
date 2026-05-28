@@ -649,6 +649,20 @@ async function init(){
     const splash=$('splash');
     if(splash){splash.style.opacity='0';setTimeout(()=>splash.remove(),400);}
   }
+  if(isTauri()){
+    document.body.classList.add('tb-active');
+    const ipc=window.__TAURI_IPC__;
+    const inv=ipc?(cmd,args)=>new Promise((rs,rj)=>ipc({cmd,args:args??{},callback:rs,error:rj})):null;
+    if(!ipc){showToast('ERR: no IPC',5000);return;}
+    const tb=$('titlebar');
+    tb.onclick=e=>{
+      const id=e.target.id;
+      if(id==='tb-min')inv('tb_minimize').catch(e=>showToast('err: '+e));
+      else if(id==='tb-close')inv('tb_close').catch(e=>showToast('err: '+e));
+      else if(id==='tb-max')inv('tb_maximize').catch(e=>showToast('err: '+e));
+    };
+    inv('tb_is_maximized').then(r=>$('tb-max').textContent=r?'❐':'□').catch(e=>showToast('err: '+e));
+  }
 }
 init();
 setTimeout(()=>{

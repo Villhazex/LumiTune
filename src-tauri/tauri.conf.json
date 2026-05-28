@@ -13,7 +13,8 @@
     "allowlist": {
       "all": false,
       "shell": { "open": true },
-      "dialog": { "all": true }
+      "dialog": { "all": true },
+      "window": { "all": true }
     },
     "bundle": {
       "active": true,
@@ -35,6 +36,7 @@
     },
     "windows": [
       {
+        "decorations": false,
         "fullscreen": false,
         "resizable": true,
         "title": "LumiTune",

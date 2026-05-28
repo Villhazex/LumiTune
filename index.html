@@ -8,6 +8,19 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+<!-- TITLE BAR (custom app-drawn, Tauri only) -->
+<div id="titlebar">
+  <div class="titlebar-drag" data-tauri-drag-region>
+    <span class="titlebar-label">LumiTune</span>
+  </div>
+  <div class="titlebar-controls">
+    <button class="tb-btn" id="tb-min" aria-label="Minimize">─</button>
+    <button class="tb-btn" id="tb-max" aria-label="Maximize">□</button>
+    <button class="tb-btn tb-close" id="tb-close" aria-label="Close">✕</button>
+  </div>
+</div>
+
 <div id="splash" style="position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:16px;transition:opacity 0.4s ease">
   <div style="font-family:Syne,sans-serif;font-size:28px;font-weight:800;color:var(--accent);letter-spacing:-.03em">LumiTune</div>
   <div class="yt-spinner" style="width:20px;height:20px"></div>

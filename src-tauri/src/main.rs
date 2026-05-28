@@ -116,9 +116,98 @@ fn yt_download_mp3(url: String) -> Result<DownloadResult, String> {
     })
 }
 
+use raw_window_handle::HasRawWindowHandle;
+
+#[tauri::command]
+fn tb_minimize(window: tauri::Window) -> Result<(), String> {
+    let handle = window.raw_window_handle();
+    match handle {
+        raw_window_handle::RawWindowHandle::Win32(win) => {
+            unsafe {
+                windows_sys::Win32::UI::WindowsAndMessaging::ShowWindow(
+                    win.hwnd as windows_sys::Win32::Foundation::HWND,
+                    windows_sys::Win32::UI::WindowsAndMessaging::SW_SHOWMINIMIZED,
+                );
+            }
+            Ok(())
+        }
+        _ => Err("Not a Windows window".into()),
+    }
+}
+
+#[tauri::command]
+fn tb_maximize(window: tauri::Window) -> Result<(), String> {
+    let handle = window.raw_window_handle();
+    match handle {
+        raw_window_handle::RawWindowHandle::Win32(win) => {
+            let hwnd = win.hwnd as windows_sys::Win32::Foundation::HWND;
+            unsafe {
+                let style = windows_sys::Win32::UI::WindowsAndMessaging::GetWindowLongW(
+                    hwnd,
+                    windows_sys::Win32::UI::WindowsAndMessaging::GWL_STYLE,
+                );
+                let is_max = (style as u32 & windows_sys::Win32::UI::WindowsAndMessaging::WS_MAXIMIZE) != 0;
+                if is_max {
+                    windows_sys::Win32::UI::WindowsAndMessaging::ShowWindow(
+                        hwnd,
+                        windows_sys::Win32::UI::WindowsAndMessaging::SW_RESTORE,
+                    );
+                } else {
+                    windows_sys::Win32::UI::WindowsAndMessaging::ShowWindow(
+                        hwnd,
+                        windows_sys::Win32::UI::WindowsAndMessaging::SW_MAXIMIZE,
+                    );
+                }
+            }
+            Ok(())
+        }
+        _ => Err("Not a Windows window".into()),
+    }
+}
+
+#[tauri::command]
+fn tb_close(window: tauri::Window) -> Result<(), String> {
+    let handle = window.raw_window_handle();
+    match handle {
+        raw_window_handle::RawWindowHandle::Win32(win) => {
+            unsafe {
+                windows_sys::Win32::UI::WindowsAndMessaging::SendMessageW(
+                    win.hwnd as windows_sys::Win32::Foundation::HWND,
+                    windows_sys::Win32::UI::WindowsAndMessaging::WM_CLOSE,
+                    0,
+                    0,
+                );
+            }
+            Ok(())
+        }
+        _ => Err("Not a Windows window".into()),
+    }
+}
+
+#[tauri::command]
+fn tb_is_maximized(window: tauri::Window) -> Result<bool, String> {
+    let handle = window.raw_window_handle();
+    match handle {
+        raw_window_handle::RawWindowHandle::Win32(win) => {
+            let hwnd = win.hwnd as windows_sys::Win32::Foundation::HWND;
+            unsafe {
+                let style = windows_sys::Win32::UI::WindowsAndMessaging::GetWindowLongW(
+                    hwnd,
+                    windows_sys::Win32::UI::WindowsAndMessaging::GWL_STYLE,
+                );
+                Ok((style as u32 & windows_sys::Win32::UI::WindowsAndMessaging::WS_MAXIMIZE) != 0)
+            }
+        }
+        _ => Err("Not a Windows window".into()),
+    }
+}
+
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![yt_info, yt_download, yt_download_mp3])
+        .invoke_handler(tauri::generate_handler![
+            yt_info, yt_download, yt_download_mp3,
+            tb_minimize, tb_maximize, tb_close, tb_is_maximized,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
