@@ -95,14 +95,13 @@ body {
   position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
   user-select: none;
 }
-.tb-active #titlebar { display: flex; align-items: center; }
-.titlebar-drag { flex: 1; height: 100%; display: flex; align-items: center; justify-content: center; cursor: default; }
-.titlebar-label { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; color: var(--accent); letter-spacing: -.03em; }
-.titlebar-controls { display: flex; height: 100%; }
+.tb-active #titlebar { display: block; position: fixed; }
+.titlebar-drag { height: 32px; display: flex; align-items: center; justify-content: center; cursor: default; }
+.titlebar-label { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 800; color: var(--accent); letter-spacing: -.03em; }
+.titlebar-controls { position: absolute; top: 0; right: 0; height: 32px; display: flex; }
 .tb-btn { width: 46px; height: 100%; border: none; background: transparent; color: inherit; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit; }
 .tb-btn:hover { background: rgba(255,255,255,0.08); }
 .tb-close:hover { background: #e81123 !important; color: white; }
-.tb-active .layout { padding-top: 32px; }
 .tb-active .marquee-bar { margin-top: 32px; }
 
 /* ── LAYOUT ── */

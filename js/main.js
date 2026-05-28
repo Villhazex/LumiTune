@@ -652,15 +652,19 @@ async function init(){
   if(isTauri()){
     document.body.classList.add('tb-active');
     const ipc=window.__TAURI_IPC__;
-    const inv=ipc?(cmd,args)=>new Promise((rs,rj)=>ipc({cmd,args:args??{},callback:rs,error:rj})):null;
+    let _ipcId=0;
+    const inv=ipc?(cmd,args)=>new Promise((rs,rj)=>{const cid=++_ipcId,eid=++_ipcId;window[`_${cid}`]=rs;window[`_${eid}`]=rj;ipc({cmd,args:args||{},callback:cid,error:eid});}):null;
     if(!ipc){showToast('ERR: no IPC',5000);return;}
-    const tb=$('titlebar');
-    tb.onclick=e=>{
-      const id=e.target.id;
-      if(id==='tb-min')inv('tb_minimize').catch(e=>showToast('err: '+e));
-      else if(id==='tb-close')inv('tb_close').catch(e=>showToast('err: '+e));
-      else if(id==='tb-max')inv('tb_maximize').catch(e=>showToast('err: '+e));
-    };
+    const btns=[$('tb-min'),$('tb-max'),$('tb-close')];
+    btns.forEach(btn=>{
+      if(!btn)return;
+      btn.addEventListener('click',e=>{
+        const id=btn.id;
+        if(id==='tb-min')inv('tb_minimize').catch(e=>showToast('err: '+e));
+        else if(id==='tb-close')inv('tb_close').catch(e=>showToast('err: '+e));
+        else if(id==='tb-max')inv('tb_maximize').catch(e=>showToast('err: '+e));
+      });
+    });
     inv('tb_is_maximized').then(r=>$('tb-max').textContent=r?'❐':'□').catch(e=>showToast('err: '+e));
   }
 }
