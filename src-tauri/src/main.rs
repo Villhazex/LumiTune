@@ -1,8 +1,13 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod db;
+mod metadata;
+mod scanner;
+
 use std::path::PathBuf;
 use std::process::Command;
 use serde::Serialize;
+use tauri::Manager;
 
 #[derive(Serialize)]
 struct VideoInfo {
@@ -116,6 +121,8 @@ fn yt_download_mp3(url: String) -> Result<DownloadResult, String> {
     })
 }
 
+// ── Title bar (Tauri window controls) ──
+
 use raw_window_handle::HasRawWindowHandle;
 
 fn get_hwnds(window: &tauri::Window) -> Result<windows_sys::Win32::Foundation::HWND, String> {
@@ -192,11 +199,93 @@ fn tb_close(window: tauri::Window) -> Result<(), String> {
     Ok(())
 }
 
+// ── Metadata identification ──
+
+#[tauri::command]
+fn pick_folder() -> Result<Option<String>, String> {
+    let path = tauri::api::dialog::blocking::FileDialogBuilder::new()
+        .pick_folder();
+    Ok(path.map(|p| p.to_string_lossy().to_string()))
+}
+
+#[tauri::command]
+fn scan_library(db: tauri::State<db::Database>, path: String) -> Result<Vec<scanner::ScannedFile>, String> {
+    let files = scanner::scan_folder(std::path::Path::new(&path))?;
+    for f in &files {
+        db.upsert_file(&f.path, f.size, f.modified)?;
+    }
+    Ok(files)
+}
+
+#[tauri::command]
+fn identify_next(db: tauri::State<db::Database>, acoustid_key: String) -> Result<Option<metadata::IdentificationResult>, String> {
+    let pending = db.get_pending_files()?;
+    let file = match pending.into_iter().next() {
+        Some(f) => f,
+        None => return Ok(None),
+    };
+    match metadata::identify_file(&db, file.id, &file.path, &acoustid_key) {
+        Ok(r) => Ok(Some(r)),
+        Err(e) => {
+            db.update_file_status(file.id, "failed")?;
+            Ok(Some(metadata::IdentificationResult {
+                file_id: file.id,
+                path: file.path,
+                success: false,
+                title: String::new(),
+                artist: String::new(),
+                album: None,
+                year: None,
+                genre: None,
+                duration: None,
+                cover_data_base64: None,
+                cover_mime: None,
+                method: String::new(),
+                confidence: None,
+                error: Some(e),
+                fallback_reason: None,
+            }))
+        }
+    }
+}
+
+#[tauri::command]
+fn get_scan_stats(db: tauri::State<db::Database>) -> Result<(i64, i64, i64), String> {
+    db.get_stats()
+}
+
+#[tauri::command]
+fn get_pending_ids(db: tauri::State<db::Database>) -> Result<Vec<db::FileEntry>, String> {
+    db.get_pending_files()
+}
+
+#[tauri::command]
+fn retry_failed(db: tauri::State<db::Database>) -> Result<usize, String> {
+    db.reset_failed_files()
+}
+
+#[tauri::command]
+fn read_file_bytes(path: String) -> Result<Vec<u8>, String> {
+    std::fs::read(&path).map_err(|e| format!("Read file: {}", e))
+}
+
 fn main() {
     tauri::Builder::default()
+        .setup(|app| {
+            let app_dir = app.path_resolver().app_data_dir()
+                .ok_or_else(|| "Failed to resolve app data dir".to_string())?;
+            std::fs::create_dir_all(&app_dir)
+                .map_err(|e| format!("Create app dir: {}", e))?;
+            let db_path = app_dir.join("lumitune.db");
+            let database = db::Database::open(&db_path)
+                .map_err(|e| format!("Failed to open DB: {}", e))?;
+            app.manage(database);
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             yt_info, yt_download, yt_download_mp3,
             tb_minimize, tb_maximize, tb_close, tb_is_maximized,
+            scan_library, identify_next, get_scan_stats, get_pending_ids, pick_folder, read_file_bytes, retry_failed,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -2280,4 +2280,12 @@ body {
   .track-list-header span:nth-child(3), .track-row .track-album { display: none; }
 }
 
+/* Scanner / progress */
+.setting-input { background:var(--surface2);border:1px solid var(--border-soft);border-radius:6px;padding:7px 10px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px; }
+.setting-input:focus { outline:none;border-color:var(--accent); }
+.scan-progress-bar { height:4px;background:var(--border-soft);border-radius:2px;overflow:hidden;margin-bottom:4px; }
+.scan-progress-fill { height:100%;background:var(--accent);transition:width .3s;border-radius:2px; }
+.scan-progress-text { font-size:10px;color:var(--text-dim);font-family:'DM Mono',monospace; }
+.scan-status { font-size:11px;color:var(--text-dim);margin-top:2px; }
+
 

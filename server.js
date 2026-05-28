@@ -86,11 +86,17 @@ app.get('/api/download-mp3',async(req,res)=>{
   }catch(e){if(!res.headersSent)res.status(500).json({error:e.message});}
 });
 
+app.get('/api/stream',(req,res)=>{
+  const filePath=req.query.path;
+  if(!filePath||filePath.includes('..'))return res.status(400).end();
+  res.sendFile(filePath);
+});
+
 // app.listen(PORT,()=>console.log(`LumiTune server running on http://localhost:${PORT}`));
 app.listen(PORT, async () => {
   const url = `http://localhost:${PORT}`;
 
   console.log(`LumiTune server running on ${url}`);
 
-  await open(url);
+  // await open(url);
 });

@@ -38,6 +38,7 @@ function saveState(){
     localStorage.setItem('lumi-stabilize',String(audioStabilize));
     localStorage.setItem('lumi-loudness-target',String(loudnessTarget));
     localStorage.setItem('lumi-recent-plays',JSON.stringify(recentPlays));
+    localStorage.setItem('lumi-acoustid-key',acoustidKey);
   }catch(e){}
 }
 async function loadState(){
@@ -108,6 +109,7 @@ async function loadState(){
     audioStabilize=localStorage.getItem('lumi-stabilize')==='true';
     const lt=parseFloat(localStorage.getItem('lumi-loudness-target'));
     if(!isNaN(lt))loudnessTarget=Math.max(-30,Math.min(-10,lt));
+    acoustidKey=localStorage.getItem('lumi-acoustid-key')||'';
   }catch(e){console.warn(e);}
 }
 

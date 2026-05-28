@@ -66,6 +66,7 @@ let recordingShortcutKey=null;
 
 let searchTab='tracks';
 let recentPlays=[];
+let acoustidKey='';
 let audioCtx=null;
 let gainNode=null;
 let analyserNode=null;
@@ -110,3 +111,4 @@ const $=id=>document.getElementById(id);
 const isTauri=()=>typeof window!=='undefined'&&window.__TAURI__;
 const YT_SERVER='http://localhost:3001';
 const LYRICS_CACHE_KEY='lumi-lyrics-cache';
+const convertFileSrc=path=>window.__TAURI_INTERNALS__?.convertFileSrc?.(path)||'asset://localhost/'+encodeURIComponent(path);

@@ -235,6 +235,175 @@ function showSettingsModal(){
         $('sCustomizeShortcuts').onclick=()=>{close();showShortcutsModal();};
       }
     },
+    scanner:{
+      label:'Scanner',
+      icon:'🔍',
+      render(){
+        const hasKey=acoustidKey.length>0;
+        return`<div class="settings-section-title">Library Scanner</div>
+          <div class="settings-section-desc">Scan folders and identify songs via audio fingerprinting</div>
+          <div class="setting-group">
+            <div class="setting-row">
+              <div class="setting-row-label">
+                <span>AcoustID API Key</span>
+                <small>Required for fingerprint matching. Get one free at acoustid.org</small>
+              </div>
+              <div class="setting-row-control">
+                <input type="text" id="sAcoustidKey" class="setting-input" value="${esc(acoustidKey)}" placeholder="Enter API key" style="width:220px">
+              </div>
+            </div>
+          </div>
+          <div class="setting-group">
+            <div class="setting-row">
+              <div class="setting-row-label">
+                <span>Scan Folder</span>
+                <small>Pick a music folder to scan and identify</small>
+              </div>
+              <div class="setting-row-control">
+                <button class="setting-btn primary" id="sScanFolder">📂 Scan Folder</button>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-row-label">
+                <span>Identify Pending</span>
+                <small>Run identification on scanned but unidentified files</small>
+              </div>
+              <div class="setting-row-control">
+                <button class="setting-btn" id="sIdentifyAll">🔍 Identify All</button>
+              </div>
+            </div>
+          </div>
+          <div id="scanProgress" style="display:none;margin-top:8px">
+            <div class="scan-progress-bar">
+              <div class="scan-progress-fill" id="scanProgressFill" style="width:0%"></div>
+            </div>
+            <div class="scan-progress-text" id="scanProgressText">0 / 0</div>
+            <div class="scan-status" id="scanStatus"></div>
+          </div>
+          <div id="scanStats" style="margin-top:8px;font-size:11px;color:var(--text-dim)"></div>`;
+      },
+      bind(){
+        $('sAcoustidKey').oninput=()=>{
+          acoustidKey=$('sAcoustidKey').value.trim();
+          saveState();
+        };
+        $('sScanFolder').onclick=async()=>{
+          if(!isTauri()){showToast('Folder scanning only available in desktop app');return;}
+          const folder=await inv('pick_folder').catch(()=>null);
+          if(!folder)return;
+          const btn=$('sScanFolder');const prog=$('scanProgress');const fill=$('scanProgressFill');const txt=$('scanProgressText');const status=$('scanStatus');
+          prog.style.display='block';
+          btn.disabled=true;
+          btn.textContent='⏳ Scanning...';
+          status.textContent='Scanning folder...';
+          try{
+            const files=await inv('scan_library',{path:folder});
+            status.textContent=`Found ${files.length} audio files. Adding to database...`;
+            showToast(`✅ Scanned ${files.length} files`);
+            let results=null;
+            if(acoustidKey&&files.length>0){
+              status.textContent='Starting identification...';
+              btn.disabled=true;
+              btn.textContent='⏳ Identifying...';
+              const pending=await inv('get_pending_ids');
+              const total=pending.length;
+              results=[];
+              if(total>0){
+                showToast(`🔍 Identifying ${total} files...`);
+                for(let i=0;i<total;i++){
+                  const result=await inv('identify_next',{acoustidKey});
+                  if(!result)break;
+                  results.push(result);
+                  const pct=((i+1)/total*100).toFixed(0);
+                  fill.style.width=pct+'%';
+                  txt.textContent=`${i+1} / ${total}`;
+                  if(result.success){
+                status.textContent=`✅ ${esc(result.title)} — ${esc(result.artist)} (${result.method})${result.fallback_reason?' ['+esc(result.fallback_reason)+']':''}`;
+                  }else{
+                    const name=result.path.split('\\').pop().split('/').pop();
+                    status.textContent=`❌ ${esc(name)} — ${result.error||'failed'}`;
+                  }
+                }
+              }
+            }
+            btn.textContent='📂 Scan Folder';
+            btn.disabled=false;
+            prog.style.display='none';
+            const folderName=folder.split('\\').pop().split('/').pop()||'Music';
+            createPlaylistFromScan(files,results,folderName);
+            const ok=results?results.filter(r=>r.success).length:0;
+            if(results!==null){
+              const failed=results.filter(r=>!r.success);
+              let msg=`Identified ${ok}/${results.length} → "${esc(folderName)}"`;
+              if(failed.length>0){
+                const firstErr=failed[0].error||'unknown error';
+                msg+=` | ${failed.length} failed: ${esc(firstErr)}`;
+              }
+              status.textContent=msg;
+            }else{
+              status.textContent=`Added ${files.length} files to "${esc(folderName)}"`;
+            }
+            refreshStats();
+          }catch(e){
+            btn.textContent='📂 Scan Folder';
+            btn.disabled=false;
+            status.textContent='Error: '+e;
+            showToast('❌ '+e,3000);
+          }
+        };
+        $('sIdentifyAll').onclick=async()=>{
+          if(!isTauri()){showToast('Identification only available in desktop app');return;}
+          if(!acoustidKey){showToast('Set AcoustID API key first');return;}
+          const btn=$('sIdentifyAll');const prog=$('scanProgress');const fill=$('scanProgressFill');const txt=$('scanProgressText');const status=$('scanStatus');
+          prog.style.display='block';
+          btn.disabled=true;
+          btn.textContent='⏳ Identifying...';
+          try{
+            const reset=await inv('retry_failed');
+            const pending=await inv('get_pending_ids');
+            const total=pending.length;
+            if(total===0){
+              btn.textContent='🔍 Identify All';btn.disabled=false;prog.style.display='none';
+              status.textContent='No pending files';
+              return;
+            }
+            let ok=0;const results=[];
+            showToast(`🔍 Identifying ${total} files...`);
+            for(let i=0;i<total;i++){
+              const result=await inv('identify_next',{acoustidKey});
+              if(!result)break;
+              results.push(result);
+              const pct=((i+1)/total*100).toFixed(0);
+              fill.style.width=pct+'%';
+              txt.textContent=`${i+1} / ${total}`;
+              if(result.success){
+                ok++;
+                status.textContent=`✅ ${esc(result.title)} — ${esc(result.artist)} (${result.method})`;
+              }else{
+                const name=result.path.split('\\').pop().split('/').pop();
+                status.textContent=`❌ ${esc(name)} — ${result.error||'failed'}`;
+              }
+            }
+            btn.textContent='🔍 Identify All';btn.disabled=false;
+            prog.style.display='none';
+            const files=results.map(r=>({path:r.path}));
+            createPlaylistFromScan(files,results,'Identified Music');
+            let msg=`Identified ${ok}/${results.length} → "Identified Music"`;
+            const failed=results.filter(r=>!r.success);
+            if(failed.length>0){
+              const firstErr=failed[0].error||'unknown error';
+              msg+=` | ${failed.length} failed: ${esc(firstErr)}`;
+            }
+            status.textContent=msg;
+            refreshStats();
+          }catch(e){
+            btn.textContent='🔍 Identify All';btn.disabled=false;
+            status.textContent='Error: '+e;
+          }
+        };
+        refreshStats();
+      }
+    },
     about:{
       label:'About',icon:'ℹ',
       render(){
@@ -289,6 +458,76 @@ function showSettingsModal(){
   });
   $('mc').onclick=()=>{close();};
   if(sections[currentSection].bind)sections[currentSection].bind();
+}
+
+async function refreshStats(){
+  if(!isTauri())return;
+  try{
+    const stats=await inv('get_scan_stats');
+    const el=$('scanStats');
+    if(el)el.textContent=`📊 Total: ${stats[0]} | ✅ Identified: ${stats[1]} | ❌ Failed: ${stats[2]}`;
+  }catch(e){}
+}
+
+function createPlaylistFromScan(files,results,playlistName){
+  const resultMap={};
+  if(results)results.forEach(r=>{resultMap[r.path]=r;});
+  const plKey='scanned-'+Date.now();
+  const ids=files.map(f=>{
+    const r=resultMap[f.path];
+    const existing=Object.values(songs).find(s=>s.filePath===f.path);
+    if(existing){
+      if(r&&r.success){
+        console.log('[IDENTIFY] existing='+existing.title+' / '+existing.artist+' → identified='+r.title+' / '+r.artist+' method='+r.method+' confidence='+r.confidence+' reason='+(r.fallback_reason||'-'));
+        existing.title=r.title||existing.title;
+        existing.artist=r.artist||existing.artist;
+        existing.album=r.album||existing.album;
+        existing.genre=r.genre||existing.genre;
+        existing.year=r.year||existing.year;
+        if(r.duration!=null)existing.duration=fmt(r.duration);
+        if(r.cover_data_base64)existing.cover='data:'+r.cover_mime+';base64,'+r.cover_data_base64;
+      }else{
+        console.log('[IDENTIFY] SKIP existing='+existing.title+' / '+existing.artist+' success='+(r?r.success:'no-result')+' reason='+(r?.fallback_reason||'-'));
+      }
+      return existing.id;
+    }
+    const name=f.path.split('\\').pop().split('/').pop().replace(/\.[^.]+$/,'');
+    const sid='file-'+plKey+'-'+name.replace(/[^a-zA-Z0-9]/g,'_');
+    const newTitle=r&&r.success?r.title:name;
+    const newArtist=r&&r.success?r.artist:'Unknown';
+    console.log('[IDENTIFY] NEW song: title='+newTitle+' / '+newArtist+' method='+(r?.method||'none')+' confidence='+(r?.confidence||0)+' reason='+(r?.fallback_reason||'-'));
+    songs[sid]={
+      id:sid,
+      title:r&&r.success?r.title:name,
+      artist:r&&r.success?r.artist:'Unknown',
+      album:r&&r.success?(r.album||''):'',
+      genre:r&&r.success?(r.genre||''):'',
+      year:r&&r.success?r.year||'':'',
+      duration:r&&r.duration!=null?fmt(r.duration):'--:--',
+      addedAt:new Date().toISOString(),
+      filePath:f.path,
+      cover:r&&r.cover_data_base64?'data:'+r.cover_mime+';base64,'+r.cover_data_base64:undefined
+    };
+    return sid;
+  });
+  playlists[plKey]={name:playlistName,emoji:'📂',color:'#'+Math.floor(Math.random()*0xffffff).toString(16).padStart(6,'0'),sub:ids.length+' tracks',songs:ids};
+  saveState();
+  renderPlaylistNav();
+  renderPlaylistGrid();
+  switchPlaylist(plKey);
+  const updated=results?results.filter(r=>r.success).length:0;
+  const total=results?results.length:0;
+  if(total>0){
+    const failed=results.filter(r=>!r.success);
+    let msg=`${updated}/${total} → "${playlistName}"`;
+    if(failed.length>0){
+      const firstErr=failed[0].error||'unknown error';
+      msg+=` | ${failed.length} failed: ${esc(firstErr)}`;
+    }
+    showToast(`✅ Identified ${msg}`);
+  }else{
+    showToast(`✅ Added ${ids.length} songs to "${playlistName}"`);
+  }
 }
 
 async function handleCreateEmptyPlaylist(){

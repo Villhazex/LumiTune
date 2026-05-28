@@ -89,14 +89,20 @@ async function playSong(index,playlistKey,addToQueue){
   requestAnimationFrame(()=>{mainEl.scrollTop=scrollPos;});
   updateUpNext();
 
-  if(song.file)playReal(song.file,song);else simPlay(song.duration);
+  if(song.file||song.filePath)playReal(song.file,song);else simPlay(song.duration);
   fetchLyricsForSong(song);
 }
 
-function playReal(file,song){
+async function playReal(file,song){
   clearInterval(playbackInterval);
-  currentAudioFile=file;
-  audioPlayer.src=URL.createObjectURL(file);
+  currentAudioFile=file||song.filePath||true;
+  if(song.filePath&&!file){
+    audioPlayer.src=YT_SERVER+'/api/stream?path='+encodeURIComponent(song.filePath);
+  }else if(song.filePath){
+    audioPlayer.src=convertFileSrc(song.filePath);
+  }else{
+    audioPlayer.src=URL.createObjectURL(file);
+  }
   audioPlayer.volume=isMuted?0:volume;
   audioPlayer.play().catch(()=>{});
   clearInterval(loudnessInterval);
