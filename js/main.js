@@ -1,3 +1,4 @@
+let inv=null;
 $('upNextClear')?.addEventListener('click',()=>{clearQueue();updateUpNext();});
 $('upNextSave')?.addEventListener('click',()=>{saveQueueToPlaylist();});
 
@@ -160,10 +161,7 @@ document.addEventListener('mousemove',e=>{
 });
 document.addEventListener('mouseup',()=>{isDraggingProgress=false;isDraggingVolume=false;isDraggingPanel=false;document.body.style.cursor='';document.body.style.userSelect='';$('resizeHandle')?.classList.remove('active');document.querySelector('.right-panel')?.classList.remove('resizing');});
   $('volBtn').addEventListener('click',toggleMute);
-  $('fullscreenBtn').addEventListener('click',()=>{
-    if(document.fullscreenElement)document.exitFullscreen();
-    else document.documentElement.requestFullscreen();
-  });
+  
   $('queueBtn')?.addEventListener('click',()=>{
      updateUpNext();
      const tab=document.querySelector('.panel-tab:nth-child(2)');
@@ -653,7 +651,7 @@ async function init(){
     document.body.classList.add('tb-active');
     const ipc=window.__TAURI_IPC__;
     let _ipcId=0;
-    const inv=ipc?(cmd,args)=>new Promise((rs,rj)=>{const cid=++_ipcId,eid=++_ipcId;window[`_${cid}`]=rs;window[`_${eid}`]=rj;ipc({cmd,args:args||{},callback:cid,error:eid});}):null;
+    inv=ipc?(cmd,args)=>new Promise((rs,rj)=>{const cid=++_ipcId,eid=++_ipcId;window[`_${cid}`]=rs;window[`_${eid}`]=rj;const m={cmd,callback:cid,error:eid,...args};ipc(m);}):null;
     if(!ipc){showToast('ERR: no IPC',5000);return;}
     const btns=[$('tb-min'),$('tb-max'),$('tb-close')];
     btns.forEach(btn=>{

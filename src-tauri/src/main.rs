@@ -118,22 +118,16 @@ fn yt_download_mp3(url: String) -> Result<DownloadResult, String> {
 
 use raw_window_handle::HasRawWindowHandle;
 
-struct Hwnds {
-    child: windows_sys::Win32::Foundation::HWND,
-    root: windows_sys::Win32::Foundation::HWND,
-}
-
-fn get_hwnds(window: &tauri::Window) -> Result<Hwnds, String> {
+fn get_hwnds(window: &tauri::Window) -> Result<windows_sys::Win32::Foundation::HWND, String> {
     let handle = window.raw_window_handle();
     match handle {
         raw_window_handle::RawWindowHandle::Win32(win) => {
             let child = win.hwnd as windows_sys::Win32::Foundation::HWND;
             Ok(unsafe {
-                let root = windows_sys::Win32::UI::WindowsAndMessaging::GetAncestor(
+                windows_sys::Win32::UI::WindowsAndMessaging::GetAncestor(
                     child,
                     windows_sys::Win32::UI::WindowsAndMessaging::GA_ROOT,
-                );
-                Hwnds { child, root }
+                )
             })
         }
         _ => Err("Not a Windows window".into()),
@@ -141,9 +135,9 @@ fn get_hwnds(window: &tauri::Window) -> Result<Hwnds, String> {
 }
 
 fn show_on_root(window: &tauri::Window, cmd: std::ffi::c_int) -> Result<(), String> {
-    let h = get_hwnds(window)?;
+    let hwnd = get_hwnds(window)?;
     unsafe {
-        windows_sys::Win32::UI::WindowsAndMessaging::ShowWindow(h.root, cmd);
+        windows_sys::Win32::UI::WindowsAndMessaging::ShowWindow(hwnd, cmd);
     }
     Ok(())
 }
@@ -155,10 +149,10 @@ fn tb_minimize(window: tauri::Window) -> Result<(), String> {
 
 #[tauri::command]
 fn tb_maximize(window: tauri::Window) -> Result<(), String> {
-    let h = get_hwnds(&window)?;
+    let hwnd = get_hwnds(&window)?;
     unsafe {
         let style = windows_sys::Win32::UI::WindowsAndMessaging::GetWindowLongW(
-            h.root,
+            hwnd,
             windows_sys::Win32::UI::WindowsAndMessaging::GWL_STYLE,
         );
         let is_max = (style as u32 & windows_sys::Win32::UI::WindowsAndMessaging::WS_MAXIMIZE) != 0;
@@ -167,17 +161,17 @@ fn tb_maximize(window: tauri::Window) -> Result<(), String> {
         } else {
             windows_sys::Win32::UI::WindowsAndMessaging::SW_MAXIMIZE
         };
-        windows_sys::Win32::UI::WindowsAndMessaging::ShowWindow(h.root, cmd);
+        windows_sys::Win32::UI::WindowsAndMessaging::ShowWindow(hwnd, cmd);
     }
     Ok(())
 }
 
 #[tauri::command]
 fn tb_is_maximized(window: tauri::Window) -> Result<bool, String> {
-    let h = get_hwnds(&window)?;
+    let hwnd = get_hwnds(&window)?;
     unsafe {
         let style = windows_sys::Win32::UI::WindowsAndMessaging::GetWindowLongW(
-            h.root,
+            hwnd,
             windows_sys::Win32::UI::WindowsAndMessaging::GWL_STYLE,
         );
         Ok((style as u32 & windows_sys::Win32::UI::WindowsAndMessaging::WS_MAXIMIZE) != 0)
@@ -186,10 +180,10 @@ fn tb_is_maximized(window: tauri::Window) -> Result<bool, String> {
 
 #[tauri::command]
 fn tb_close(window: tauri::Window) -> Result<(), String> {
-    let h = get_hwnds(&window)?;
+    let hwnd = get_hwnds(&window)?;
     unsafe {
         windows_sys::Win32::UI::WindowsAndMessaging::SendMessageW(
-            h.root,
+            hwnd,
             windows_sys::Win32::UI::WindowsAndMessaging::WM_CLOSE,
             0,
             0,
