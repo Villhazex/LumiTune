@@ -562,10 +562,26 @@ pub fn identify_file(
 ) -> Result<IdentificationResult, String> {
 
     // Read ID3 tags (fallback if AcoustID fails)
-    let tags = read_id3(path).unwrap_or_default();
+    let mut tags = read_id3(path).unwrap_or_default();
     let has_tags = has_minimal_tags(&tags);
     let mut fallback_reason: Option<String> = None;
     let mut acoustid_artist: Option<String> = None;
+
+    // Detect swapped title/artist in ID3 tags by comparing with filename
+    // YouTube downloads often have channel name in title tag and song title in artist tag
+    if has_tags && tags.title.is_some() && tags.artist.is_some() {
+        let (fn_title, fn_artist) = parse_filename(path);
+        if let (Some(ft), Some(fa)) = (&fn_title, &fn_artist) {
+            let id3_title = tags.title.as_deref().unwrap_or("");
+            let id3_artist = tags.artist.as_deref().unwrap_or("");
+            if titles_match(id3_title, fa) && titles_match(id3_artist, ft) {
+                let tmp = tags.title.clone();
+                tags.title = tags.artist.clone();
+                tags.artist = tmp;
+                fallback_reason = Some("id3 tags had swapped title/artist — auto-fixed from filename".into());
+            }
+        }
+    }
 
     // Audio hash cache: skip fpcalc if same audio already identified
     if !audio_hash.is_empty() {

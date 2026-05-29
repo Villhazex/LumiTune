@@ -1,0 +1,358 @@
+# Level 1 + Level 2 Metadata Split — Implementation Plan
+
+## Architecture
+
+Separate metadata into TWO layers:
+
+| Layer | Speed | Source | When |
+|---|---|---|---|
+| **Level 1** (Display) | Instant | ID3 + filename + folder | During scan → show immediately |
+| **Level 2** (Canonical) | Background | fpcalc + AcoustID + MusicBrainz | Worker queue → enrich progressively |
+
+Display metadata lives in `files` table columns.
+Canonical metadata stays in `metadata_cache` + `identifications` (as-is).
+
+---
+
+## Session A: Display Metadata Pipeline
+
+### A1 — DB Schema (db.rs ~L46-107)
+
+Add columns to `files` table (in `migrate()`):
+
+```sql
+display_title    TEXT NOT NULL DEFAULT ''
+display_artist   TEXT NOT NULL DEFAULT ''
+display_album    TEXT DEFAULT NULL
+display_cover_path TEXT DEFAULT NULL
+display_source   TEXT NOT NULL DEFAULT 'filename'
+metadata_source  TEXT NOT NULL DEFAULT 'auto'  -- 'auto' | 'manual'
+```
+
+These are ALTER TABLE migrations (like existing ones at L93-104).
+
+`metadata_source` tracks whether user manually edited → when `'manual'`, Level 2 NEVER overwrites display_title/display_artist.
+
+### A2 — Level1Metadata Struct (scanner.rs)
+
+Add to `scanner.rs`:
+
+```rust
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct Level1Metadata {
+    pub display_title: String,
+    pub display_artist: String,
+    pub display_album: Option<String>,
+    pub display_cover_path: Option<String>,
+    pub display_source: String,  // "id3" | "filename"
+}
+```
+
+New function `read_level1_metadata(path: &str) -> Level1Metadata`:
+1. Call `read_id3(path)` (reuse from metadata.rs)
+2. If ID3 has minimal tags → use ID3 title/artist/album + source="id3"
+3. Also detect swapped tags (reuse logic from metadata.rs:571-584)
+4. Check for local cover in same dir: `folder.jpg`, `cover.jpg`, `front.jpg`, `Folder.jpg`
+5. ElSE → `parse_filename(path)` + source="filename"
+6. If filename yields artist + title → use it
+7. If filename only yields title → title=that, artist="Unknown"
+
+Update `ScannedFile` to include:
+
+```rust
+pub struct ScannedFile {
+    pub path: String,
+    pub size: i64,
+    pub modified: i64,
+    pub audio_hash: String,
+    pub display_title: String,
+    pub display_artist: String,
+    pub display_album: Option<String>,
+    pub display_cover_path: Option<String>,
+    pub display_source: String,
+}
+```
+
+Update `scan_folder()` to call `read_level1_metadata()` for each file and populate these fields.
+
+### A3 — upsert_file migration (db.rs ~L109-121)
+
+Update `upsert_file()` to accept and store display fields:
+
+```rust
+pub fn upsert_file(&self, path: &str, size: i64, modified: i64, audio_hash: &str,
+    display_title: &str, display_artist: &str, display_album: Option<&str>,
+    display_cover_path: Option<&str>, display_source: &str) -> Result<i64, String>
+```
+
+SQL now inserts/updates all display columns.
+
+Add a new query method:
+
+```rust
+pub fn get_display_metadata(&self, id: i64) -> Result<(String, String, Option<String>, Option<String>, String), String>
+```
+
+### A4 — scan_library command (main.rs ~L217-223)
+
+Update `scan_library` to accept and pass display metadata to `upsert_file`.
+
+Return type changes from `Vec<ScannedFile>` to the new `ScannedFile` (which includes display fields).
+
+The response size won't change much — just a few extra strings per file.
+
+### A5 — JS: createPlaylistFromScan (settings.js ~L464-523)
+
+**Current behavior**: waits for identification results, then creates songs.
+
+**New behavior**: creates songs IMMEDIATELY from display fields in `ScannedFile`.
+
+```js
+function createPlaylistFromScan(files, results, playlistName) {
+  files.forEach((f) => {
+    const sid = generateId(f.path);
+    songs[sid] = {
+      id: sid,
+      title: f.display_title || filenameFromPath(f.path),
+      artist: f.display_artist || 'Unknown',
+      album: f.display_album || '',
+      cover: f.display_cover_path || undefined,
+      genre: '', year: '', duration: '--:--',
+      metadataSource: f.display_source,  // "id3" | "filename"
+      filePath: f.path,
+      fileKey: f.fileKey || null,
+      displayTitle: f.display_title,
+      displayArtist: f.display_artist,
+      displayAlbum: f.display_album,
+    };
+    // ... existing dedup logic
+  });
+  // Create playlist immediately
+  // If results arrive later, update progressively
+}
+```
+
+Add `displayTitle`, `displayArtist`, `displayAlbum`, `metadataSource` fields to song objects. These are the Level 1 display fields. Level 2 results update `title`/`artist`/`album` directly but only if `metadataSource !== 'manual'`.
+
+The scan button flow changes:
+
+```js
+$('sScanFolder').onclick = async () => {
+  const files = await inv('scan_library', { path: folder });
+  // IMMEDIATELY create playlist from Level 1 data
+  const plKey = createPlaylistFromScan(files, null, folderName);
+  status.textContent = `Showing ${files.length} songs from "${folderName}"`;
+
+  // THEN start background enrichment (if API key)
+  if (acoustidKey && files.length > 0) {
+    startBackgroundEnrichment(files, plKey);
+  }
+};
+```
+
+### A6 — Background Enrichment (new or merged into runQueueCollect)
+
+```js
+async function startBackgroundEnrichment(files, plKey) {
+  await inv('start_queue', { acoustidKey, concurrency: 3 });
+  while (true) {
+    await sleep(250);
+    const qs = await inv('get_queue_status');
+    if (!qs.running) break;
+
+    const drain = await inv('drain_processed');
+    for (const r of drain) {
+      if (!r.success) continue;
+      // Find song by filePath and update its title/artist/album
+      const song = Object.values(songs).find(s => s.filePath === r.path);
+      if (!song) continue;
+      if (song.metadataSource === 'manual') continue; // NEVER overwrite manual edits
+      applyCanonicalUpdate(song, r);
+    }
+    updateUI(); // refresh visible rows
+  }
+  await inv('stop_queue').catch(() => {});
+}
+
+function applyCanonicalUpdate(song, result) {
+  // Source priority: if current is ID3 and canonical is AcoustID with ≥0.9, update
+  // If current is filename and canonical is anything ≥0.4, update
+  const priorities = { manual: 5, acoustid: 4, id3: 3, hybrid: 2, filename: 1, folder: 0 };
+  const currentPrio = priorities[song.metadataSource] || 0;
+  const newPrio = priorities[result.method] || 0;
+
+  if (newPrio > currentPrio || (newPrio === currentPrio && result.confidence >= 0.9)) {
+    const oldTitle = song.title;
+    song.title = result.title || song.title;
+    song.artist = result.artist || song.artist;
+    song.album = result.album || song.album;
+    song.genre = result.genre || song.genre;
+    song.year = result.year || song.year;
+    if (result.cover_data_base64) {
+      song.cover = 'data:' + result.cover_mime + ';base64,' + result.cover_data_base64;
+    }
+    song.metadataSource = result.method;
+    song.reliability = result.reliability;
+  }
+}
+```
+
+---
+
+## Session B: Metadata Merge Strategy (Rust + JS)
+
+### B1 — Merge Rules (new module or add to metadata.rs)
+
+Principles:
+1. **Manual edits NEVER overwritten** (new `metadata_source` field)
+2. **Safe fields**: genre, year, cover art, MusicBrainz IDs — auto-update on any canonical result
+3. **Protected fields**: title, artist, album — update only if new source has higher priority
+4. **Priority ladder**: manual(5) > acoustid(4) > cache/audio_hash(3.5) > hybrid(3) > id3(3) > filename(2) > folder(1) > none(0)
+
+Priority system in Rust:
+
+```rust
+fn source_priority(source: &str) -> u8 {
+    match source {
+        "manual" => 5,
+        "acoustid" => 4,
+        "cache" | "audio_hash" => 3,
+        "id3" | "hybrid" => 3,
+        "filename" => 2,
+        "folder" => 1,
+        _ => 0,
+    }
+}
+
+fn should_update_display(current_source: &str, new_source: &str, new_confidence: f64) -> bool {
+    let cur = source_priority(current_source);
+    let new = source_priority(new_source);
+    new > cur || (new == cur && new_confidence >= 0.9)
+}
+```
+
+### B2 — JS Merge Logic (settings.js or new helpers.js functions)
+
+`applyCanonicalUpdate()` as defined above, with the priority + confidence check.
+
+---
+
+## Session C: Settings + Preferences
+
+### C1 — New settings in Settings → Scanner section
+
+```
+[ ] Enable background enrichment (default: on)
+[ ] Auto-apply metadata improvements (default: on)
+[ ] Prefer official metadata over local tags (default: off)
+```
+
+### C2 — Enrichment toggle
+
+When enrichment is off, scan creates playlist from Level 1 and does NOT start queue.
+
+### C3 — Manual metadata editor (modals.js ~L140-214)
+
+When user saves in `showMetadataEditor()`:
+- Set `song.metadataSource = 'manual'`
+- This protects title/artist from future Level 2 overwrites
+
+---
+
+## Session D: Source Tracking + Reliability UI
+
+### D1 — Song object fields (constants.js, storage.js)
+
+Add to song objects:
+- `displayTitle` — Level 1 title (original from scan)
+- `displayArtist` — Level 1 artist
+- `reliability` — "high" | "medium" | "low" (from canonical)
+- `metadataSource` — "id3" | "filename" | "acoustid" | "manual" | "hybrid" | "cache"
+
+### D2 — Track row indicators (views.js ~L61-85)
+
+Add subtle reliability or source indicator:
+- 🟢 high confidence (acoustid ≥0.9)
+- 🟡 medium (id3, hybrid, cache, acoustid <0.9)
+- ⚪ low (filename)
+- Or just a tooltip showing method + confidence
+
+### D3 — storage.js changes
+
+`saveState()` already strips `file` from song objects. Add:
+```js
+// displayTitle, displayArtist, reliability, metadataSource persist through save/load
+```
+
+`loadState()` restores these fields.
+
+---
+
+## Session E: metadata.rs Module Refactor
+
+Split monolithic `metadata.rs` (868 lines) into modules:
+
+```
+src-tauri/src/
+  metadata/
+    mod.rs          — re-exports + public API (identify_file)
+    display.rs      — read_id3, has_minimal_tags, is_garbage_tags, Id3Tags
+    fpcalc.rs       — fpcalc_bin, run_fpcalc
+    acoustid.rs     — lookup_acoustid, AcoustidResult/Hit/Recording/Artist
+    musicbrainz.rs  — lookup_musicbrainz, fetch_cover, MbRecording/Release/etc
+    normalize.rs    — normalize_title, titles_match, parse_filename
+    merge.rs        — metadata merge strategy
+    queue.rs        — IdentificationResult, IdentificationProgress, reliability, save_cover
+```
+
+File sizes after split:
+- `normalize.rs`: ~60 lines (normalize_title, titles_match, parse_filename)
+- `display.rs`: ~100 lines (read_id3, Id3Tags, has_minimal_tags, is_garbage_tags)
+- `fpcalc.rs`: ~60 lines (fpcalc_bin, run_fpcalc)
+- `acoustid.rs`: ~60 lines (lookup_acoustid + structs)
+- `musicbrainz.rs`: ~100 lines (lookup_musicbrainz, fetch_cover, structs)
+- `merge.rs`: ~50 lines
+- `queue.rs`: ~50 lines
+- `mod.rs`: ~40 lines (identify_file, re-exports)
+
+> **Note**: Do NOT move `throttle_api()` into its own tiny file — it's used by both musicbrainz and cover art. Keep it accessible (e.g., in `mod.rs` or a small `rate_limit.rs`).
+
+---
+
+## Changes Summary
+
+| Change | Files | Lines Changed |
+|---|---|---|
+| DB schema migration (display columns) | `db.rs` | +15 |
+| Scanner Level 1 metadata | `scanner.rs` | +50 |
+| scan_library command update | `main.rs` | +5 |
+| JS createPlaylistFromScan | `settings.js` | +30 |
+| Background enrichment + merge | `settings.js` | +40 |
+| Source tracking in song objects | `settings.js`, `constants.js`, `storage.js` | +10 |
+| Reliability UI indicators | `views.js` | +15 |
+| Manual metadata protection | `modals.js` | +3 |
+| Settings toggles | `settings.js` | +20 |
+| Module split | `metadata/` new dir | restructure |
+
+---
+
+## Testing Strategy
+
+1. **Scan folder with known mp3s** → verify display_title/display_artist populated instantly
+2. **Create playlist** → verify songs appear with Level 1 data (no wait)
+3. **Background enrichment** → verify title/artist progressively improve
+4. **Manual edit** → verify metadata_source='manual' and enrichment doesn't overwrite
+5. **Module split** → verify `cargo build` succeeds and `cargo t` passes
+6. **Edge: no ID3 tags** → verify filename parsing works
+7. **Edge: swapped tags** → verify auto-detect + fix works
+8. **Edge: empty library** → verify no crash
+
+---
+
+## Future (not in scope for this refactor)
+
+- Folder-based album detection (Level 1 enhancement)
+- Batch ID3 reading during scan (optimization)
+- Local cover image caching (Level 1 enhancement)
+- Write metadata back to audio files
+- AI-powered tag correction
