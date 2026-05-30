@@ -66,7 +66,8 @@ let recordingShortcutKey=null;
 
 let searchTab='tracks';
 let recentPlays=[];
-let acoustidKey='';
+const ACOUSTID_API_KEY='KC621JosOG';
+let acoustidKey=ACOUSTID_API_KEY;
 let audioCtx=null;
 let gainNode=null;
 let analyserNode=null;

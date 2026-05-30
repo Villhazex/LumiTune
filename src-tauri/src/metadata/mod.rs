@@ -247,22 +247,52 @@ pub fn identify_file(
             if !acoustid_results.is_empty() {
                 // ---- Candidate Re-Scoring ----
                 // Determine known metadata from ID3 or filename for comparison
-                let known_title = {
+                // When no ID3 tags, try both filename parser orientations
+                let known_pairs: Vec<(String, String)> = if has_tags {
                     let id3_t = tags.title.as_deref().unwrap_or("").trim().to_string();
-                    if !id3_t.is_empty() { id3_t } else {
-                        Path::new(path).file_stem()
-                            .and_then(|s| s.to_str())
-                            .unwrap_or("")
-                            .to_string()
+                    let id3_a = tags.artist.as_deref().unwrap_or("").trim().to_string();
+                    if !id3_t.is_empty() {
+                        vec![(id3_t, id3_a)]
+                    } else {
+                        Vec::new()
                     }
+                } else {
+                    let fp = parse_filename(path);
+                    let ft = fp.title.unwrap_or_default();
+                    let fa = fp.artist.unwrap_or_default();
+                    let mut pairs = Vec::new();
+                    if !ft.is_empty() || !fa.is_empty() {
+                        pairs.push((ft.clone(), fa.clone()));
+                        if !ft.is_empty() && !fa.is_empty() && ft != fa {
+                            pairs.push((fa, ft));
+                        }
+                    }
+                    pairs
                 };
-                let known_artist = tags.artist.as_deref().unwrap_or("").trim().to_string();
 
                 // Score all AcoustID candidates against known metadata
+                // When multiple known pairs exist, pick the orientation with the best match
                 let mut scored: Vec<(f64, &(String, f64, String, String), VerificationResult)> = acoustid_results.iter()
                     .map(|cand| {
-                        let vr = verify_candidate(&cand.2, &cand.3, &known_title, &known_artist, cand.1);
-                        (vr.final_score, cand, vr)
+                        if known_pairs.is_empty() {
+                            let vr = VerificationResult {
+                                title_similarity: cand.1,
+                                artist_similarity: cand.1,
+                                final_score: cand.1,
+                                is_trusted: cand.1 >= 0.5,
+                            };
+                            return (vr.final_score, cand, vr);
+                        }
+                        let mut best: Option<(f64, &(String, f64, String, String), VerificationResult)> = None;
+                        for (kt, ka) in &known_pairs {
+                            let vr = verify_candidate(&cand.2, &cand.3, kt, ka, cand.1);
+                            let score = vr.final_score;
+                            let better = best.as_ref().map_or(true, |(best_s, _, _)| score > *best_s);
+                            if better {
+                                best = Some((score, cand, vr));
+                            }
+                        }
+                        best.unwrap()
                     })
                     .collect();
                 scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
@@ -290,10 +320,30 @@ pub fn identify_file(
                             _ => (title_from_aid.clone(), artist_from_aid.clone(), None, None, None),
                         };
 
-                        // Re-verify with MB-resolved data
-                        let mb_vr = verify_candidate(&title, &artist, &known_title, &known_artist, *confidence);
-                        let mb_score = mb_vr.final_score;
-                        let is_trusted = mb_vr.is_trusted;
+                        // Re-verify with MB-resolved data against all known pairs
+                        let (mb_vr, mb_score, is_trusted) = if known_pairs.is_empty() {
+                            let vr = VerificationResult {
+                                title_similarity: confidence.max(0.5),
+                                artist_similarity: confidence.max(0.5),
+                                final_score: *confidence,
+                                is_trusted: *confidence >= 0.5,
+                            };
+                            let fs = vr.final_score;
+                            let tr = vr.is_trusted;
+                            (vr, fs, tr)
+                        } else {
+                            let mut mb_best: Option<(VerificationResult, f64, bool)> = None;
+                            for (kt, ka) in &known_pairs {
+                                let vr = verify_candidate(&title, &artist, kt, ka, *confidence);
+                                let score = vr.final_score;
+                                let trusted = vr.is_trusted;
+                                let better = mb_best.as_ref().map_or(true, |(_, best_s, _)| score > *best_s);
+                                if better {
+                                    mb_best = Some((vr, score, trusted));
+                                }
+                            }
+                            mb_best.unwrap()
+                        };
 
                         let final_decision = if mb_score >= 0.6 || is_trusted { "accepted" }
                             else if mb_score >= 0.4 { "needs_review" }
@@ -523,6 +573,6 @@ pub fn identify_file(
         artist_similarity: 0.0,
         final_score: 0.0,
         is_trusted: false,
-        suspected_swapped: fp.suspected_swapped,
+        suspected_swapped: false,
     })
 }

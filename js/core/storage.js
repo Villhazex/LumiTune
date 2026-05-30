@@ -38,7 +38,6 @@ function saveState(){
     localStorage.setItem('lumi-stabilize',String(audioStabilize));
     localStorage.setItem('lumi-loudness-target',String(loudnessTarget));
     localStorage.setItem('lumi-recent-plays',JSON.stringify(recentPlays));
-    localStorage.setItem('lumi-acoustid-key',acoustidKey);
     localStorage.setItem('lumi-enrich',String(enrichmentEnabled));
     localStorage.setItem('lumi-auto-apply',String(autoApplyMetadata));
   }catch(e){}
@@ -111,7 +110,7 @@ async function loadState(){
     audioStabilize=localStorage.getItem('lumi-stabilize')==='true';
     const lt=parseFloat(localStorage.getItem('lumi-loudness-target'));
     if(!isNaN(lt))loudnessTarget=Math.max(-30,Math.min(-10,lt));
-    acoustidKey=localStorage.getItem('lumi-acoustid-key')||'';
+    acoustidKey=localStorage.getItem('lumi-acoustid-key')||ACOUSTID_API_KEY;
     enrichmentEnabled=localStorage.getItem('lumi-enrich')!=='false';
     autoApplyMetadata=localStorage.getItem('lumi-auto-apply')!=='false';
   }catch(e){console.warn(e);}

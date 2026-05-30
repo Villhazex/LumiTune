@@ -237,22 +237,10 @@ function showSettingsModal(){
     },
     scanner:{
       label:'Scanner',
-      icon:'🔍',
+      icon:'<svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.5 1A5.5 5.5 0 0 1 12 6.5c0 1.38-.5 2.63-1.32 3.62l3.6 3.6a.75.75 0 0 1-1.06 1.06l-3.6-3.6A5.5 5.5 0 1 1 6.5 1Zm0 1.5a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/></svg>',
       render(){
-        const hasKey=acoustidKey.length>0;
         return`<div class="settings-section-title">Library Scanner</div>
           <div class="settings-section-desc">Scan folders and identify songs via audio fingerprinting</div>
-          <div class="setting-group">
-            <div class="setting-row">
-              <div class="setting-row-label">
-                <span>AcoustID API Key</span>
-                <small>Required for fingerprint matching. Get one free at acoustid.org</small>
-              </div>
-              <div class="setting-row-control">
-                <input type="text" id="sAcoustidKey" class="setting-input" value="${esc(acoustidKey)}" placeholder="Enter API key" style="width:220px">
-              </div>
-            </div>
-          </div>
           <div class="setting-group">
             <div class="setting-row">
               <div class="setting-row-label">
@@ -286,7 +274,7 @@ function showSettingsModal(){
                 <small>Pick a music folder to scan and identify</small>
               </div>
               <div class="setting-row-control">
-                <button class="setting-btn primary" id="sScanFolder">📂 Scan Folder</button>
+                <button class="setting-btn primary" id="sScanFolder"><svg viewBox="0 0 16 16" fill="currentColor" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px"><path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h4.88a1.5 1.5 0 0 1 1.06.44l.88.88A1.5 1.5 0 0 0 10.38 3H13.5A1.5 1.5 0 0 1 15 4.5V12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V2.5Z"/></svg> Scan Folder</button>
               </div>
             </div>
             <div class="setting-row">
@@ -295,7 +283,7 @@ function showSettingsModal(){
                 <small>Run identification on scanned but unidentified files</small>
               </div>
               <div class="setting-row-control">
-                <button class="setting-btn" id="sIdentifyAll">🔍 Identify All</button>
+                <button class="setting-btn" id="sIdentifyAll"><svg viewBox="0 0 16 16" fill="currentColor" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px"><path d="M6.5 1A5.5 5.5 0 0 1 12 6.5c0 1.38-.5 2.63-1.32 3.62l3.6 3.6a.75.75 0 0 1-1.06 1.06l-3.6-3.6A5.5 5.5 0 1 1 6.5 1Zm0 1.5a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/></svg> Identify All</button>
               </div>
             </div>
           </div>
@@ -309,10 +297,6 @@ function showSettingsModal(){
           <div id="scanStats" style="margin-top:8px;font-size:11px;color:var(--text-dim)"></div>`;
       },
       bind(){
-        $('sAcoustidKey').oninput=()=>{
-          acoustidKey=$('sAcoustidKey').value.trim();
-          saveState();
-        };
         $('sEnrichEnabled').onchange=()=>{
           enrichmentEnabled=$('sEnrichEnabled').checked;
           saveState();
@@ -328,7 +312,7 @@ function showSettingsModal(){
           const btn=$('sScanFolder');const prog=$('scanProgress');const fill=$('scanProgressFill');const txt=$('scanProgressText');const status=$('scanStatus');
           prog.style.display='block';
           btn.disabled=true;
-          btn.textContent='⏳ Scanning...';
+          btn.innerHTML='<svg viewBox="0 0 16 16" fill="currentColor" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px"><path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h4.88a1.5 1.5 0 0 1 1.06.44l.88.88A1.5 1.5 0 0 0 10.38 3H13.5A1.5 1.5 0 0 1 15 4.5V12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V2.5Z"/></svg> Scanning...';
           status.textContent='Scanning folder...';
           try{
             const files=await inv('scan_library',{path:folder});
@@ -336,20 +320,20 @@ function showSettingsModal(){
             status.textContent=`Showing ${files.length} songs from "${esc(folderName)}"`;
             const plKey=createPlaylistFromScan(files,null,folderName);
             showToast(`✅ Added ${files.length} songs to "${esc(folderName)}"`);
-            if(enrichmentEnabled&&acoustidKey&&files.length>0){
+            if(enrichmentEnabled&&files.length>0){
               status.textContent='Starting background enrichment...';
               await startBackgroundEnrichment(({done,total,status:s})=>{
                 fill.style.width=(total>0?(done/total*100).toFixed(0):'0')+'%';
                 txt.textContent=`${done} / ${total}`;
                 if(s)status.textContent=s;
-              },acoustidKey,3,files,plKey);
+              },ACOUSTID_API_KEY,3,files,plKey);
             }
-            btn.textContent='📂 Scan Folder';
+            btn.innerHTML='<svg viewBox="0 0 16 16" fill="currentColor" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px"><path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h4.88a1.5 1.5 0 0 1 1.06.44l.88.88A1.5 1.5 0 0 0 10.38 3H13.5A1.5 1.5 0 0 1 15 4.5V12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V2.5Z"/></svg> Scan Folder';
             btn.disabled=false;
             prog.style.display='none';
             refreshStats();
           }catch(e){
-            btn.textContent='📂 Scan Folder';
+            btn.innerHTML='<svg viewBox="0 0 16 16" fill="currentColor" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px"><path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h4.88a1.5 1.5 0 0 1 1.06.44l.88.88A1.5 1.5 0 0 0 10.38 3H13.5A1.5 1.5 0 0 1 15 4.5V12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V2.5Z"/></svg> Scan Folder';
             btn.disabled=false;
             status.textContent='Error: '+e;
             showToast('❌ '+e,3000);
@@ -357,15 +341,14 @@ function showSettingsModal(){
         };
         $('sIdentifyAll').onclick=async()=>{
           if(!isTauri()){showToast('Identification only available in desktop app');return;}
-          if(!acoustidKey){showToast('Set AcoustID API key first');return;}
           const btn=$('sIdentifyAll');const prog=$('scanProgress');const fill=$('scanProgressFill');const txt=$('scanProgressText');const status=$('scanStatus');
           prog.style.display='block';
           btn.disabled=true;
-          btn.textContent='⏳ Identifying...';
+          btn.innerHTML='<svg viewBox="0 0 16 16" fill="currentColor" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px"><path d="M6.5 1A5.5 5.5 0 0 1 12 6.5c0 1.38-.5 2.63-1.32 3.62l3.6 3.6a.75.75 0 0 1-1.06 1.06l-3.6-3.6A5.5 5.5 0 1 1 6.5 1Zm0 1.5a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/></svg> Identifying...';
           try{
             await inv('retry_failed');
-            const results=await runQueueCollect(prog,fill,txt,status,acoustidKey,3);
-            btn.textContent='🔍 Identify All';btn.disabled=false;
+            const results=await runQueueCollect(prog,fill,txt,status,ACOUSTID_API_KEY,3);
+            btn.innerHTML='<svg viewBox="0 0 16 16" fill="currentColor" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px"><path d="M6.5 1A5.5 5.5 0 0 1 12 6.5c0 1.38-.5 2.63-1.32 3.62l3.6 3.6a.75.75 0 0 1-1.06 1.06l-3.6-3.6A5.5 5.5 0 1 1 6.5 1Zm0 1.5a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/></svg> Identify All';btn.disabled=false;
             prog.style.display='none';
             if(results.length>0){
               const ok=results.filter(r=>r.success).length;
@@ -395,7 +378,7 @@ function showSettingsModal(){
             }
             refreshStats();
           }catch(e){
-            btn.textContent='🔍 Identify All';btn.disabled=false;
+            btn.innerHTML='<svg viewBox="0 0 16 16" fill="currentColor" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px"><path d="M6.5 1A5.5 5.5 0 0 1 12 6.5c0 1.38-.5 2.63-1.32 3.62l3.6 3.6a.75.75 0 0 1-1.06 1.06l-3.6-3.6A5.5 5.5 0 1 1 6.5 1Zm0 1.5a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/></svg> Identify All';btn.disabled=false;
             status.textContent='Error: '+e;
           }
         };
@@ -464,9 +447,9 @@ async function refreshStats(){
     const stats=await inv('get_scan_stats');
     const el=$('scanStats');
     if(el){
-      let parts=[`📊 Total: ${stats[0]}`,`✅ Identified: ${stats[1]}`];
-      if(stats[2]>0)parts.push(`🔍 Needs review: ${stats[2]}`);
-      parts.push(`❌ Failed: ${stats[3]}`);
+      let parts=[`# Total: ${stats[0]}`,`✓ Identified: ${stats[1]}`];
+      if(stats[2]>0)parts.push(`◉ Needs review: ${stats[2]}`);
+      parts.push(`✗ Failed: ${stats[3]}`);
       el.textContent=parts.join(' | ');
     }
   }catch(e){}
@@ -489,13 +472,13 @@ async function runQueueCollect(progEl,fillEl,txtEl,statusEl,key,concurrency){
       const drain=await inv('drain_processed');
       if(drain.length>0){
         const last=drain[drain.length-1];
-        const b={high:'🟢',medium:'🟡',low:'⚪'}[last.reliability]||'⚪';
-        const trustMark=last.is_trusted===false?' ⚠️':'';
+        const b={high:'●',medium:'◖',low:'○'}[last.reliability]||'○';
+        const trustMark=last.is_trusted===false?' !':'';
         statusEl.textContent=`${b}${trustMark} ${esc(last.title)} — ${esc(last.artist)} (${last.method})${last.fallback_reason?' ['+esc(last.fallback_reason)+']':''}`;
       }
       if(qs.errors.length>0){
         const e=qs.errors[qs.errors.length-1];
-        statusEl.textContent='❌ '+esc(e);
+        statusEl.textContent='✗ '+esc(e);
       }
       results.push(...drain);
     }
@@ -517,11 +500,11 @@ async function startBackgroundEnrichment(onProgress,key,concurrency,scannedFiles
       const drain=await inv('drain_processed');
       if(drain.length>0){
         const last=drain[drain.length-1];
-        const b={high:'🟢',medium:'🟡',low:'⚪'}[last.reliability]||'⚪';
-        const trustMark=last.is_trusted===false?' ⚠️':'';
+        const b={high:'●',medium:'◖',low:'○'}[last.reliability]||'○';
+        const trustMark=last.is_trusted===false?' !':'';
         onProgress({done,total,title:last.title,artist:last.artist,method:last.method,reliability:last.reliability,isTrusted:last.is_trusted,status:`${b}${trustMark} ${esc(last.title)} — ${esc(last.artist)} (${last.method})`});
       }else{
-        onProgress({done,total,status:qs.errors.length>0?'❌ '+qs.errors[qs.errors.length-1]:''});
+        onProgress({done,total,status:qs.errors.length>0?'✗ '+qs.errors[qs.errors.length-1]:''});
       }
       for(const r of drain){
         if(!r.success)continue;
@@ -551,7 +534,13 @@ function applyCanonicalUpdate(song,result){
   const bypassGate=(result.confidence||0)>=0.995;
   const ts=result.title_similarity!=null?result.title_similarity:1;
   const as=result.artist_similarity!=null?result.artist_similarity:1;
-  const simOk=bypassGate||(ts>=0.7&&as>=0.7);
+  // AcoustID results from MusicBrainz are inherently more reliable than
+  // filename/hybrid/folder guesses — trust them even with low similarity
+  const upgradeFromWeak=result.method==='acoustid'&&(result.confidence||0)>=0.5&&
+    song.metadataSource!=='manual'&&
+    (song.metadataSource==='filename'||song.metadataSource==='hybrid'||
+     song.metadataSource==='folder'||!song.metadataSource);
+  const simOk=bypassGate||(ts>=0.7&&as>=0.7)||upgradeFromWeak;
 
   const canUpdate=autoApplyMetadata&&(newPrio>curPrio||(newPrio===curPrio&&(result.confidence||0)>=0.9));
   if(canUpdate&&simOk){
@@ -750,11 +739,11 @@ async function doScanFolder(){
     if(prog.cancelled()){prog.close();return;}
     const plKey=createPlaylistFromScan(files,null,folderName);
     saveState();
-    if(acoustidKey&&files.length>0){
+    if(files.length>0){
       prog.update({done:0,total:files.length,status:'Starting identification...',label:'Identifying '+esc(folderName)});
       await startBackgroundEnrichment(({done,total,status:s})=>{
         prog.update({done,total,status:s||'',label:'Identifying '+esc(folderName)});
-      },acoustidKey,3,files,plKey);
+      },ACOUSTID_API_KEY,3,files,plKey);
     }
     if(!prog.cancelled()){
       prog.close();

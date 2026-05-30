@@ -94,7 +94,7 @@ fn read_level1_metadata(path: &str) -> Level1Metadata {
         if let (Some(ft), Some(fa)) = (&fp.title, &fp.artist) {
             let need_flip = if fp.suspected_swapped {
                 // Relaxed threshold when parser is unsure
-                metadata::titles_match(&title, fa) || metadata::titles_match(&title, ft)
+                metadata::titles_match(&title, fa) || metadata::titles_match(&artist, ft)
             } else {
                 metadata::titles_match(&title, fa) && metadata::titles_match(&artist, ft)
             };
@@ -129,8 +129,11 @@ fn read_level1_metadata(path: &str) -> Level1Metadata {
         }
     } else {
         // Fallback to filename parsing
+        // Parser outputs its best guess for title/artist ordering.
+        // We don't propagate suspected_swapped because it reflects internal
+        // parser confidence, not an actual swap needed at display level.
+        // Propagating it causes applyCanonicalUpdate to flip already-correct values.
         let fp = metadata::parse_filename(path);
-        let suspected = fp.suspected_swapped;
         Level1Metadata {
             display_title: fp.title.unwrap_or_else(|| {
                 std::path::Path::new(path)
@@ -146,7 +149,7 @@ fn read_level1_metadata(path: &str) -> Level1Metadata {
             has_embedded_cover: false,
             cover_data_base64: None,
             cover_mime: None,
-            suspected_swapped: suspected,
+            suspected_swapped: false,
         }
     }
 }
