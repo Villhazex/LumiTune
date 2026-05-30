@@ -33,6 +33,11 @@ pub struct MetadataEntry {
     pub musicbrainz_id: Option<String>,
     pub acoustid_id: Option<String>,
     pub confidence: Option<f64>,
+    pub title_similarity: Option<f64>,
+    pub artist_similarity: Option<f64>,
+    pub final_score: Option<f64>,
+    pub is_trusted: Option<bool>,
+    pub candidates_log: Option<String>,
 }
 
 impl Database {
@@ -103,15 +108,40 @@ impl Database {
         // Migration: cover_path column for disk-based cover storage
         conn.execute("ALTER TABLE metadata_cache ADD COLUMN cover_path TEXT DEFAULT NULL", []).ok();
 
+        // Migration: Level 1 display metadata columns on files table
+        conn.execute("ALTER TABLE files ADD COLUMN display_title TEXT NOT NULL DEFAULT ''", []).ok();
+        conn.execute("ALTER TABLE files ADD COLUMN display_artist TEXT NOT NULL DEFAULT ''", []).ok();
+        conn.execute("ALTER TABLE files ADD COLUMN display_album TEXT DEFAULT NULL", []).ok();
+        conn.execute("ALTER TABLE files ADD COLUMN display_cover_path TEXT DEFAULT NULL", []).ok();
+        conn.execute("ALTER TABLE files ADD COLUMN display_source TEXT NOT NULL DEFAULT 'filename'", []).ok();
+        conn.execute("ALTER TABLE files ADD COLUMN metadata_source TEXT NOT NULL DEFAULT 'auto'", []).ok();
+
+        // Migration: verification scoring columns on metadata_cache
+        conn.execute("ALTER TABLE metadata_cache ADD COLUMN title_similarity REAL DEFAULT NULL", []).ok();
+        conn.execute("ALTER TABLE metadata_cache ADD COLUMN artist_similarity REAL DEFAULT NULL", []).ok();
+        conn.execute("ALTER TABLE metadata_cache ADD COLUMN final_score REAL DEFAULT NULL", []).ok();
+        conn.execute("ALTER TABLE metadata_cache ADD COLUMN is_trusted INTEGER DEFAULT NULL", []).ok();
+        conn.execute("ALTER TABLE metadata_cache ADD COLUMN candidates_log TEXT DEFAULT NULL", []).ok();
+
         Ok(())
     }
 
-    pub fn upsert_file(&self, path: &str, size: i64, modified: i64, audio_hash: &str) -> Result<i64, String> {
+    pub fn upsert_file(&self, path: &str, size: i64, modified: i64, audio_hash: &str,
+        display_title: &str, display_artist: &str, display_album: Option<&str>,
+        display_cover_path: Option<&str>, display_source: &str) -> Result<i64, String> {
         let conn = self.conn.lock().map_err(|e| format!("DB lock: {}", e))?;
         conn.execute(
-            "INSERT INTO files (path, size, modified, status, retry_count, last_error, audio_hash) VALUES (?1, ?2, ?3, 'pending', 0, NULL, ?4)
-             ON CONFLICT(path) DO UPDATE SET size=excluded.size, modified=excluded.modified, status='pending', retry_count=0, last_error=NULL, audio_hash=excluded.audio_hash",
-            params![path, size, modified, audio_hash],
+            "INSERT INTO files (path, size, modified, status, retry_count, last_error, audio_hash,
+                display_title, display_artist, display_album, display_cover_path, display_source)
+             VALUES (?1, ?2, ?3, 'pending', 0, NULL, ?4, ?5, ?6, ?7, ?8, ?9)
+             ON CONFLICT(path) DO UPDATE SET
+                size=excluded.size, modified=excluded.modified,
+                status='pending', retry_count=0, last_error=NULL, audio_hash=excluded.audio_hash,
+                display_title=excluded.display_title, display_artist=excluded.display_artist,
+                display_album=excluded.display_album, display_cover_path=excluded.display_cover_path,
+                display_source=excluded.display_source",
+            params![path, size, modified, audio_hash,
+                display_title, display_artist, display_album, display_cover_path, display_source],
         ).map_err(|e| format!("DB upsert file: {}", e))?;
         let id: i64 = conn.query_row(
             "SELECT id FROM files WHERE path = ?1", params![path],
@@ -230,12 +260,13 @@ impl Database {
     pub fn cache_metadata(&self, entry: &MetadataEntry) -> Result<i64, String> {
         let conn = self.conn.lock().map_err(|e| format!("DB lock: {}", e))?;
         conn.execute(
-            "INSERT INTO metadata_cache (fingerprint, source, title, artist, album, year, genre, cover_data, cover_mime, cover_path, musicbrainz_id, acoustid_id, confidence)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+            "INSERT INTO metadata_cache (fingerprint, source, title, artist, album, year, genre, cover_data, cover_mime, cover_path, musicbrainz_id, acoustid_id, confidence, title_similarity, artist_similarity, final_score, is_trusted, candidates_log)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18)",
             params![
                 entry.fingerprint, entry.source, entry.title, entry.artist,
                 entry.album, entry.year, entry.genre, entry.cover_data,
                 entry.cover_mime, entry.cover_path, entry.musicbrainz_id, entry.acoustid_id, entry.confidence,
+                entry.title_similarity, entry.artist_similarity, entry.final_score, entry.is_trusted, entry.candidates_log,
             ],
         ).map_err(|e| format!("DB cache metadata: {}", e))?;
         let id: i64 = conn.last_insert_rowid();
@@ -255,7 +286,7 @@ impl Database {
     pub fn find_by_fingerprint(&self, fp: &str) -> Result<Option<MetadataEntry>, String> {
         let conn = self.conn.lock().map_err(|e| format!("DB lock: {}", e))?;
         let mut stmt = conn.prepare(
-            "SELECT id, fingerprint, source, title, artist, album, year, genre, cover_data, cover_mime, cover_path, musicbrainz_id, acoustid_id, confidence
+            "SELECT id, fingerprint, source, title, artist, album, year, genre, cover_data, cover_mime, cover_path, musicbrainz_id, acoustid_id, confidence, title_similarity, artist_similarity, final_score, is_trusted, candidates_log
              FROM metadata_cache WHERE fingerprint = ?1 LIMIT 1"
         ).map_err(|e| format!("DB prepare: {}", e))?;
         let mut rows = stmt.query_map(params![fp], |r| {
@@ -275,6 +306,11 @@ impl Database {
                 musicbrainz_id: r.get(11)?,
                 acoustid_id: r.get(12)?,
                 confidence: r.get(13)?,
+                title_similarity: r.get(14)?,
+                artist_similarity: r.get(15)?,
+                final_score: r.get(16)?,
+                is_trusted: r.get(17)?,
+                candidates_log: r.get(18)?,
             })
         }).map_err(|e| format!("DB query: {}", e))?;
         match rows.next() {
@@ -289,7 +325,7 @@ impl Database {
         }
         let conn = self.conn.lock().map_err(|e| format!("DB lock: {}", e))?;
         let mut stmt = conn.prepare(
-            "SELECT m.id, m.fingerprint, m.source, m.title, m.artist, m.album, m.year, m.genre, m.cover_data, m.cover_mime, m.cover_path, m.musicbrainz_id, m.acoustid_id, m.confidence
+            "SELECT m.id, m.fingerprint, m.source, m.title, m.artist, m.album, m.year, m.genre, m.cover_data, m.cover_mime, m.cover_path, m.musicbrainz_id, m.acoustid_id, m.confidence, m.title_similarity, m.artist_similarity, m.final_score, m.is_trusted, m.candidates_log
              FROM files f
              JOIN identifications i ON i.file_id = f.id
              JOIN metadata_cache m ON m.id = i.metadata_id
@@ -313,12 +349,58 @@ impl Database {
                 musicbrainz_id: r.get(11)?,
                 acoustid_id: r.get(12)?,
                 confidence: r.get(13)?,
+                title_similarity: r.get(14)?,
+                artist_similarity: r.get(15)?,
+                final_score: r.get(16)?,
+                is_trusted: r.get(17)?,
+                candidates_log: r.get(18)?,
             })
         }).map_err(|e| format!("DB query: {}", e))?;
         match rows.next() {
             Some(Ok(entry)) => Ok(Some(entry)),
             _ => Ok(None),
         }
+    }
+
+    pub fn get_display_metadata(&self, id: i64) -> Result<Option<(String, String, Option<String>, Option<String>, String, String)>, String> {
+        let conn = self.conn.lock().map_err(|e| format!("DB lock: {}", e))?;
+        let mut stmt = conn.prepare(
+            "SELECT display_title, display_artist, display_album, display_cover_path, display_source, metadata_source
+             FROM files WHERE id = ?1"
+        ).map_err(|e| format!("DB prepare: {}", e))?;
+        let mut rows = stmt.query_map(params![id], |r| {
+            Ok((
+                r.get::<_, String>(0)?,
+                r.get::<_, String>(1)?,
+                r.get::<_, Option<String>>(2)?,
+                r.get::<_, Option<String>>(3)?,
+                r.get::<_, String>(4)?,
+                r.get::<_, String>(5)?,
+            ))
+        }).map_err(|e| format!("DB query: {}", e))?;
+        match rows.next() {
+            Some(Ok(entry)) => Ok(Some(entry)),
+            _ => Ok(None),
+        }
+    }
+
+    pub fn update_display_metadata(&self, id: i64, title: &str, artist: &str, source: &str) -> Result<(), String> {
+        let conn = self.conn.lock().map_err(|e| format!("DB lock: {}", e))?;
+        conn.execute(
+            "UPDATE files SET display_title = ?1, display_artist = ?2, display_source = ?3 WHERE id = ?4 AND metadata_source != 'manual'",
+            params![title, artist, source, id],
+        ).map_err(|e| format!("DB update display: {}", e))?;
+        Ok(())
+    }
+
+    pub fn get_file_metadata_source(&self, id: i64) -> Result<String, String> {
+        let conn = self.conn.lock().map_err(|e| format!("DB lock: {}", e))?;
+        let val: String = conn.query_row(
+            "SELECT metadata_source FROM files WHERE id = ?1",
+            params![id],
+            |r| r.get(0),
+        ).unwrap_or_else(|_| "auto".to_string());
+        Ok(val)
     }
 
     pub fn get_stats(&self) -> Result<(i64, i64, i64, i64), String> {
@@ -334,5 +416,42 @@ impl Database {
             "SELECT COUNT(*) FROM files WHERE status = 'failed'", [], |r| r.get(0)
         ).unwrap_or(0);
         Ok((total, identified, needs_review, failed))
+    }
+
+    /// Batch-get cover data from metadata_cache for given file paths.
+    /// Returns Vec of (path, cover_data_bytes, cover_mime) where cover_data is found.
+    pub fn get_covers_by_paths(&self, paths: &[String]) -> Result<Vec<(String, Vec<u8>, String)>, String> {
+        if paths.is_empty() {
+            return Ok(Vec::new());
+        }
+        let placeholders: Vec<String> = paths.iter().enumerate()
+            .map(|(i, _)| format!("?{}", i + 1))
+            .collect();
+        let sql = format!(
+            "SELECT f.path, m.cover_data, m.cover_mime
+             FROM files f
+             JOIN identifications i ON i.file_id = f.id
+             JOIN metadata_cache m ON m.id = i.metadata_id
+             WHERE m.cover_data IS NOT NULL
+             AND f.path IN ({})",
+            placeholders.join(",")
+        );
+        let conn = self.conn.lock().map_err(|e| format!("DB lock: {}", e))?;
+        let mut stmt = conn.prepare(&sql).map_err(|e| format!("DB prepare: {}", e))?;
+        let params: Vec<&dyn rusqlite::types::ToSql> = paths.iter().map(|p| p as &dyn rusqlite::types::ToSql).collect();
+        let rows = stmt.query_map(params.as_slice(), |r| {
+            Ok((
+                r.get::<_, String>(0)?,
+                r.get::<_, Vec<u8>>(1)?,
+                r.get::<_, String>(2)?,
+            ))
+        }).map_err(|e| format!("DB query: {}", e))?;
+        let mut results = Vec::new();
+        for row in rows {
+            if let Ok(entry) = row {
+                results.push(entry);
+            }
+        }
+        Ok(results)
     }
 }

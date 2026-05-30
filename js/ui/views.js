@@ -62,6 +62,18 @@ function makeRow(song,origIdx,isActive,isLiked,plKey,showDel,extra){
   const statusBadge=isActive
     ?`<span class="badge ${isPlaying?'badge-playing':'badge-paused'}"><span class="badge-dot"></span>${isPlaying?'Playing':'Paused'}</span>`
     :'';
+  const reliIcon={high:'🟢',medium:'🟡',low:'⚪'}[song.reliability]||'⚪';
+  const methodLabel={id3:'ID3',acoustid:'AcoustID',hybrid:'Hybrid',cache:'Cache',audio_hash:'Audio Hash',manual:'Manual',filename:'Filename'}[song.metadataSource]||song.metadataSource||'Unknown';
+  const trustIcon=song.isTrusted===false?' ⚠️':'';
+  const swapIcon=song.suspectedSwapped?' 🔄':'';
+  const trustNote=song.isTrusted===false?' · Not Verified':'';
+  const swapNote=song.suspectedSwapped?' · Parser unsure (title/artist may be swapped)':'';
+  const simNote=song.titleSimilarity>0
+    ?` · Title:${(song.titleSimilarity*100).toFixed(0)}% Artist:${((song.artistSimilarity||0)*100).toFixed(0)}%`
+    :'';
+  const reliBadge=song.reliability||song.metadataSource
+    ?` <span class="reliability-badge" title="Source: ${methodLabel} · Reliability: ${song.reliability||'low'}${trustNote}${swapNote}${simNote}">${reliIcon}${trustIcon}${swapIcon}</span>`
+    :'';
   const moreItems=`<button class="dropdown-item" data-qadd="${origIdx}" data-qpl="${plKey}" title="Add to queue">Add to queue</button>
     <button class="dropdown-item" data-addpl="${origIdx}" data-addpl-pl="${plKey}" title="Add to playlist">Add to playlist</button>
     <button class="dropdown-item" data-movepl="${origIdx}" data-movepl-pl="${plKey}" title="Move to playlist">Move to playlist</button>
@@ -71,7 +83,7 @@ function makeRow(song,origIdx,isActive,isLiked,plKey,showDel,extra){
   return`<div class="track-row ${isActive?'active':''}" draggable="true" data-index="${origIdx}" data-playlist="${plKey}">
     <div class="t-info">
       <span class="t-title">${song.title}</span>
-      <span class="t-artist">${song.artist}${statusBadge?' ':''}${statusBadge}</span>
+      <span class="t-artist">${song.artist}${reliBadge}${statusBadge?' ':''}${statusBadge}</span>
     </div>
     <div class="t-extra">${extra}</div>
     <div class="t-actions">

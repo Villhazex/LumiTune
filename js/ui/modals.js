@@ -190,6 +190,7 @@ function showMetadataEditor(playlistKey,index){
     song.year=$('metaYear').value.trim();
     song.duration=$('metaDuration').value.trim()||'--:--';
     song.metadataEdited=true;
+    song.metadataSource='manual';
     if(normalizeMeta(oldTitle)!==normalizeMeta(song.title)||normalizeMeta(oldArtist)!==normalizeMeta(song.artist)){
       deleteCachedLyrics(song);
     }
@@ -212,6 +213,38 @@ function showMetadataEditor(playlistKey,index){
   $('mo').onclick=()=>{document.removeEventListener('keydown',kh);save();};
   o.onclick=e=>{if(e.target===o){document.removeEventListener('keydown',kh);close();}};
 }
+function showScanProgress(){
+  const o=$('confirmOverlay');
+  o.innerHTML=`<div class="modal-box scan-progress-modal" style="text-align:center;min-width:320px">
+    <div class="modal-msg">Scanning Music Folder...</div>
+    <div style="margin:16px 0">
+      <div class="scan-progress-bar" style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden">
+        <div class="scan-progress-fill" style="height:100%;width:0%;background:var(--accent);border-radius:3px;transition:width .3s"></div>
+      </div>
+    </div>
+    <div class="scan-progress-text" style="font-size:13px;color:var(--text2)">0 / 0</div>
+    <div class="scan-status" style="font-size:12px;color:var(--text3);margin-top:6px"></div>
+    <div class="modal-actions" style="justify-content:center;margin-top:12px">
+      <button class="modal-btn" id="scanProgCancel" title="Cancel">Cancel</button>
+    </div>
+  </div>`;
+  o.style.display='flex';
+  let cancelled=false;
+  $('scanProgCancel').onclick=()=>cancelled=true;
+  return {
+    close:()=>{o.style.display='none';},
+    cancelled:()=>cancelled,
+    update:({done,total,status,label})=>{
+      if(cancelled)return;
+      const pct=total>0?(done/total*100).toFixed(0):'0';
+      o.querySelector('.scan-progress-fill').style.width=pct+'%';
+      o.querySelector('.scan-progress-text').textContent=`${done} / ${total}`;
+      if(label)o.querySelector('.modal-msg').textContent=label;
+      if(status)o.querySelector('.scan-status').textContent=status;
+    }
+  };
+}
+
 function showSourcePicker(){
   return new Promise(resolve=>{
     const o=$('confirmOverlay');
@@ -228,6 +261,11 @@ function showSourcePicker(){
           <span class="source-label">YouTube</span>
           <span class="source-desc">Download audio</span>
         </button>
+        ${isTauri()?`<button class="source-option" data-source="folder" title="Scan folder">
+          <span class="source-icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 4a1 1 0 0 1 1-1h4l2 2h5a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4z"/></svg></span>
+          <span class="source-label">Folder</span>
+          <span class="source-desc">Scan &amp; identify</span>
+        </button>`:''}
       </div>
       <div class="modal-actions">
         <button class="modal-btn" id="mc" title="Cancel">Cancel</button>

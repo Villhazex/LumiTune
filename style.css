@@ -704,6 +704,7 @@ body {
 .t-info { min-width: 0; }
 .t-title { font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .t-artist { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+.reliability-badge { cursor: help; font-size: 10px; margin-left: 2px; vertical-align: middle; }
 .t-extra { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .t-actions { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
 .t-actions button {

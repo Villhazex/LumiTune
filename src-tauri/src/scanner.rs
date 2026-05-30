@@ -5,7 +5,24 @@ use std::collections::hash_map::DefaultHasher;
 use std::io::{Read, Seek, SeekFrom};
 use walkdir::WalkDir;
 
+use base64::Engine;
+
+use crate::metadata;
+
 const AUDIO_EXTS: &[&str] = &["mp3", "wav", "ogg", "flac", "m4a", "aac", "wma", "opus"];
+
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct Level1Metadata {
+    pub display_title: String,
+    pub display_artist: String,
+    pub display_album: Option<String>,
+    pub display_cover_path: Option<String>,
+    pub display_source: String,
+    pub has_embedded_cover: bool,
+    pub cover_data_base64: Option<String>,
+    pub cover_mime: Option<String>,
+    pub suspected_swapped: bool,
+}
 
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct ScannedFile {
@@ -13,6 +30,15 @@ pub struct ScannedFile {
     pub size: i64,
     pub modified: i64,
     pub audio_hash: String,
+    pub display_title: String,
+    pub display_artist: String,
+    pub display_album: Option<String>,
+    pub display_cover_path: Option<String>,
+    pub display_source: String,
+    pub has_embedded_cover: bool,
+    pub cover_data_base64: Option<String>,
+    pub cover_mime: Option<String>,
+    pub suspected_swapped: bool,
 }
 
 fn compute_audio_hash(path: &str) -> String {
@@ -48,6 +74,83 @@ fn compute_audio_hash(path: &str) -> String {
     format!("{:016x}", hasher.finish())
 }
 
+/// Read Level 1 display metadata from ID3 tags or filename parsing.
+/// This never waits for network or fingerprinting — instant, offline metadata.
+fn read_level1_metadata(path: &str) -> Level1Metadata {
+    let tags = metadata::read_id3(path).unwrap_or_default();
+    let has_tags = metadata::has_minimal_tags(&tags);
+
+    let (cover_data_b64, cover_mime) = tags.cover_data.as_ref().zip(tags.cover_mime.as_ref())
+        .map(|(data, mime)| (Some(base64::engine::general_purpose::STANDARD.encode(data)), Some(mime.clone())))
+        .unwrap_or((None, None));
+
+    if has_tags {
+        let mut title = tags.title.clone().unwrap_or_default();
+        let mut artist = tags.artist.clone().unwrap_or_default();
+        let album = tags.album.clone();
+
+        // Detect swapped title/artist using filename parser
+        let fp = metadata::parse_filename(path);
+        if let (Some(ft), Some(fa)) = (&fp.title, &fp.artist) {
+            let need_flip = if fp.suspected_swapped {
+                // Relaxed threshold when parser is unsure
+                metadata::titles_match(&title, fa) || metadata::titles_match(&title, ft)
+            } else {
+                metadata::titles_match(&title, fa) && metadata::titles_match(&artist, ft)
+            };
+            if need_flip {
+                std::mem::swap(&mut title, &mut artist);
+            }
+        }
+
+        // Check for local cover image in same directory
+        let parent = std::path::Path::new(path).parent();
+        let cover_path = parent.and_then(|dir| {
+            let candidates = ["folder.jpg", "cover.jpg", "front.jpg", "Folder.jpg", "Cover.jpg", "Front.jpg"];
+            for name in &candidates {
+                let p = dir.join(name);
+                if p.exists() {
+                    return Some(p.to_string_lossy().to_string());
+                }
+            }
+            None
+        });
+
+        Level1Metadata {
+            display_title: if title.trim().is_empty() { "Unknown".to_string() } else { title },
+            display_artist: if artist.trim().is_empty() { "Unknown".to_string() } else { artist },
+            display_album: album.filter(|a| !a.trim().is_empty()),
+            display_cover_path: cover_path,
+            display_source: "id3".to_string(),
+            has_embedded_cover: tags.cover_data.is_some(),
+            cover_data_base64: cover_data_b64,
+            cover_mime,
+            suspected_swapped: false,
+        }
+    } else {
+        // Fallback to filename parsing
+        let fp = metadata::parse_filename(path);
+        let suspected = fp.suspected_swapped;
+        Level1Metadata {
+            display_title: fp.title.unwrap_or_else(|| {
+                std::path::Path::new(path)
+                    .file_stem()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or("Unknown")
+                    .to_string()
+            }),
+            display_artist: fp.artist.unwrap_or_else(|| "Unknown".to_string()),
+            display_album: fp.album,
+            display_cover_path: None,
+            display_source: "filename".to_string(),
+            has_embedded_cover: false,
+            cover_data_base64: None,
+            cover_mime: None,
+            suspected_swapped: suspected,
+        }
+    }
+}
+
 pub fn scan_folder(path: &Path) -> Result<Vec<ScannedFile>, String> {
     if !path.is_dir() {
         return Err(format!("Not a directory: {}", path.display()));
@@ -69,11 +172,21 @@ pub fn scan_folder(path: &Path) -> Result<Vec<ScannedFile>, String> {
             .map(|d| d.as_secs() as i64)
             .unwrap_or(0);
         let apath = entry.path().to_string_lossy().to_string();
+        let l1 = read_level1_metadata(&apath);
         files.push(ScannedFile {
             path: apath.clone(),
             size: meta.len() as i64,
             modified,
             audio_hash: compute_audio_hash(&apath),
+            display_title: l1.display_title,
+            display_artist: l1.display_artist,
+            display_album: l1.display_album,
+            display_cover_path: l1.display_cover_path,
+            display_source: l1.display_source,
+            has_embedded_cover: l1.has_embedded_cover,
+            cover_data_base64: l1.cover_data_base64,
+            cover_mime: l1.cover_mime,
+            suspected_swapped: l1.suspected_swapped,
         });
     }
     Ok(files)

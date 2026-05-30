@@ -390,6 +390,29 @@ async function fetchLyricsForSong(song){
     await renderLyrics(cached);
     return;
   }
+
+  // Lyrics trust gate: only fetch from LRCLIB if metadata is trusted
+  const metadataTrusted=song.isTrusted!==false||song.metadataSource==='manual'||song.metadataSource==='id3';
+  if(!metadataTrusted){
+    const el=$('lyricsContent');
+    if(el){
+      el.innerHTML=`<div class="lyrics-none">Lyrics unavailable — metadata pending verification</div>
+<div class="lyrics-helper">
+  <div class="lyrics-helper-text">This track's metadata is not yet verified. Edit metadata manually to enable lyrics lookup.</div>
+  <div class="lyrics-actions">
+    <button class="lyrics-add-btn primary" id="lyricEditMeta" title="Edit metadata">Edit Metadata</button>
+  </div>
+</div>`;
+      setTimeout(()=>{
+        $('lyricEditMeta')?.addEventListener('click',()=>{
+          const loc=findSongLocation(song);
+          if(loc)showMetadataEditor(loc.playlistKey,loc.index);
+        });
+      },0);
+    }
+    return;
+  }
+
   const readTags=!song.metadataEdited&&song.file&&typeof jsmediatags!=='undefined'?readID3Tags(song.file):null;
   const dataPromise=fetchLyrics(title,artist);
   if(readTags){

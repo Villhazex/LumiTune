@@ -87,6 +87,7 @@ $('addTracksBtn').addEventListener('click',async()=>{
   const src=await showSourcePicker();
   if(src==='local')$('addTracksInput').click();
   else if(src==='youtube')handleYouTubeImport();
+  else if(src==='folder')doScanFolder();
 });
 $('addTracksInput').addEventListener('change',handleAddTracks);
 $('playBtn').addEventListener('click',togglePlay);
@@ -651,8 +652,9 @@ async function init(){
     document.body.classList.add('tb-active');
     const ipc=window.__TAURI_IPC__;
     let _ipcId=0;
-    inv=ipc?(cmd,args)=>new Promise((rs,rj)=>{const cid=++_ipcId,eid=++_ipcId;window[`_${cid}`]=rs;window[`_${eid}`]=rj;const m={cmd,callback:cid,error:eid,...args};ipc(m);}):null;
-    if(!ipc){showToast('ERR: no IPC',5000);return;}
+    const tauriInvoke=window.__TAURI__?.tauri?.invoke||window.__TAURI__?.invoke;
+    inv=ipc?(cmd,args)=>new Promise((rs,rj)=>{const cid=++_ipcId,eid=++_ipcId;window[`_${cid}`]=rs;window[`_${eid}`]=rj;const m={cmd,callback:cid,error:eid,...args};ipc(m);}):tauriInvoke?(cmd,args)=>tauriInvoke(cmd,args):null;
+    if(!inv){showToast('ERR: no IPC',5000);return;}
     const btns=[$('tb-min'),$('tb-max'),$('tb-close')];
     btns.forEach(btn=>{
       if(!btn)return;
@@ -665,6 +667,7 @@ async function init(){
     });
     inv('tb_is_maximized').then(r=>$('tb-max').textContent=r?'❐':'□').catch(e=>showToast('err: '+e));
   }
+  loadCoversFromDB();
   initKuroshiro().catch(()=>{});
 }
 init();

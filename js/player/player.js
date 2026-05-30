@@ -55,9 +55,22 @@ async function playSong(index,playlistKey,addToQueue){
   const songId=playlists[currentPlaylist].songs[currentSongIndex];
   const song=getSong(songId);
   if(!song)return;
-  if(!song.cover&&song.file){
-    const cover=await extractCoverFromFile(song.file);
-    if(cover){song.cover=cover;saveState();}
+  if(!song.cover){
+    if(song.file){
+      const cover=await extractCoverFromFile(song.file);
+      if(cover){song.cover=cover;saveState();}
+    }else if(song.filePath&&song.hasEmbeddedCover!==false&&isTauri()&&inv){
+      try{
+        const r=await inv('extract_file_cover',{path:song.filePath});
+        if(r&&r[0]){song.cover='data:'+r[1]+';base64,'+r[0];saveState();}
+      }catch(e){console.warn('extract cover error:',e);}
+    }
+    if(!song.cover&&song.filePath&&isTauri()&&inv){
+      try{
+        const r=await inv('batch_get_covers',{paths:[song.filePath]});
+        if(r&&r[0]&&r[0][1]){song.cover='data:'+r[0][2]+';base64,'+r[0][1];saveState();}
+      }catch(e){console.warn('db cover fallback error:',e);}
+    }
   }
   incrementPlayCount(song.id,song.title,song.artist);
   trackRecentPlay(song,currentPlaylist);
@@ -96,15 +109,20 @@ async function playSong(index,playlistKey,addToQueue){
 async function playReal(file,song){
   clearInterval(playbackInterval);
   currentAudioFile=file||song.filePath||true;
+  let src;
   if(song.filePath&&!file){
-    audioPlayer.src=YT_SERVER+'/api/stream?path='+encodeURIComponent(song.filePath);
+    src=YT_SERVER+'/api/stream?path='+encodeURIComponent(song.filePath);
   }else if(song.filePath){
-    audioPlayer.src=convertFileSrc(song.filePath);
+    src=convertFileSrc(song.filePath);
   }else{
-    audioPlayer.src=URL.createObjectURL(file);
+    src=URL.createObjectURL(file);
   }
+  console.log('playReal src:',src,'filePath:',song.filePath,'hasFile:',!!file);
+  audioPlayer.src=src;
+  audioPlayer.load();
+  audioPlayer.onerror=()=>console.warn('Audio error:',audioPlayer.error?.code,audioPlayer.error?.message,'src:',audioPlayer.src);
   audioPlayer.volume=isMuted?0:volume;
-  audioPlayer.play().catch(()=>{});
+  audioPlayer.play().catch(e=>console.warn('play() failed:',e));
   clearInterval(loudnessInterval);
   loudnessInterval=null;
   if(audioStabilize){initAudioChain();applyGain(song);measureLoudness(song);}

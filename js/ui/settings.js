@@ -256,6 +256,32 @@ function showSettingsModal(){
           <div class="setting-group">
             <div class="setting-row">
               <div class="setting-row-label">
+                <span>Background Enrichment</span>
+                <small>Automatically improve metadata after scan via AcoustID</small>
+              </div>
+              <div class="setting-row-control">
+                <label class="toggle-switch">
+                  <input type="checkbox" id="sEnrichEnabled"${enrichmentEnabled?' checked':''}>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-row-label">
+                <span>Auto-apply Improvements</span>
+                <small>Apply enriched title/artist when higher confidence found</small>
+              </div>
+              <div class="setting-row-control">
+                <label class="toggle-switch">
+                  <input type="checkbox" id="sAutoApply"${autoApplyMetadata?' checked':''}>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="setting-group">
+            <div class="setting-row">
+              <div class="setting-row-label">
                 <span>Scan Folder</span>
                 <small>Pick a music folder to scan and identify</small>
               </div>
@@ -287,6 +313,14 @@ function showSettingsModal(){
           acoustidKey=$('sAcoustidKey').value.trim();
           saveState();
         };
+        $('sEnrichEnabled').onchange=()=>{
+          enrichmentEnabled=$('sEnrichEnabled').checked;
+          saveState();
+        };
+        $('sAutoApply').onchange=()=>{
+          autoApplyMetadata=$('sAutoApply').checked;
+          saveState();
+        };
         $('sScanFolder').onclick=async()=>{
           if(!isTauri()){showToast('Folder scanning only available in desktop app');return;}
           const folder=await inv('pick_folder').catch(()=>null);
@@ -298,27 +332,21 @@ function showSettingsModal(){
           status.textContent='Scanning folder...';
           try{
             const files=await inv('scan_library',{path:folder});
-            status.textContent=`Found ${files.length} audio files. Adding to database...`;
-            showToast(`✅ Scanned ${files.length} files`);
-            let results=null;
-            if(acoustidKey&&files.length>0){
-              status.textContent='Starting identification...';
-              results=await runQueueCollect(prog,fill,txt,status,acoustidKey,3);
+            const folderName=folder.split('\\').pop().split('/').pop()||'Music';
+            status.textContent=`Showing ${files.length} songs from "${esc(folderName)}"`;
+            const plKey=createPlaylistFromScan(files,null,folderName);
+            showToast(`✅ Added ${files.length} songs to "${esc(folderName)}"`);
+            if(enrichmentEnabled&&acoustidKey&&files.length>0){
+              status.textContent='Starting background enrichment...';
+              await startBackgroundEnrichment(({done,total,status:s})=>{
+                fill.style.width=(total>0?(done/total*100).toFixed(0):'0')+'%';
+                txt.textContent=`${done} / ${total}`;
+                if(s)status.textContent=s;
+              },acoustidKey,3,files,plKey);
             }
             btn.textContent='📂 Scan Folder';
             btn.disabled=false;
             prog.style.display='none';
-            const folderName=folder.split('\\').pop().split('/').pop()||'Music';
-            createPlaylistFromScan(files,results,folderName);
-            if(results&&results.length>0){
-              const ok=results.filter(r=>r.success).length;
-              const failed=results.filter(r=>!r.success);
-              let msg=`Identified ${ok}/${results.length} → "${esc(folderName)}"`;
-              if(failed.length>0)msg+=` | ${failed.length} failed: ${esc(failed[0].error||'?')}`;
-              status.textContent=msg;
-            }else{
-              status.textContent=`Added ${files.length} files to "${esc(folderName)}"`;
-            }
             refreshStats();
           }catch(e){
             btn.textContent='📂 Scan Folder';
@@ -340,13 +368,28 @@ function showSettingsModal(){
             btn.textContent='🔍 Identify All';btn.disabled=false;
             prog.style.display='none';
             if(results.length>0){
-              const files=results.map(r=>({path:r.path}));
-              createPlaylistFromScan(files,results,'Identified Music');
               const ok=results.filter(r=>r.success).length;
               const failed=results.filter(r=>!r.success);
+              const plKey='identified-'+Date.now();
+              const ids=[];
+              for(const r of results){
+                if(!r.success)continue;
+                const song=Object.values(songs).find(s=>s.filePath===r.path);
+                if(song){
+                  applyCanonicalUpdate(song,r);
+                  ids.push(song.id);
+                }
+              }
+              if(ids.length>0){
+                playlists[plKey]={name:'Identified Music',emoji:'🔍',color:'#'+Math.floor(Math.random()*0xffffff).toString(16).padStart(6,'0'),sub:ids.length+' tracks',songs:ids};
+                saveState();
+                renderPlaylistNav();renderPlaylistGrid();
+                switchPlaylist(plKey);
+              }
               let msg=`Identified ${ok}/${results.length} → "Identified Music"`;
               if(failed.length>0)msg+=` | ${failed.length} failed: ${esc(failed[0].error||'?')}`;
               status.textContent=msg;
+              renderSongList($('searchInput').value);
             }else{
               status.textContent='No pending files';
             }
@@ -447,7 +490,8 @@ async function runQueueCollect(progEl,fillEl,txtEl,statusEl,key,concurrency){
       if(drain.length>0){
         const last=drain[drain.length-1];
         const b={high:'🟢',medium:'🟡',low:'⚪'}[last.reliability]||'⚪';
-        statusEl.textContent=`${b} ${esc(last.title)} — ${esc(last.artist)} (${last.method})${last.fallback_reason?' ['+esc(last.fallback_reason)+']':''}`;
+        const trustMark=last.is_trusted===false?' ⚠️':'';
+        statusEl.textContent=`${b}${trustMark} ${esc(last.title)} — ${esc(last.artist)} (${last.method})${last.fallback_reason?' ['+esc(last.fallback_reason)+']':''}`;
       }
       if(qs.errors.length>0){
         const e=qs.errors[qs.errors.length-1];
@@ -461,44 +505,133 @@ async function runQueueCollect(progEl,fillEl,txtEl,statusEl,key,concurrency){
   return results;
 }
 
+async function startBackgroundEnrichment(onProgress,key,concurrency,scannedFiles,plKey){
+  const total=scannedFiles.length;
+  await inv('start_queue',{acoustidKey:key,concurrency});
+  try{
+    while(true){
+      await sleep(250);
+      const qs=await inv('get_queue_status');
+      if(!qs.running)break;
+      const done=qs.completed+qs.errors.length;
+      const drain=await inv('drain_processed');
+      if(drain.length>0){
+        const last=drain[drain.length-1];
+        const b={high:'🟢',medium:'🟡',low:'⚪'}[last.reliability]||'⚪';
+        const trustMark=last.is_trusted===false?' ⚠️':'';
+        onProgress({done,total,title:last.title,artist:last.artist,method:last.method,reliability:last.reliability,isTrusted:last.is_trusted,status:`${b}${trustMark} ${esc(last.title)} — ${esc(last.artist)} (${last.method})`});
+      }else{
+        onProgress({done,total,status:qs.errors.length>0?'❌ '+qs.errors[qs.errors.length-1]:''});
+      }
+      for(const r of drain){
+        if(!r.success)continue;
+        const song=Object.values(songs).find(s=>s.filePath===r.path);
+        if(!song)continue;
+        applyCanonicalUpdate(song,r);
+      }
+      if(drain.length>0){
+        saveState();
+        renderSongList($('searchInput').value);
+        renderPlaylistGrid();
+      }
+    }
+  }finally{
+    await inv('stop_queue').catch(()=>{});
+  }
+}
+
+function applyCanonicalUpdate(song,result){
+  if(song.metadataSource==='manual')return;
+  const priorities={manual:5,acoustid:4,cache:3,audio_hash:3,id3:3,hybrid:3,filename:2,folder:1};
+  const curPrio=priorities[song.metadataSource]||0;
+  const newPrio=priorities[result.method]||0;
+
+  // Similarity gate: block title/artist update if similarity too low
+  // (unless confidence is extremely high >= 0.995)
+  const bypassGate=(result.confidence||0)>=0.995;
+  const ts=result.title_similarity!=null?result.title_similarity:1;
+  const as=result.artist_similarity!=null?result.artist_similarity:1;
+  const simOk=bypassGate||(ts>=0.7&&as>=0.7);
+
+  const canUpdate=autoApplyMetadata&&(newPrio>curPrio||(newPrio===curPrio&&(result.confidence||0)>=0.9));
+  if(canUpdate&&simOk){
+    // If filename parser suspects swapped, flip title/artist
+    let t=result.title||song.title;
+    let a=result.artist||song.artist;
+    song.suspectedSwapped=!!result.suspected_swapped;
+    if(result.suspected_swapped){
+      [t,a]=[a,t];
+    }
+    song.title=t;
+    song.artist=a;
+    song.album=result.album||song.album;
+    song.year=result.year||song.year;
+    song.metadataSource=result.method;
+    song.reliability=result.reliability||'low';
+    song.isTrusted=result.is_trusted!=null?result.is_trusted:true;
+    song.titleSimilarity=ts;
+    song.artistSimilarity=as;
+    song.finalScore=result.final_score||0;
+  }else{
+    // Always update reliability/trust even if title/artist not updated
+    if(result.method==='acoustid'||result.method==='cache'||result.method==='audio_hash'){
+      song.reliability=result.reliability||song.reliability;
+      song.isTrusted=result.is_trusted!=null?result.is_trusted:song.isTrusted;
+    }else if(result.method==='filename'||result.method==='hybrid'){
+      // Filename/hybrid is NEVER reliable — force low
+      song.reliability='low';
+      song.isTrusted=false;
+    }
+    // Apply suspected_swapped even when canUpdate is false
+    if(result.suspected_swapped){
+      song.suspectedSwapped=true;
+    }
+  }
+  // Safe fields: always update genre, duration, cover
+  if(result.genre)song.genre=result.genre;
+  if(result.duration!=null&&result.duration>0)song.duration=fmt(result.duration);
+  if(result.cover_data_base64)song.cover='data:'+result.cover_mime+';base64,'+result.cover_data_base64;
+}
+
 function createPlaylistFromScan(files,results,playlistName){
-  const resultMap={};
-  if(results)results.forEach(r=>{resultMap[r.path]=r;});
   const plKey='scanned-'+Date.now();
   const ids=files.map(f=>{
-    const r=resultMap[f.path];
     const existing=Object.values(songs).find(s=>s.filePath===f.path);
     if(existing){
-      if(r&&r.success){
-        console.log('[IDENTIFY] existing='+existing.title+' / '+existing.artist+' → identified='+r.title+' / '+r.artist+' method='+r.method+' confidence='+r.confidence+' reason='+(r.fallback_reason||'-'));
-        existing.title=r.title||existing.title;
-        existing.artist=r.artist||existing.artist;
-        existing.album=r.album||existing.album;
-        existing.genre=r.genre||existing.genre;
-        existing.year=r.year||existing.year;
-        if(r.duration!=null)existing.duration=fmt(r.duration);
-        if(r.cover_data_base64)existing.cover='data:'+r.cover_mime+';base64,'+r.cover_data_base64;
-      }else{
-        console.log('[IDENTIFY] SKIP existing='+existing.title+' / '+existing.artist+' success='+(r?r.success:'no-result')+' reason='+(r?.fallback_reason||'-'));
+      if(results){
+        const r=results.find(x=>x.path===f.path);
+        if(r&&r.success)applyCanonicalUpdate(existing,r);
       }
       return existing.id;
     }
     const name=f.path.split('\\').pop().split('/').pop().replace(/\.[^.]+$/,'');
     const sid='file-'+plKey+'-'+name.replace(/[^a-zA-Z0-9]/g,'_');
-    const newTitle=r&&r.success?r.title:name;
-    const newArtist=r&&r.success?r.artist:'Unknown';
-    console.log('[IDENTIFY] NEW song: title='+newTitle+' / '+newArtist+' method='+(r?.method||'none')+' confidence='+(r?.confidence||0)+' reason='+(r?.fallback_reason||'-'));
+    const title=f.display_title||name;
+    const artist=f.display_artist||'Unknown';
+    const scanCover=f.cover_data_base64&&f.cover_mime?'data:'+f.cover_mime+';base64,'+f.cover_data_base64:undefined;
     songs[sid]={
       id:sid,
-      title:r&&r.success?r.title:name,
-      artist:r&&r.success?r.artist:'Unknown',
-      album:r&&r.success?(r.album||''):'',
-      genre:r&&r.success?(r.genre||''):'',
-      year:r&&r.success?r.year||'':'',
-      duration:r&&r.duration!=null?fmt(r.duration):'--:--',
+      title,
+      artist,
+      album:f.display_album||'',
+      genre:'',
+      year:'',
+      duration:'--:--',
       addedAt:new Date().toISOString(),
       filePath:f.path,
-      cover:r&&r.cover_data_base64?'data:'+r.cover_mime+';base64,'+r.cover_data_base64:undefined
+      cover:scanCover,
+      displayTitle:f.display_title||'',
+      displayArtist:f.display_artist||'',
+      displayAlbum:f.display_album||'',
+      displayCoverPath:f.display_cover_path||'',
+      metadataSource:f.display_source||'filename',
+      reliability:'low',
+      isTrusted:false,
+      suspectedSwapped:!!f.suspected_swapped,
+      titleSimilarity:0,
+      artistSimilarity:0,
+      finalScore:0,
+      hasEmbeddedCover:!!f.has_embedded_cover,
     };
     return sid;
   });
@@ -507,19 +640,16 @@ function createPlaylistFromScan(files,results,playlistName){
   renderPlaylistNav();
   renderPlaylistGrid();
   switchPlaylist(plKey);
-  const updated=results?results.filter(r=>r.success).length:0;
-  const total=results?results.length:0;
-  if(total>0){
+  if(results){
+    const ok=results.filter(r=>r.success).length;
     const failed=results.filter(r=>!r.success);
-    let msg=`${updated}/${total} → "${playlistName}"`;
-    if(failed.length>0){
-      const firstErr=failed[0].error||'unknown error';
-      msg+=` | ${failed.length} failed: ${esc(firstErr)}`;
-    }
-    showToast(`✅ Identified ${msg}`);
+    let msg=`${ok}/${results.length} → "${playlistName}"`;
+    if(failed.length>0)msg+=` | ${failed.length} failed: ${esc(failed[0].error||'?')}`;
+    showToast(`✅ ${msg}`);
   }else{
-    showToast(`✅ Added ${ids.length} songs to "${playlistName}"`);
+    showToast(`✅ Added ${ids.length} songs to "${esc(playlistName)}"`);
   }
+  return plKey;
 }
 
 async function handleCreateEmptyPlaylist(){
@@ -604,4 +734,34 @@ async function importPlaylists(e){
     showMessage(msg,'OK');
   }catch(err){loading(null);showMessage('Failed to parse file','OK');}
   e.target.value='';
+}
+
+async function doScanFolder(){
+  if(!isTauri()){showToast('Folder scanning only available in desktop app');return;}
+  const folder=await inv('pick_folder').catch(()=>null);
+  if(!folder)return;
+  const folderName=folder.split('\\').pop().split('/').pop()||'Music';
+  const prog=showScanProgress();
+  try{
+    prog.update({done:0,total:1,status:'Scanning folder...',label:'Scanning '+esc(folderName)});
+    const files=await inv('scan_library',{path:folder});
+    prog.update({done:1,total:1,status:`Found ${files.length} songs`,label:'Creating playlist...'});
+    await sleep(100);
+    if(prog.cancelled()){prog.close();return;}
+    const plKey=createPlaylistFromScan(files,null,folderName);
+    saveState();
+    if(acoustidKey&&files.length>0){
+      prog.update({done:0,total:files.length,status:'Starting identification...',label:'Identifying '+esc(folderName)});
+      await startBackgroundEnrichment(({done,total,status:s})=>{
+        prog.update({done,total,status:s||'',label:'Identifying '+esc(folderName)});
+      },acoustidKey,3,files,plKey);
+    }
+    if(!prog.cancelled()){
+      prog.close();
+      showToast(`✅ Added ${files.length} songs to "${esc(folderName)}"`);
+    }
+  }catch(e){
+    prog.close();
+    showToast('❌ '+e,3000);
+  }
 }

@@ -12,6 +12,7 @@ use tauri::Manager;
 
 struct AppPaths {
     covers_dir: PathBuf,
+    downloads_dir: PathBuf,
 }
 
 #[derive(Serialize)]
@@ -27,6 +28,13 @@ struct VideoInfo {
 struct DownloadResult {
     bytes: Vec<u8>,
     mime: String,
+    title: String,
+    author: String,
+}
+
+#[derive(Serialize)]
+struct DownloadFileResult {
+    file_path: String,
     title: String,
     author: String,
 }
@@ -53,7 +61,7 @@ fn run_yt(args: &[&str]) -> Result<Vec<u8>, String> {
 fn yt_info(url: String) -> Result<VideoInfo, String> {
     let stdout = run_yt(&[
         &url, "--dump-json", "--no-check-certificates", "--no-warnings",
-        "--prefer-free-formats", "--skip-download",
+        "--skip-download",
     ])?;
     let v: serde_json::Value = serde_json::from_slice(&stdout)
         .map_err(|e| format!("Invalid JSON: {}", e))?;
@@ -123,6 +131,70 @@ fn yt_download_mp3(url: String) -> Result<DownloadResult, String> {
         mime: "audio/mpeg".into(),
         title: v["title"].as_str().unwrap_or("").into(),
         author: v["uploader"].as_str().or(v["channel"].as_str()).unwrap_or("").into(),
+    })
+}
+
+#[tauri::command]
+fn yt_download_file(url: String, download_dir: Option<String>, app_paths: tauri::State<AppPaths>) -> Result<DownloadFileResult, String> {
+    let info_out = run_yt(&[
+        &url, "--dump-json", "--no-check-certificates", "--no-warnings",
+        "--prefer-free-formats", "--skip-download",
+    ])?;
+    let v: serde_json::Value = serde_json::from_slice(&info_out)
+        .map_err(|e| format!("Invalid JSON: {}", e))?;
+    let title = v["title"].as_str().unwrap_or("").to_string();
+    let author = v["uploader"].as_str().or(v["channel"].as_str()).unwrap_or("").to_string();
+
+    let dl_dir = match download_dir {
+        Some(ref d) => std::path::PathBuf::from(d),
+        None => app_paths.downloads_dir.clone(),
+    };
+    std::fs::create_dir_all(&dl_dir).map_err(|e| format!("Create dir: {}", e))?;
+
+    let safe_title: String = title.chars()
+        .map(|c| if matches!(c, '<' | '>' | ':' | '"' | '/' | '\\' | '|' | '?' | '*') { '_' } else { c })
+        .take(100)
+        .collect();
+    let ts = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH).unwrap_or_default()
+        .as_millis();
+    let out_path = dl_dir.join(format!("{}-{}", safe_title, ts));
+
+    let output = Command::new(yt_bin())
+        .args(&[
+            &url, "-o", out_path.to_str().unwrap_or("audio"), "-x",
+            "--audio-format", "mp3", "--audio-quality", "0",
+            "--no-check-certificates", "--no-warnings", "--prefer-free-formats",
+        ])
+        .output()
+        .map_err(|e| format!("Failed to run yt-dlp: {}", e))?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("yt-dlp: {}", &stderr[..500.min(stderr.len())]));
+    }
+
+    // Find the actual file (yt-dlp appends .mp3)
+    let actual = std::fs::read_dir(&dl_dir)
+        .map_err(|_| "Cannot list downloads dir".to_string())?
+        .filter_map(|e| e.ok())
+        .map(|e| e.path())
+        .filter(|p| {
+            let name = p.file_stem().and_then(|s| s.to_str()).unwrap_or("");
+            name.starts_with(&safe_title)
+        })
+        .max_by_key(|p| {
+            p.metadata().ok()
+                .and_then(|m| m.modified().ok())
+                .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                .map(|d| d.as_nanos())
+                .unwrap_or(0)
+        })
+        .ok_or("No output MP3 file found after download".to_string())?;
+
+    Ok(DownloadFileResult {
+        file_path: actual.to_string_lossy().to_string(),
+        title,
+        author,
     })
 }
 
@@ -217,7 +289,13 @@ fn pick_folder() -> Result<Option<String>, String> {
 fn scan_library(db: tauri::State<db::Database>, path: String) -> Result<Vec<scanner::ScannedFile>, String> {
     let files = scanner::scan_folder(std::path::Path::new(&path))?;
     for f in &files {
-        db.upsert_file(&f.path, f.size, f.modified, &f.audio_hash)?;
+        db.upsert_file(
+            &f.path, f.size, f.modified, &f.audio_hash,
+            &f.display_title, &f.display_artist,
+            f.display_album.as_deref(),
+            f.display_cover_path.as_deref(),
+            &f.display_source,
+        )?;
     }
     Ok(files)
 }
@@ -258,6 +336,11 @@ fn identify_next(db: tauri::State<db::Database>, acoustid_key: String, paths: ta
                 error: Some(e),
                 fallback_reason: None,
                 reliability: "low".into(),
+                title_similarity: 0.0,
+                artist_similarity: 0.0,
+                final_score: 0.0,
+                is_trusted: false,
+                suspected_swapped: false,
             }))
         }
     }
@@ -286,6 +369,30 @@ fn read_file_bytes(path: String) -> Result<Vec<u8>, String> {
 #[tauri::command]
 fn read_cover(cover_path: String) -> Result<Vec<u8>, String> {
     std::fs::read(&cover_path).map_err(|e| format!("Read cover: {}", e))
+}
+
+#[tauri::command]
+fn extract_file_cover(path: String) -> Result<Option<(String, String)>, String> {
+    let tags = metadata::read_id3(&path).map_err(|e| format!("Read ID3: {}", e))?;
+    match (tags.cover_data, tags.cover_mime) {
+        (Some(data), Some(mime)) => {
+            let b64 = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &data);
+            Ok(Some((b64, mime)))
+        }
+        _ => Ok(None),
+    }
+}
+
+#[tauri::command]
+fn batch_get_covers(db: tauri::State<db::Database>, paths: Vec<String>) -> Result<Vec<(String, String, String)>, String> {
+    let results = db.get_covers_by_paths(&paths)?;
+    let encoded: Vec<(String, String, String)> = results.into_iter()
+        .map(|(path, data, mime)| {
+            let b64 = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &data);
+            (path, b64, mime)
+        })
+        .collect();
+    Ok(encoded)
 }
 
 // ── Worker queue commands ──
@@ -340,7 +447,9 @@ fn main() {
 
             let covers_dir = app_dir.join("covers");
             std::fs::create_dir_all(&covers_dir).ok();
-            app.manage(AppPaths { covers_dir: covers_dir.clone() });
+            let downloads_dir = app_dir.join("downloads");
+            std::fs::create_dir_all(&downloads_dir).ok();
+            app.manage(AppPaths { covers_dir: covers_dir.clone(), downloads_dir: downloads_dir.clone() });
 
             let queue = worker::WorkerQueue::new(worker_db, covers_dir.to_string_lossy().to_string());
             app.manage(queue);
@@ -348,9 +457,9 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            yt_info, yt_download, yt_download_mp3,
+            yt_info, yt_download, yt_download_mp3, yt_download_file,
             tb_minimize, tb_maximize, tb_close, tb_is_maximized,
-            scan_library, identify_next, get_scan_stats, get_pending_ids, pick_folder, read_file_bytes, read_cover, retry_failed,
+            scan_library, identify_next, get_scan_stats, get_pending_ids, pick_folder, read_file_bytes, read_cover, extract_file_cover, batch_get_covers, retry_failed,
             start_queue, stop_queue, pause_queue, resume_queue, get_queue_status, drain_processed,
         ])
         .run(tauri::generate_context!())

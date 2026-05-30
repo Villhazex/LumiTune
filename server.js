@@ -1,6 +1,7 @@
 const express=require('express');
 const {spawn,execFile}=require('child_process');
 const path=require('path');
+const fs=require('fs');
 
 const open = (...args) =>
   import("open").then(({ default: open }) => open(...args));
@@ -9,6 +10,7 @@ const open = (...args) =>
 const app=express();
 const PORT=3001;
 const BIN=path.join(require.resolve('yt-dlp-exec/package.json'),'..','bin','yt-dlp.exe');
+const YT_DOWNLOAD_DIR=path.join(__dirname,'yt-downloads');
 
 
 
@@ -30,7 +32,7 @@ app.get('/api/info',async(req,res)=>{
   try{
     const info=await ytRun([
       req.query.url,'--dump-json','--no-check-certificates','--no-warnings',
-      '--prefer-free-formats','--skip-download'
+      '--skip-download'
     ]);
     res.json({title:info.title,author_name:info.uploader||info.channel||'',thumbnail_url:info.thumbnail,format:info.ext,duration:info.duration});
   }catch(e){res.status(500).json({error:e.message});}
@@ -86,10 +88,45 @@ app.get('/api/download-mp3',async(req,res)=>{
   }catch(e){if(!res.headersSent)res.status(500).json({error:e.message});}
 });
 
+app.get('/api/download-file',async(req,res)=>{
+  try{
+    const url=req.query.url;
+    if(!url)return res.status(400).json({error:'Missing url'});
+    const info=await ytRun([
+      url,'--dump-json','--no-check-certificates','--no-warnings',
+      '--prefer-free-formats','--skip-download'
+    ]);
+    const dlDir=req.query.downloadDir?path.resolve(req.query.downloadDir):YT_DOWNLOAD_DIR;
+    fs.mkdirSync(dlDir,{recursive:true});
+    const safeTitle=info.title.replace(/[<>:"/\\|?*]/g,'_').slice(0,100);
+    const outPath=path.join(dlDir,`${safeTitle}-${Date.now()}.mp3`);
+    const cp=spawn(BIN,[
+      url,'-o',outPath,'-x','--audio-format','mp3','--audio-quality','0',
+      '--no-check-certificates','--no-warnings','--prefer-free-formats'
+    ]);
+    let err='';
+    cp.stderr.on('data',c=>err+=c);
+    cp.on('close',code=>{
+      if(code){if(!res.headersSent)res.status(500).json({error:`yt-dlp exited ${code}: ${err.slice(0,300)}`});return;}
+      fs.readdir(dlDir,(_,files)=>{
+        const latest=files.filter(f=>f.startsWith(safeTitle)).sort().pop();
+        if(!latest)return res.status(500).json({error:'File not found after download'});
+        res.json({
+          filePath:path.join(dlDir,latest),
+          title:info.title,
+          author:info.uploader||info.channel||''
+        });
+      });
+    });
+    cp.on('error',(e)=>{if(!res.headersSent)res.status(500).json({error:e.message});});
+  }catch(e){if(!res.headersSent)res.status(500).json({error:e.message});}
+});
+
 app.get('/api/stream',(req,res)=>{
   const filePath=req.query.path;
-  if(!filePath||filePath.includes('..'))return res.status(400).end();
-  res.sendFile(filePath);
+  if(!filePath||filePath.includes('..')){console.warn('/api/stream blocked:',filePath);return res.status(400).end();}
+  console.log('/api/stream serving:',filePath);
+  res.sendFile(filePath,err=>{if(err)console.warn('/api/stream error:',err.message);});
 });
 
 // app.listen(PORT,()=>console.log(`LumiTune server running on http://localhost:${PORT}`));

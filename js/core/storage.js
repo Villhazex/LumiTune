@@ -20,7 +20,7 @@ function saveState(){
   }
   const songData={};
   Object.entries(songs).forEach(([id,s])=>{
-    const{file,...r}=s;
+    const{file,cover,...r}=s;
     songData[id]=r;
   });
   try{
@@ -39,6 +39,8 @@ function saveState(){
     localStorage.setItem('lumi-loudness-target',String(loudnessTarget));
     localStorage.setItem('lumi-recent-plays',JSON.stringify(recentPlays));
     localStorage.setItem('lumi-acoustid-key',acoustidKey);
+    localStorage.setItem('lumi-enrich',String(enrichmentEnabled));
+    localStorage.setItem('lumi-auto-apply',String(autoApplyMetadata));
   }catch(e){}
 }
 async function loadState(){
@@ -110,7 +112,28 @@ async function loadState(){
     const lt=parseFloat(localStorage.getItem('lumi-loudness-target'));
     if(!isNaN(lt))loudnessTarget=Math.max(-30,Math.min(-10,lt));
     acoustidKey=localStorage.getItem('lumi-acoustid-key')||'';
+    enrichmentEnabled=localStorage.getItem('lumi-enrich')!=='false';
+    autoApplyMetadata=localStorage.getItem('lumi-auto-apply')!=='false';
   }catch(e){console.warn(e);}
+}
+
+async function loadCoversFromDB(){
+  if(!isTauri()||!inv)return;
+  const paths=Object.values(songs).filter(s=>!s.cover&&s.filePath).map(s=>s.filePath);
+  if(paths.length===0)return;
+  try{
+    const results=await inv('batch_get_covers',{paths});
+    if(!results||results.length===0)return;
+    let changed=0;
+    for(const[path,b64,mime]of results){if(!path||!b64||!mime)continue;
+      const song=Object.values(songs).find(s=>s.filePath===path);
+      if(song&&!song.cover){song.cover='data:'+mime+';base64,'+b64;changed++;}
+    }
+    if(changed>0){
+      renderSongList($('searchInput')?.value||'');
+      renderPlaylistGrid();
+    }
+  }catch(e){console.warn('loadCoversFromDB:',e);}
 }
 
 function getMonthPlays(){

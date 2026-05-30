@@ -11,3 +11,4 @@ src-tauri/target/
 src-tauri/resources/
 dist/
 app-icon.png
+metadata.txt

@@ -73,6 +73,8 @@ let analyserNode=null;
 let loudnessTarget=-18;
 let audioStabilize=false;
 let loudnessInterval=null;
+let enrichmentEnabled=true;
+let autoApplyMetadata=true;
 
 const SHORTCUTS={
   playPause:{code:'Space',modifiers:[],label:'Play / Pause',category:'Playback'},
