@@ -72,9 +72,9 @@ async function playSong(index,playlistKey,addToQueue){
       }catch(e){console.warn('db cover fallback error:',e);}
     }
   }
-  incrementPlayCount(song.id,song.title,song.artist);
+  incrementPlayCount(song.id,displayTitle(song),song.artist);
   trackRecentPlay(song,currentPlaylist);
-  $('trackTitle').textContent=song.title;
+  $('trackTitle').textContent=displayTitle(song);
   $('trackArtist').textContent=song.artist;
   const aa=$('albumArt');
   const emoji=aa.querySelector('.art-emoji');

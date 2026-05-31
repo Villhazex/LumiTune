@@ -32,6 +32,14 @@ function normalizeMeta(value){
   return String(value||'').trim().toLowerCase().replace(/\s+/g,' ');
 }
 
+function displayTitle(s){
+  return s.customTitle||s.title||'Unknown';
+}
+
+function displayFileName(s){
+  return s.fileName||(s.filePath?s.filePath.split('\\').pop().split('/').pop():'')||'—';
+}
+
 function getSong(id){
   return songs[String(id)]||null;
 }

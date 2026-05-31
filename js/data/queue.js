@@ -56,7 +56,7 @@ function renderQueue(){
         const cls=i==currentQueueIdx?'queue-item active':i<currentQueueIdx?'queue-item queue-history':'queue-item has-del';
       return`<div class="${cls}" draggable="true" data-qi="${i}">
           <span class="drag-handle">≡</span>
-          <span class="queue-info"><span class="queue-title">${esc(song.title)}</span><span class="queue-artist">${esc(song.artist)}</span></span>
+          <span class="queue-info"><span class="queue-title">${esc(displayTitle(song))}</span><span class="queue-artist">${esc(song.artist)}</span></span>
           <span class="queue-pl">${esc(pl?.name||'')}</span>
           ${i>currentQueueIdx?`<button class="queue-del" data-qdel="${i}" title="Remove from queue">×</button>`:''}
         </div>`;

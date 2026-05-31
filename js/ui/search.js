@@ -47,7 +47,7 @@ function addRecentSearch(term){
 function trackRecentPlay(song,playlistKey){
   if(!song||!song.id)return;
   recentPlays=recentPlays.filter(p=>p.id!==song.id);
-  recentPlays.unshift({id:song.id,title:song.title,artist:song.artist,playlistKey,time:Date.now()});
+  recentPlays.unshift({id:song.id,title:displayTitle(song),artist:song.artist,playlistKey,time:Date.now()});
   if(recentPlays.length>200)recentPlays.pop();
   saveState();
 }
@@ -92,9 +92,9 @@ function renderSearchDropdown(term){
     pl.songs.forEach((songId,i)=>{
       const s=getSong(songId);
       if(!s)return;
-      const titleMatch=s.title.toLowerCase().includes(ql)||fuzzyMatch(ql,s.title);
+      const titleMatch=(s.customTitle||'').toLowerCase().includes(ql)||(s.fileName||'').toLowerCase().includes(ql)||s.title.toLowerCase().includes(ql)||fuzzyMatch(ql,s.title);
       const artistMatch=s.artist.toLowerCase().includes(ql)||fuzzyMatch(ql,s.artist);
-      if(titleMatch||artistMatch)matchTracks.push({...s,playlistKey:pk,songIndex:i,exact:titleMatch&&(s.title.toLowerCase().includes(ql)||s.artist.toLowerCase().includes(ql))});
+      if(titleMatch||artistMatch)matchTracks.push({...s,playlistKey:pk,songIndex:i,exact:titleMatch&&((s.customTitle||'').toLowerCase().includes(ql)||(s.fileName||'').toLowerCase().includes(ql)||s.title.toLowerCase().includes(ql)||s.artist.toLowerCase().includes(ql))});
     });
   });
   matchTracks.sort((a,b)=>{

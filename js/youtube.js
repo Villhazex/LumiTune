@@ -65,7 +65,8 @@ async function handleYouTubeImport(){
         if(r&&r[0])coverData='data:'+r[1]+';base64,'+r[0];
       }catch(e){}
     }
-    songs[sid]={id:sid,title:songTitle,artist:songArtist,album:'YouTube',genre:'',year:'',duration:'--:--',addedAt:new Date().toISOString(),filePath,cover:coverData,sourceUrl:url,metadataSource:'youtube',reliability:'high',isTrusted:true,suspectedSwapped:false,titleSimilarity:0,artistSimilarity:0,finalScore:0};
+    const ytFileName=filePath?filePath.split('\\').pop().split('/').pop():'';
+    songs[sid]={id:sid,title:songTitle,artist:songArtist,album:'YouTube',genre:'',year:'',duration:'--:--',addedAt:new Date().toISOString(),filePath,cover:coverData,sourceUrl:url,fileName:ytFileName||undefined,metadataSource:'youtube',reliability:'high',isTrusted:true,suspectedSwapped:false,titleSimilarity:0,artistSimilarity:0,finalScore:0};
     pl.songs.push(String(sid));
     pl.sub=`${pl.songs.length} tracks`;
     if(currentPlaylist===targetKey)renderSongList($('searchInput').value);

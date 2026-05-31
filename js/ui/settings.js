@@ -593,7 +593,8 @@ function createPlaylistFromScan(files,results,playlistName){
       }
       return existing.id;
     }
-    const name=f.path.split('\\').pop().split('/').pop().replace(/\.[^.]+$/,'');
+    const fileName=f.path.split('\\').pop().split('/').pop();
+    const name=fileName.replace(/\.[^.]+$/,'');
     const sid='file-'+plKey+'-'+name.replace(/[^a-zA-Z0-9]/g,'_');
     const title=f.display_title||name;
     const artist=f.display_artist||'Unknown';
@@ -609,6 +610,7 @@ function createPlaylistFromScan(files,results,playlistName){
       addedAt:new Date().toISOString(),
       filePath:f.path,
       cover:scanCover,
+      fileName,
       displayTitle:f.display_title||'',
       displayArtist:f.display_artist||'',
       displayAlbum:f.display_album||'',

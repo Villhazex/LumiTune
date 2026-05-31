@@ -56,6 +56,7 @@ async function loadState(){
       for(const[id,s]of Object.entries(songData)){
         const file=await dbGet(s.fileKey).catch(()=>null);
         songs[id]=file?{...s,file,fileKey:s.fileKey}:{...s};
+        if(s.displayTitle&&!s.customTitle)songs[id].customTitle=s.displayTitle;
       }
     }
     if(raw){

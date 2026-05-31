@@ -10,7 +10,7 @@ async function handleFolderSelect(e){
   for(const[idx,file]of files.entries()){
     const id=key+'-'+idx;const fk=`file-${key}-${id}`;
     const[cover]=await Promise.all([extractCoverFromFile(file),dbStore(fk,file)]);
-    songs[id]={id,title:file.name.replace(/\.[^/.]+$/,''),artist:'Unknown',album:'',genre:'',year:'',duration:'--:--',addedAt:new Date().toISOString(),file,fileKey:fk,cover};
+    songs[id]={id,title:file.name.replace(/\.[^/.]+$/,''),artist:'Unknown',album:'',genre:'',year:'',duration:'--:--',addedAt:new Date().toISOString(),file,fileKey:fk,cover,fileName:file.name};
     songIds.push(id);
     if(idx%5===0)loading(`<div class="yt-loading"><div class="yt-spinner"></div><div class="yt-step">${idx+1} of ${files.length}</div><div>Processing files&hellip;</div></div>`);
   }
@@ -30,7 +30,7 @@ async function handleAddTracks(e){
   for(const[idx,file]of files.entries()){
     const id=startId+idx;const fk=`file-${targetKey}-${id}`;
     const[cover]=await Promise.all([extractCoverFromFile(file),dbStore(fk,file)]);
-    songs[id]={id,title:file.name.replace(/\.[^/.]+$/,''),artist:'Unknown',album:'',genre:'',year:'',duration:'--:--',addedAt:new Date().toISOString(),file,fileKey:fk,cover};
+    songs[id]={id,title:file.name.replace(/\.[^/.]+$/,''),artist:'Unknown',album:'',genre:'',year:'',duration:'--:--',addedAt:new Date().toISOString(),file,fileKey:fk,cover,fileName:file.name};
     pl.songs.push(String(id));
     if(idx%5===0)loading(`<div class="yt-loading"><div class="yt-spinner"></div><div class="yt-step">${idx+1} of ${files.length}</div><div>Adding files&hellip;</div></div>`);
   }

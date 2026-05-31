@@ -5,7 +5,7 @@ function showSkeleton(){
 
 function renderVirtualRows(title,sub,songs,filter=''){
   const q=filter.trim().toLowerCase();
-  const filtered=q?songs.filter(s=>String(s.title||'').toLowerCase().includes(q)||String(s.artist||'').toLowerCase().includes(q)||String(s.album||'').toLowerCase().includes(q)||(playlists[s.playlistKey]?.name||'').toLowerCase().includes(q)):songs;
+  const filtered=q?songs.filter(s=>(s.customTitle||'').toLowerCase().includes(q)||String(s.title||'').toLowerCase().includes(q)||(s.fileName||'').toLowerCase().includes(q)||String(s.artist||'').toLowerCase().includes(q)||String(s.album||'').toLowerCase().includes(q)||(playlists[s.playlistKey]?.name||'').toLowerCase().includes(q)):songs;
   $('trackHeader').style.display='';
   $('secTitle').textContent=title;
   $('secCount').textContent=filtered.length+' tracks';
@@ -79,7 +79,7 @@ function makeRow(song,origIdx,isActive,isLiked,plKey,showDel,extra){
     ${showDel?`<div class="dropdown-divider"></div><button class="dropdown-item danger" data-del="${origIdx}" data-del-pl="${plKey}" title="Delete track">Delete</button>`:''}`;
   return`<div class="track-row ${isActive?'active':''}" draggable="true" data-index="${origIdx}" data-playlist="${plKey}">
     <div class="t-info">
-      <span class="t-title">${song.title}</span>
+      <span class="t-title">${esc(displayTitle(song))}</span>
       <span class="t-artist">${song.artist}${reliBadge}${statusBadge?' ':''}${statusBadge}</span>
     </div>
     <div class="t-extra">${extra}</div>
@@ -101,7 +101,7 @@ function renderHome(filter){
       const song=getSong(songId);
       if(song)all.push({...song,playlistKey:pk,songIndex:i});
     }));
-    const filtered=all.filter(s=>s.title.toLowerCase().includes(filter.toLowerCase())||s.artist.toLowerCase().includes(filter.toLowerCase())||(playlists[s.playlistKey]?.name||'').toLowerCase().includes(filter.toLowerCase()));
+    const filtered=all.filter(s=>(s.customTitle||'').toLowerCase().includes(filter.toLowerCase())||s.title.toLowerCase().includes(filter.toLowerCase())||(s.fileName||'').toLowerCase().includes(filter.toLowerCase())||s.artist.toLowerCase().includes(filter.toLowerCase())||(playlists[s.playlistKey]?.name||'').toLowerCase().includes(filter.toLowerCase()));
     $('secTitle').textContent='Search Results';
     $('secCount').textContent=filtered.length+' tracks';
     $('breadcrumbTitle').textContent='Search';
@@ -170,7 +170,7 @@ function renderSearchTracks(filter){
     if(song)all.push({...song,playlistKey:pk,songIndex:i});
   }));
   const ql=filter.toLowerCase();
-  const filtered=all.filter(s=>s.title.toLowerCase().includes(ql)||s.artist.toLowerCase().includes(ql)||(playlists[s.playlistKey]?.name||'').toLowerCase().includes(ql));
+  const filtered=all.filter(s=>(s.customTitle||'').toLowerCase().includes(ql)||s.title.toLowerCase().includes(ql)||(s.fileName||'').toLowerCase().includes(ql)||s.artist.toLowerCase().includes(ql)||(playlists[s.playlistKey]?.name||'').toLowerCase().includes(ql));
   $('secTitle').textContent='Search Results';
   $('secCount').textContent=filtered.length+' tracks';
   if(!filtered.length){$('songList').innerHTML='';$('emptyState').style.display='block';return;}
@@ -240,7 +240,7 @@ function renderLibrary(filter){
       const song=getSong(songId);
       if(song)all.push({...song,playlistKey:pk,songIndex:i});
     }));
-    const filtered=all.filter(s=>s.title.toLowerCase().includes(filter.toLowerCase())||s.artist.toLowerCase().includes(filter.toLowerCase())||(playlists[s.playlistKey]?.name||'').toLowerCase().includes(filter.toLowerCase()));
+    const filtered=all.filter(s=>(s.customTitle||'').toLowerCase().includes(filter.toLowerCase())||s.title.toLowerCase().includes(filter.toLowerCase())||(s.fileName||'').toLowerCase().includes(filter.toLowerCase())||s.artist.toLowerCase().includes(filter.toLowerCase())||(playlists[s.playlistKey]?.name||'').toLowerCase().includes(filter.toLowerCase()));
     $('secTitle').textContent='Library';$('secCount').textContent=filtered.length+' tracks';
     if(!filtered.length){$('songList').innerHTML='';$('emptyState').style.display='block';libraryOrder=null;return;}
     $('emptyState').style.display='none';
@@ -416,7 +416,7 @@ function renderFavs(filter){
       if(song)favs.push({...song,playlistKey:pk,songIndex:i});
     }
   }));
-  const filtered=filter?favs.filter(s=>s.title.toLowerCase().includes(filter.toLowerCase())||s.artist.toLowerCase().includes(filter.toLowerCase())):favs;
+  const filtered=filter?favs.filter(s=>(s.customTitle||'').toLowerCase().includes(filter.toLowerCase())||s.title.toLowerCase().includes(filter.toLowerCase())||(s.fileName||'').toLowerCase().includes(filter.toLowerCase())||s.artist.toLowerCase().includes(filter.toLowerCase())):favs;
   $('secTitle').textContent='Favourites';$('secCount').textContent=filtered.length+' tracks';
   $('breadcrumbTitle').textContent='Favourites';$('breadcrumbSub').textContent='Your liked tracks';
   if(!filtered.length){
@@ -433,7 +433,7 @@ function renderFavs(filter){
 function renderLooseSongs(filter){
   $('trackHeader').style.display='';
   const loose=getLooseSongs();
-  const filtered=filter?loose.filter(s=>s.title.toLowerCase().includes(filter.toLowerCase())||s.artist.toLowerCase().includes(filter.toLowerCase())):loose;
+  const filtered=filter?loose.filter(s=>(s.customTitle||'').toLowerCase().includes(filter.toLowerCase())||s.title.toLowerCase().includes(filter.toLowerCase())||(s.fileName||'').toLowerCase().includes(filter.toLowerCase())||s.artist.toLowerCase().includes(filter.toLowerCase())):loose;
   $('secTitle').textContent='Loose Songs';$('secCount').textContent=filtered.length+' tracks';
   $('breadcrumbTitle').textContent='Loose Songs';$('breadcrumbSub').textContent='Tracks not assigned to any playlist';
   if(!filtered.length){
@@ -538,7 +538,7 @@ function updateHeroSection(){
   }
   const pl=playlists[targetPl];
   const song=currentPlaylistPlaying&&pl?getSong(pl.songs[currentSongIndex]):null;
-  $('heroTitle').textContent=song?song.title:'Select a track';
+  $('heroTitle').textContent=song?displayTitle(song):'Select a track';
   $('heroArtist').textContent=song?song.artist:'Pick a song to start listening';
   const heroArt=$('heroArt');
   if(song?.cover){
@@ -676,7 +676,7 @@ function updateUpNext(){
         ${i>currentQueueIdx?`<span class="queue-drag-handle">≡</span>`:''}
         <div class="queue-thumb"><svg viewBox="0 0 16 16"><path d="M2 3h8l2 3h2v8H2z" fill="currentColor"/></svg></div>
         <div class="queue-info">
-          <div class="queue-name${i===currentQueueIdx&&isOnQueueSong?' active':''}">${esc(song.title)}</div>
+          <div class="queue-name${i===currentQueueIdx&&isOnQueueSong?' active':''}">${esc(displayTitle(song))}</div>
           <div class="queue-sub">${esc(song.artist)}</div>
         </div>
         ${i>currentQueueIdx?`<button class="queue-del" data-qdel="${i}" title="Remove from queue">×</button>`:''}
@@ -721,7 +721,7 @@ function getQueueAllItems(){
         var pk=e[0],pl=e[1];
         pl.songs.forEach(function(songId,i){
           var song=getSong(songId);
-          if(song&&(song.title.toLowerCase().includes(filter)||song.artist.toLowerCase().includes(filter)||(playlists[pk]?.name||'').toLowerCase().includes(filter)))
+          if(song&&((song.customTitle||'').toLowerCase().includes(filter)||song.title.toLowerCase().includes(filter)||(song.fileName||'').toLowerCase().includes(filter)||song.artist.toLowerCase().includes(filter)||(playlists[pk]?.name||'').toLowerCase().includes(filter)))
             items.push({playlistKey:pk,songIndex:i});
         });
       });
@@ -735,7 +735,7 @@ function getQueueAllItems(){
         var pk=e[0],pl=e[1];
         pl.songs.forEach(function(songId,i){
           var song=getSong(songId);
-          if(song&&(song.title.toLowerCase().includes(filter)||song.artist.toLowerCase().includes(filter)))
+          if(song&&((song.customTitle||'').toLowerCase().includes(filter)||song.title.toLowerCase().includes(filter)||(song.fileName||'').toLowerCase().includes(filter)||song.artist.toLowerCase().includes(filter)))
             items.push({playlistKey:pk,songIndex:i});
         });
       });
@@ -754,7 +754,7 @@ function getQueueAllItems(){
       var pk=e[0],pl=e[1];
       pl.songs.forEach(function(songId,i){
         var song=getSong(songId);
-        if(song&&(song.title.toLowerCase().includes(filter)||song.artist.toLowerCase().includes(filter)||(playlists[pk]?.name||'').toLowerCase().includes(filter)))
+        if(song&&((song.customTitle||'').toLowerCase().includes(filter)||song.title.toLowerCase().includes(filter)||(song.fileName||'').toLowerCase().includes(filter)||song.artist.toLowerCase().includes(filter)||(playlists[pk]?.name||'').toLowerCase().includes(filter)))
           items.push({playlistKey:pk,songIndex:i});
       });
     });
@@ -832,7 +832,7 @@ function updateStats(){
   ${sortedPlays.length?sortedPlays.map(([id,entry])=>{
     const count=typeof entry==='number'?entry:entry.c;
     const song=findSongById(id);
-    const label=song?esc(song.title):(entry.t?esc(entry.t):'Unknown');
+    const label=song?esc(displayTitle(song)):(entry.t?esc(entry.t):'Unknown');
     const artist=song?esc(song.artist):(entry.a?esc(entry.a):'');
     return `<div class="genre-row" style="display:flex;justify-content:space-between;align-items:flex-start">
     <div class="genre-name" style="width:auto;flex-shrink:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${label}${artist?'<br><span style="font-size:10px;color:var(--text-dim)">'+artist+'</span>':''}</div>

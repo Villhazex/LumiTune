@@ -148,11 +148,15 @@ function showMetadataEditor(playlistKey,index){
     song=getSong(songId);
   }
   if(!song)return;
+  song={...song};
+  songs[String(song.id)]=song;
   const o=$('confirmOverlay');
   o.innerHTML=`<div class="modal-box metadata-box">
     <div class="modal-msg">Edit Metadata</div>
-    <label class="modal-field-label" for="metaTitle">Title</label>
-    <input type="text" class="modal-input" id="metaTitle" value="${esc(song.title)}">
+    <label class="modal-field-label" for="metaCustomTitle">Custom Title (for display)</label>
+    <input type="text" class="modal-input" id="metaCustomTitle" value="${esc(displayTitle(song))}">
+    <label class="modal-field-label" for="metaOriginalTitle">Original Title (for metadata)</label>
+    <input type="text" class="modal-input" id="metaOriginalTitle" value="${esc(song.title)}">
     <label class="modal-field-label" for="metaArtist">Artist</label>
     <input type="text" class="modal-input" id="metaArtist" value="${esc(song.artist)}">
     <div class="metadata-grid">
@@ -177,7 +181,10 @@ function showMetadataEditor(playlistKey,index){
         <input type="text" class="modal-input" id="metaSourceUrl" value="${esc(song.sourceUrl||'')}">
       </div>
     </div>
-    <div class="modal-hint">Changes update LumiTune's library metadata. The original audio file is left untouched.</div>
+    <div style="font-size:12px;color:var(--text3);margin:8px 0;padding:6px 8px;background:var(--surface2);border-radius:4px">
+      Original File: <span id="metaFileName">${esc(displayFileName(song))}</span>
+    </div>
+    <div class="modal-hint">Custom Title is for display only. Original Title is used for lyrics &amp; cover search.</div>
     <div style="text-align:center;margin:16px 0 18px"><button class="modal-btn" id="metaDeezerCover">Search Cover from Deezer</button></div>
     <div class="modal-actions">
       <button class="modal-btn" id="mc" title="Cancel">Cancel</button>
@@ -187,8 +194,14 @@ function showMetadataEditor(playlistKey,index){
   o.style.display='flex';
   const close=()=>{o.style.display='none';};
   const save=async ()=>{
-    const oldTitle=song.title,oldArtist=song.artist;
-    song.title=$('metaTitle').value.trim()||oldTitle||'Unknown';
+    const oldOriginal=song.title,oldArtist=song.artist;
+    const ct=$('metaCustomTitle').value.trim();
+    if(ct&&ct!==song.title){
+      song.customTitle=ct;
+    }else{
+      delete song.customTitle;
+    }
+    song.title=$('metaOriginalTitle').value.trim()||song.title||'Unknown';
     song.artist=$('metaArtist').value.trim()||'Unknown';
     song.album=$('metaAlbum').value.trim();
     song.genre=$('metaGenre').value.trim();
@@ -197,12 +210,12 @@ function showMetadataEditor(playlistKey,index){
     song.sourceUrl=$('metaSourceUrl').value.trim()||undefined;
     song.metadataEdited=true;
     song.metadataSource='manual';
-    const metaChanged=normalizeMeta(oldTitle)!==normalizeMeta(song.title)||normalizeMeta(oldArtist)!==normalizeMeta(song.artist);
+    const metaChanged=normalizeMeta(oldOriginal)!==normalizeMeta(song.title)||normalizeMeta(oldArtist)!==normalizeMeta(song.artist);
     if(metaChanged){
       deleteCachedLyrics(song);
     }
     if(playlistKey===currentPlaylist&&index===currentSongIndex){
-      $('trackTitle').textContent=song.title;
+      $('trackTitle').textContent=displayTitle(song);
       $('trackArtist').textContent=song.artist;
       updateHeroSection();
       fetchLyricsForSong(song);
@@ -239,11 +252,11 @@ function showMetadataEditor(playlistKey,index){
   };
   const kh=e=>{if(e.key==='Escape'){document.removeEventListener('keydown',kh);close();}if(e.key==='Enter'){e.preventDefault();document.removeEventListener('keydown',kh);save();}};
   document.addEventListener('keydown',kh);
-  $('metaTitle').focus();$('metaTitle').select();
+  $('metaCustomTitle').focus();$('metaCustomTitle').select();
   $('mc').onclick=()=>{document.removeEventListener('keydown',kh);close();};
   $('mo').onclick=()=>{document.removeEventListener('keydown',kh);save();};
   $('metaDeezerCover').onclick=()=>{
-    const ti=$('metaTitle').value.trim()||song.title;
+    const ti=$('metaOriginalTitle').value.trim()||song.title;
     const ar=$('metaArtist').value.trim()||song.artist;
     if(!ti&&!ar)return;
     showDeezerCoverPicker(song,ti,ar,playlistKey,index);
@@ -331,7 +344,7 @@ function showDeezerCoverPicker(song, title, artist, playlistKey, songIdx){
               song.metadataEdited=true;
               song.metadataSource='deezer';
               if(playlistKey===currentPlaylist&&songIdx===currentSongIndex){
-                $('trackTitle').textContent=song.title;
+                $('trackTitle').textContent=displayTitle(song);
                 $('trackArtist').textContent=song.artist;
                 updateHeroSection();
                 fetchLyricsForSong(song);
@@ -353,16 +366,16 @@ function showDeezerCoverPicker(song, title, artist, playlistKey, songIdx){
     const searchIdx=currentPage*25;
     container.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text3)">Searching...</div>';
     footer.querySelectorAll('.dz-nav').forEach(n=>n.remove());
-    inv('search_deezer_cover',{title:'',artist,index:searchIdx}).then(raw=>{
+    inv('search_deezer_cover',{title,artist,index:searchIdx}).then(raw=>{
       if(!raw||!raw.length){
         container.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text3)">No results from Deezer</div>';
         return;
       }
       const al=artist.toLowerCase();
-      const filtered=raw.filter(r=>r.artist.toLowerCase().includes(al));
+      let filtered=raw.filter(r=>r.artist.toLowerCase().includes(al));
       if(!filtered.length){
-        container.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text3)">No results from Deezer</div>';
-        return;
+        filtered=raw;
+        showToast('Showing all results — none matched artist filter');
       }
       container.innerHTML='';
       filtered.forEach(r=>container.appendChild(createCard(r)));

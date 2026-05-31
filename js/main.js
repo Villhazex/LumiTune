@@ -639,7 +639,7 @@ function handleDownload(plKey,idx){
           const a=document.createElement('a');a.href=url;a.download=`${name}.mp3`;
           document.body.appendChild(a);a.click();a.remove();
           URL.revokeObjectURL(url);
-          showToast(`⬇ Downloaded ${song.title}`);
+          showToast(`⬇ Downloaded ${displayTitle(song)}`);
         }catch(e){showToast('Download failed');}
       })();
     }else{
@@ -647,7 +647,7 @@ function handleDownload(plKey,idx){
       a.href=`/api/download-mp3?url=${encodeURIComponent(song.sourceUrl)}`;
       a.download=`${name}.mp3`;
       document.body.appendChild(a);a.click();a.remove();
-      showToast(`⬇ Downloading ${song.title}...`);
+      showToast(`⬇ Downloading ${displayTitle(song)}...`);
     }
   }else if(song.file){
     const ct=song.file.type;
@@ -663,7 +663,7 @@ function handleDownload(plKey,idx){
     a.href=url;a.download=`${name}.${ext}`;
     document.body.appendChild(a);a.click();a.remove();
     URL.revokeObjectURL(url);
-    showToast(`⬇ Downloaded ${song.title}`);
+    showToast(`⬇ Downloaded ${displayTitle(song)}`);
   }else showToast('No audio data to download');
 }
 
