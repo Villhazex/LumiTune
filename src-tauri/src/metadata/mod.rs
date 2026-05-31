@@ -14,7 +14,7 @@ pub use acoustid::lookup_acoustid;
 pub use musicbrainz::{lookup_musicbrainz, fetch_cover};
 pub use merge::try_update_display;
 pub use verifier::{VerificationResult, verify_candidate};
-use deezer::fetch_deezer_cover;
+pub use deezer::{fetch_deezer_cover, search_deezer, download_deezer_cover, DeezerMatch};
 
 use std::path::Path;
 
@@ -120,6 +120,23 @@ fn save_cover(data: &[u8], mime: &str, musicbrainz_id: &str, covers_dir: &str) -
         std::fs::write(path, data).ok();
     }
     path_str
+}
+
+pub fn fetch_and_save_manual_cover(title: &str, artist: &str, covers_dir: &str) -> Result<Option<(Vec<u8>, String, String)>, String> {
+    match fetch_deezer_cover(title, artist) {
+        Ok(Some((data, mime))) => {
+            let rid = format!("manual_{:x}", metadata_hash(title, artist));
+            let path = save_cover(&data, &mime, &rid, covers_dir);
+            Ok(Some((data, mime, path)))
+        }
+        Ok(None) => Ok(None),
+        Err(e) => Err(e),
+    }
+}
+
+pub fn save_raw_cover_to_dir(title: &str, artist: &str, data: &[u8], mime: &str, covers_dir: &str) -> String {
+    let rid = format!("yt_{:x}", metadata_hash(title, artist));
+    save_cover(data, mime, &rid, covers_dir)
 }
 
 pub fn identify_file(
@@ -252,7 +269,12 @@ pub fn identify_file(
                     let id3_t = tags.title.as_deref().unwrap_or("").trim().to_string();
                     let id3_a = tags.artist.as_deref().unwrap_or("").trim().to_string();
                     if !id3_t.is_empty() {
-                        vec![(id3_t, id3_a)]
+                        // Try both orientations in case ID3 tags are swapped
+                        let mut pairs = vec![(id3_t.clone(), id3_a.clone())];
+                        if !id3_a.is_empty() && id3_t != id3_a {
+                            pairs.push((id3_a, id3_t));
+                        }
+                        pairs
                     } else {
                         Vec::new()
                     }

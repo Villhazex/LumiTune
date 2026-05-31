@@ -54,7 +54,7 @@ let lyricsHasRomaji=false;
 let lyricsShowEdit=false;
 
 let currentTheme='default';
-const availableThemes=['default','retro','zine','neurophism','synthwave','brutalism','shibuya','mecha','blackwhite','soft-pastel'];
+const availableThemes=['default','retro','zine','neurophism','shibuya','mecha','blackwhite'];
 
 let currentLyricOffset=0;
 let currentLyricOffsetSongId=null;

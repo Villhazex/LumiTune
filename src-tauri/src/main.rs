@@ -367,6 +367,52 @@ fn read_file_bytes(path: String) -> Result<Vec<u8>, String> {
 }
 
 #[tauri::command]
+fn fetch_song_cover(title: String, artist: String, paths: tauri::State<AppPaths>) -> Result<Option<(String, String)>, String> {
+    let covers_dir = paths.covers_dir.to_string_lossy().to_string();
+    match metadata::fetch_and_save_manual_cover(&title, &artist, &covers_dir) {
+        Ok(Some((data, mime, _path))) => {
+            let b64 = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &data);
+            Ok(Some((b64, mime)))
+        }
+        Ok(None) => Ok(None),
+        Err(e) => Err(e),
+    }
+}
+
+#[tauri::command]
+fn save_yt_thumbnail(thumbnail_url: String, title: String, artist: String, paths: tauri::State<AppPaths>) -> Result<Option<(String, String)>, String> {
+    let covers_dir = paths.covers_dir.to_string_lossy().to_string();
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(15))
+        .user_agent("LumiTune/1.0")
+        .build().map_err(|e| format!("Client: {}", e))?;
+    let resp = client.get(&thumbnail_url).send().map_err(|e| format!("Fetch thumbnail: {}", e))?;
+    let bytes = resp.bytes().map_err(|e| format!("Read thumbnail: {}", e))?;
+    let mime = if thumbnail_url.ends_with(".png") { "image/png" } else { "image/jpeg" };
+    let path = metadata::save_raw_cover_to_dir(&title, &artist, &bytes, mime, &covers_dir);
+    let b64 = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &bytes);
+    Ok(Some((b64, mime.to_string())))
+}
+
+#[tauri::command]
+fn search_deezer_cover(title: String, artist: String) -> Result<Vec<metadata::DeezerMatch>, String> {
+    metadata::search_deezer(&title, &artist, 10)
+}
+
+#[tauri::command]
+fn pick_deezer_cover(cover_url: String, title: String, artist: String, paths: tauri::State<AppPaths>) -> Result<Option<(String, String)>, String> {
+    let covers_dir = paths.covers_dir.to_string_lossy().to_string();
+    match metadata::download_deezer_cover(&cover_url, &title, &artist, &covers_dir) {
+        Ok(Some((data, mime))) => {
+            let b64 = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &data);
+            Ok(Some((b64, mime)))
+        }
+        Ok(None) => Ok(None),
+        Err(e) => Err(e),
+    }
+}
+
+#[tauri::command]
 fn read_cover(cover_path: String) -> Result<Vec<u8>, String> {
     std::fs::read(&cover_path).map_err(|e| format!("Read cover: {}", e))
 }
@@ -459,7 +505,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             yt_info, yt_download, yt_download_mp3, yt_download_file,
             tb_minimize, tb_maximize, tb_close, tb_is_maximized,
-            scan_library, identify_next, get_scan_stats, get_pending_ids, pick_folder, read_file_bytes, read_cover, extract_file_cover, batch_get_covers, retry_failed,
+            scan_library, identify_next, get_scan_stats, get_pending_ids, pick_folder, read_file_bytes, read_cover, fetch_song_cover, save_yt_thumbnail, extract_file_cover, batch_get_covers, retry_failed,
+            search_deezer_cover, pick_deezer_cover,
             start_queue, stop_queue, pause_queue, resume_queue, get_queue_status, drain_processed,
         ])
         .run(tauri::generate_context!())

@@ -20,7 +20,7 @@ function saveState(){
   }
   const songData={};
   Object.entries(songs).forEach(([id,s])=>{
-    const{file,cover,...r}=s;
+    const{file,...r}=s;
     songData[id]=r;
   });
   try{
@@ -118,21 +118,31 @@ async function loadState(){
 
 async function loadCoversFromDB(){
   if(!isTauri()||!inv)return;
+  let changed=0;
   const paths=Object.values(songs).filter(s=>!s.cover&&s.filePath).map(s=>s.filePath);
-  if(paths.length===0)return;
-  try{
-    const results=await inv('batch_get_covers',{paths});
-    if(!results||results.length===0)return;
-    let changed=0;
-    for(const[path,b64,mime]of results){if(!path||!b64||!mime)continue;
-      const song=Object.values(songs).find(s=>s.filePath===path);
-      if(song&&!song.cover){song.cover='data:'+mime+';base64,'+b64;changed++;}
-    }
-    if(changed>0){
-      renderSongList($('searchInput')?.value||'');
-      renderPlaylistGrid();
-    }
-  }catch(e){console.warn('loadCoversFromDB:',e);}
+  if(paths.length){
+    try{
+      const results=await inv('batch_get_covers',{paths});
+      if(results&&results.length){
+        for(const[path,b64,mime]of results){if(!path||!b64||!mime)continue;
+          const song=Object.values(songs).find(s=>s.filePath===path);
+          if(song&&!song.cover){song.cover='data:'+mime+';base64,'+b64;changed++;}
+        }
+      }
+    }catch(e){console.warn('loadCoversFromDB:',e);}
+  }
+  const urlCovers=Object.values(songs).filter(s=>s.cover&&typeof s.cover==='string'&&s.cover.startsWith('http'));
+  for(const song of urlCovers){
+    try{
+      const r=await inv('save_yt_thumbnail',{thumbnail_url:song.cover,title:song.title,artist:song.artist});
+      if(r&&r[0]){song.cover='data:'+r[1]+';base64,'+r[0];changed++;}
+    }catch(e){}
+  }
+  if(changed>0){
+    saveState();
+    renderSongList($('searchInput')?.value||'');
+    renderPlaylistGrid();
+  }
 }
 
 function getMonthPlays(){

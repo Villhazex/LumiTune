@@ -539,7 +539,7 @@ function applyCanonicalUpdate(song,result){
   const upgradeFromWeak=result.method==='acoustid'&&(result.confidence||0)>=0.5&&
     song.metadataSource!=='manual'&&
     (song.metadataSource==='filename'||song.metadataSource==='hybrid'||
-     song.metadataSource==='folder'||!song.metadataSource);
+     song.metadataSource==='folder'||song.metadataSource==='id3'||!song.metadataSource);
   const simOk=bypassGate||(ts>=0.7&&as>=0.7)||upgradeFromWeak;
 
   const canUpdate=autoApplyMetadata&&(newPrio>curPrio||(newPrio===curPrio&&(result.confidence||0)>=0.9));

@@ -298,12 +298,34 @@ document.addEventListener('mouseup',()=>{isDraggingProgress=false;isDraggingVolu
   $('sortTitle')?.addEventListener('click',()=>toggleSort('title'));
   $('sortDuration')?.addEventListener('click',()=>toggleSort('duration'));
   $('settingsBtn').addEventListener('click',showSettingsModal);
+  function closeAllDropdowns(){
+    document.querySelectorAll('.track-more-dropdown.show').forEach(d=>{
+      d.classList.remove('show','upward');
+      if(d.id==='heroMoreDropdown'){
+        d.style.left='';d.style.top='';d.style.transformOrigin='';
+        const ow=$('heroMoreBtn').closest('.track-more-wrap');
+        if(ow&&d.parentNode!==ow)ow.appendChild(d);
+      }
+    });
+  }
   $('heroMoreBtn').addEventListener('click',e=>{
     e.stopPropagation();
     const dd=$('heroMoreDropdown');
     const wasOpen=dd.classList.contains('show');
-    document.querySelectorAll('.track-more-dropdown.show').forEach(d=>d.classList.remove('show'));
-    if(!wasOpen)dd.classList.add('show');
+    closeAllDropdowns();
+    if(!wasOpen){
+      const rect=$('heroMoreBtn').getBoundingClientRect();
+      document.body.appendChild(dd);
+      const ddH=dd.offsetHeight;
+      const ddW=Math.max(160,dd.offsetWidth||160);
+      let top=rect.bottom+4;
+      let origin='top center';
+      if(top+ddH>window.innerHeight-4){top=rect.top-4-ddH;origin='bottom center';}
+      dd.style.transformOrigin=origin;
+      dd.style.left=Math.max(8,Math.min(rect.right-ddW,window.innerWidth-ddW-8))+'px';
+      dd.style.top=Math.max(8,top)+'px';
+      dd.classList.add('show');
+    }
   });
   $('heroMoreDropdown').addEventListener('click',e=>{
     const btn=e.target.closest('[data-hero-action]');
@@ -316,7 +338,10 @@ document.addEventListener('mouseup',()=>{isDraggingProgress=false;isDraggingVolu
     else if(action==='edit')showMetadataEditor(currentPlaylist,currentSongIndex);
     else if(action==='del')handleDeleteTrack(currentSongIndex);
     else if(action==='download')handleDownload(currentPlaylist,currentSongIndex);
-    $('heroMoreDropdown').classList.remove('show');
+    const dd=$('heroMoreDropdown');dd.classList.remove('show');
+    dd.style.left='';dd.style.top='';dd.style.transformOrigin='';
+    const ow=$('heroMoreBtn').closest('.track-more-wrap');
+    if(ow&&dd.parentNode!==ow)ow.appendChild(dd);
   });
   $('togglePanelBtn').addEventListener('click',()=>{
     const layout=document.querySelector('.layout');
@@ -458,17 +483,31 @@ $('songList').addEventListener('click',e=>{
     const dd=wrap?.querySelector('.track-more-dropdown');
     if(dd){
       const wasOpen=dd.classList.contains('show');
-      document.querySelectorAll('.track-more-dropdown.show').forEach(d=>d.classList.remove('show'));
-      if(!wasOpen)dd.classList.add('show');
+      closeAllDropdowns();
+      if(!wasOpen){
+        dd.classList.add('show');
+        requestAnimationFrame(()=>{
+          const dr=dd.getBoundingClientRect();
+          const main=document.querySelector('.main');
+          if(main&&dr.bottom>window.innerHeight-4){
+            const maxScroll=main.scrollHeight-main.clientHeight;
+            if(main.scrollTop<maxScroll){
+              main.scrollTop+=dr.bottom-window.innerHeight+12;
+            }else{
+              dd.classList.add('upward');
+            }
+          }
+        });
+      }
     }
     return;
   }
-  document.querySelectorAll('.track-more-dropdown.show').forEach(d=>d.classList.remove('show'));
+  closeAllDropdowns();
   const qadd=e.target.closest('[data-qadd]');if(qadd){if(qadd.dataset.qpl==='__loose'){showToast('⊕ Add this song to a playlist first');return;}addToQueue(qadd.dataset.qpl,parseInt(qadd.dataset.qadd));return;}
   const addpl=e.target.closest('[data-addpl]');if(addpl){handleAddToAnotherPlaylist(addpl.dataset.addplPl,parseInt(addpl.dataset.addpl));return;}
   const movepl=e.target.closest('[data-movepl]');if(movepl){handleMoveToPlaylist(movepl.dataset.moveplPl,parseInt(movepl.dataset.movepl));return;}
   const edit=e.target.closest('[data-edit]');if(edit){showMetadataEditor(edit.dataset.editPl,parseInt(edit.dataset.edit));return;}
-  const delTrack=e.target.closest('[data-del]');if(delTrack){handleDeleteTrack(parseInt(delTrack.dataset.del));return;}
+  const delTrack=e.target.closest('[data-del]');if(delTrack){handleDeleteTrack(parseInt(delTrack.dataset.del),delTrack.dataset.delPl||currentPlaylist);return;}
   const dload=e.target.closest('[data-download]');if(dload){handleDownload(dload.dataset.downloadPl,parseInt(dload.dataset.download));return;}
    const artist=e.target.closest('[data-artist]');if(artist){recordNav();selectedArtist=artist.dataset.artist;currentView='artists';renderSongList($('searchInput').value);return;}
    const album=e.target.closest('[data-album]');if(album){recordNav();selectedAlbum=album.dataset.album;currentView='albums';renderSongList($('searchInput').value);return;}
@@ -484,9 +523,7 @@ $('songList').addEventListener('click',e=>{
     }
 });
 
-document.addEventListener('click',()=>{
-  document.querySelectorAll('.track-more-dropdown.show').forEach(d=>d.classList.remove('show'));
-});
+document.addEventListener('click',closeAllDropdowns);
 
 let dragTrackSource=null;
 const sl=$('songList');
@@ -572,6 +609,13 @@ document.addEventListener('keydown',e=>{
   const isInput=(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA');
   if(e.code==='Space'&&e.ctrlKey){e.preventDefault();executeShortcutAction('focusSearch');return;}
   if(isInput){if(e.code==='Escape'){e.target.blur();}return;}
+  if(e.ctrlKey&&e.shiftKey&&(e.code==='ArrowRight'||e.code==='ArrowLeft')){
+    e.preventDefault();
+    const ci=availableThemes.indexOf(currentTheme);
+    const next=e.code==='ArrowRight'?(ci+1)%availableThemes.length:(ci-1+availableThemes.length)%availableThemes.length;
+    applyTheme(availableThemes[next]);
+    return;
+  }
   const shortcuts=getActiveShortcuts();
   for(const[action,sc]of Object.entries(shortcuts)){
     if(matchShortcut(e,sc)){e.preventDefault();executeShortcutAction(action);return;}

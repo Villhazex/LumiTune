@@ -15,7 +15,7 @@ function renderVirtualRows(title,sub,songs,filter=''){
   $('emptyState').style.display='none';
   setVirtualSongList(filtered,(song,i)=>{
     const isActive=song.playlistKey===currentPlaylist&&song.songIndex===currentSongIndex;
-    return makeRow(song,song.songIndex,isActive,favorites.has(String(song.id)),song.playlistKey,false,playlists[song.playlistKey]?.name||song.playlistKey);
+    return makeRow(song,song.songIndex,isActive,favorites.has(String(song.id)),song.playlistKey,true,playlists[song.playlistKey]?.name||song.playlistKey);
   });
 }
 
@@ -62,24 +62,21 @@ function makeRow(song,origIdx,isActive,isLiked,plKey,showDel,extra){
   const statusBadge=isActive
     ?`<span class="badge ${isPlaying?'badge-playing':'badge-paused'}"><span class="badge-dot"></span>${isPlaying?'Playing':'Paused'}</span>`
     :'';
-  const reliIcon={high:'🟢',medium:'🟡',low:'⚪'}[song.reliability]||'⚪';
   const methodLabel={id3:'ID3',acoustid:'AcoustID',hybrid:'Hybrid',cache:'Cache',audio_hash:'Audio Hash',manual:'Manual',filename:'Filename'}[song.metadataSource]||song.metadataSource||'Unknown';
-  const trustIcon=song.isTrusted===false?' ⚠️':'';
-  const swapIcon=song.suspectedSwapped?' 🔄':'';
   const trustNote=song.isTrusted===false?' · Not Verified':'';
   const swapNote=song.suspectedSwapped?' · Parser unsure (title/artist may be swapped)':'';
   const simNote=song.titleSimilarity>0
     ?` · Title:${(song.titleSimilarity*100).toFixed(0)}% Artist:${((song.artistSimilarity||0)*100).toFixed(0)}%`
     :'';
-  const reliBadge=song.reliability||song.metadataSource
-    ?` <span class="reliability-badge" title="Source: ${methodLabel} · Reliability: ${song.reliability||'low'}${trustNote}${swapNote}${simNote}">${reliIcon}${trustIcon}${swapIcon}</span>`
+  const reliBadge=song.reliability&&song.reliability!=='high'
+    ?` <span class="reliability-badge" title="Source: ${methodLabel} · Reliability: ${song.reliability||'low'}${trustNote}${swapNote}${simNote}"><span class="reli-dot ${song.reliability==='low'?'reli-low':'reli-med'}"></span></span>`
     :'';
   const moreItems=`<button class="dropdown-item" data-qadd="${origIdx}" data-qpl="${plKey}" title="Add to queue">Add to queue</button>
     <button class="dropdown-item" data-addpl="${origIdx}" data-addpl-pl="${plKey}" title="Add to playlist">Add to playlist</button>
     <button class="dropdown-item" data-movepl="${origIdx}" data-movepl-pl="${plKey}" title="Move to playlist">Move to playlist</button>
     <button class="dropdown-item" data-edit="${origIdx}" data-edit-pl="${plKey}" title="Edit metadata">Edit metadata</button>
     <button class="dropdown-item" data-download="${origIdx}" data-download-pl="${plKey}" title="Download MP3">Download MP3</button>
-    ${showDel?`<div class="dropdown-divider"></div><button class="dropdown-item danger" data-del="${origIdx}" title="Delete track">Delete</button>`:''}`;
+    ${showDel?`<div class="dropdown-divider"></div><button class="dropdown-item danger" data-del="${origIdx}" data-del-pl="${plKey}" title="Delete track">Delete</button>`:''}`;
   return`<div class="track-row ${isActive?'active':''}" draggable="true" data-index="${origIdx}" data-playlist="${plKey}">
     <div class="t-info">
       <span class="t-title">${song.title}</span>
@@ -113,7 +110,7 @@ function renderHome(filter){
     $('emptyState').style.display='none';
     setVirtualSongList(filtered,(song,i)=>{
       const isActive=song.playlistKey===currentPlaylist&&song.songIndex===currentSongIndex;
-      return makeRow(song,song.songIndex,isActive,favorites.has(String(song.id)),song.playlistKey,false,playlists[song.playlistKey]?.name||song.playlistKey);
+      return makeRow(song,song.songIndex,isActive,favorites.has(String(song.id)),song.playlistKey,true,playlists[song.playlistKey]?.name||song.playlistKey);
     });
     updateHeroSection();
     return;
@@ -180,7 +177,7 @@ function renderSearchTracks(filter){
   $('emptyState').style.display='none';
   setVirtualSongList(filtered,(song,i)=>{
     const isActive=song.playlistKey===currentPlaylist&&song.songIndex===currentSongIndex;
-    return makeRow(song,song.songIndex,isActive,favorites.has(String(song.id)),song.playlistKey,false,playlists[song.playlistKey]?.name||song.playlistKey);
+    return makeRow(song,song.songIndex,isActive,favorites.has(String(song.id)),song.playlistKey,true,playlists[song.playlistKey]?.name||song.playlistKey);
   });
 }
 function renderSearchPlaylists(filter){
@@ -249,7 +246,7 @@ function renderLibrary(filter){
     $('emptyState').style.display='none';
     setVirtualSongList(filtered,(song,i)=>{
       const isActive=song.playlistKey===currentPlaylist&&song.songIndex===currentSongIndex;
-      return makeRow(song,song.songIndex,isActive,favorites.has(String(song.id)),song.playlistKey,false,playlists[song.playlistKey]?.name||song.playlistKey);
+      return makeRow(song,song.songIndex,isActive,favorites.has(String(song.id)),song.playlistKey,true,playlists[song.playlistKey]?.name||song.playlistKey);
     });
     libraryOrder=null;
     return;
@@ -266,7 +263,7 @@ function renderLibrary(filter){
   $('emptyState').style.display='none';
   setVirtualSongList(libraryOrder,(song,i)=>{
     const isActive=song.playlistKey===currentPlaylist&&song.songIndex===currentSongIndex;
-    return makeRow(song,song.songIndex,isActive,favorites.has(String(song.id)),song.playlistKey,false,playlists[song.playlistKey]?.name||song.playlistKey);
+    return makeRow(song,song.songIndex,isActive,favorites.has(String(song.id)),song.playlistKey,true,playlists[song.playlistKey]?.name||song.playlistKey);
   });
 }
 
@@ -429,7 +426,7 @@ function renderFavs(filter){
   $('emptyState').style.display='none';
   setVirtualSongList(filtered,(song,i)=>{
     const isActive=song.playlistKey===currentPlaylist&&song.songIndex===currentSongIndex;
-    return makeRow(song,song.songIndex,isActive,true,song.playlistKey,false,playlists[song.playlistKey]?.name||song.playlistKey);
+    return makeRow(song,song.songIndex,isActive,true,song.playlistKey,true,playlists[song.playlistKey]?.name||song.playlistKey);
   });
 }
 

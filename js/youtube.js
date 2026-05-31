@@ -56,7 +56,16 @@ async function handleYouTubeImport(){
     const sid=Date.now();
     const{filePath,title,author}=await fetchYouTubeDownloadFile(id,downloadDir);
     loading2(`<div class="yt-loading"><div class="yt-spinner"></div><div class="yt-step">Step 4 of 4</div><div>Saving to ${esc(pl.name||'playlist')}&hellip;</div></div>`);
-    songs[sid]={id:sid,title:title||info.title||'Unknown',artist:author||info.author_name||'YouTube',album:'YouTube',genre:'',year:'',duration:'--:--',addedAt:new Date().toISOString(),filePath,cover:info.thumbnail_url||undefined,sourceUrl:url,metadataSource:'youtube',reliability:'low',isTrusted:false,suspectedSwapped:false,titleSimilarity:0,artistSimilarity:0,finalScore:0};
+    const songTitle=title||info.title||'Unknown';
+    const songArtist=author||info.author_name||'YouTube';
+    let coverData=info.thumbnail_url||undefined;
+    if(info.thumbnail_url&&isTauri()&&inv){
+      try{
+        const r=await inv('save_yt_thumbnail',{thumbnail_url:info.thumbnail_url,title:songTitle,artist:songArtist});
+        if(r&&r[0])coverData='data:'+r[1]+';base64,'+r[0];
+      }catch(e){}
+    }
+    songs[sid]={id:sid,title:songTitle,artist:songArtist,album:'YouTube',genre:'',year:'',duration:'--:--',addedAt:new Date().toISOString(),filePath,cover:coverData,sourceUrl:url,metadataSource:'youtube',reliability:'high',isTrusted:true,suspectedSwapped:false,titleSimilarity:0,artistSimilarity:0,finalScore:0};
     pl.songs.push(String(sid));
     pl.sub=`${pl.songs.length} tracks`;
     if(currentPlaylist===targetKey)renderSongList($('searchInput').value);

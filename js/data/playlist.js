@@ -61,22 +61,27 @@ async function handleDeletePlaylist(key){
   }
 }
 
-async function handleDeleteTrack(index){
-  const pl=playlists[currentPlaylist];
+async function handleDeleteTrack(index,plKey){
+  plKey=plKey||currentPlaylist;
+  const pl=playlists[plKey];
   const songId=pl?.songs[index];
   const song=getSong(songId);
-  if(!(await showConfirm(`Remove "${song?.title}"?`)))return;
+  const plName=pl?.name||plKey;
+  if(!(await showConfirm(`Remove "${song?.title}" from ${plName}?`)))return;
   pl.songs.splice(index,1);
-  if(currentSongIndex===index){
-    audioPlayer.pause();
-    if(currentAudioFile){URL.revokeObjectURL(audioPlayer.src);audioPlayer.src='';currentAudioFile=null;}
-    clearInterval(playbackInterval);
-    currentSongIndex=-1;currentPlaylistPlaying='';isPlaying=false;updatePlayBtn();updateUpNext();
-    $('albumArt').classList.remove('playing');$('vizBars').classList.remove('active');
-    $('trackTitle').textContent='Select a track';$('trackArtist').textContent='Awaiting input';
-    $('progressFill').style.width='0%';$('currentTime').textContent='0:00';$('totalTime').textContent='0:00';
-    $('heroSection').style.display='none';
-  }else if(currentSongIndex>index)currentSongIndex--;
+  pl.sub=`${pl.songs.length} tracks`;
+  if(plKey===currentPlaylist){
+    if(currentSongIndex===index){
+      audioPlayer.pause();
+      if(currentAudioFile){URL.revokeObjectURL(audioPlayer.src);audioPlayer.src='';currentAudioFile=null;}
+      clearInterval(playbackInterval);
+      currentSongIndex=-1;currentPlaylistPlaying='';isPlaying=false;updatePlayBtn();updateUpNext();
+      $('albumArt').classList.remove('playing');$('vizBars').classList.remove('active');
+      $('trackTitle').textContent='Select a track';$('trackArtist').textContent='Awaiting input';
+      $('progressFill').style.width='0%';$('currentTime').textContent='0:00';$('totalTime').textContent='0:00';
+      $('heroSection').style.display='none';
+    }else if(currentSongIndex>index)currentSongIndex--;
+  }
   libraryOrder=null;renderSongList($('searchInput').value);saveState();
 }
 async function deleteSongRef(playlistKey,index){

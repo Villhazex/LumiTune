@@ -160,6 +160,7 @@ const TITLE_KEYWORDS: &[&str] = &[
     "feat", "featuring", "ft.", "official", "lyrics", "lyric", "remix",
     "live", "opening", "ending", "theme", "amv", "mv", "video", "audio",
     "instrumental", "acoustic", "cover", "version", "mix", "edit", "demo",
+    "years", "days", "night",
 ];
 
 fn is_title_keyword(text: &str) -> bool {
