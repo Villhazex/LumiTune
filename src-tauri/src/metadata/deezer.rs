@@ -182,14 +182,10 @@ pub fn search_deezer(title: &str, artist: &str, limit: usize, index: usize) -> R
         Err(_) => return Ok(vec![]),
     };
 
-    let search_artist_lower = artist.trim().to_lowercase();
     let results = deez
         .data
         .into_iter()
         .filter_map(|t| {
-            if !t.artist.name.trim().to_lowercase().contains(&search_artist_lower) {
-                return None;
-            }
             let cover_url = t
                 .album
                 .cover_xl

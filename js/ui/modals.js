@@ -178,7 +178,7 @@ function showMetadataEditor(playlistKey,index){
       </div>
     </div>
     <div class="modal-hint">Changes update LumiTune's library metadata. The original audio file is left untouched.</div>
-    <div style="text-align:center;margin:10px 0 0"><button class="modal-btn" id="metaDeezerCover">Search Cover from Deezer</button></div>
+    <div style="text-align:center;margin:16px 0 18px"><button class="modal-btn" id="metaDeezerCover">Search Cover from Deezer</button></div>
     <div class="modal-actions">
       <button class="modal-btn" id="mc" title="Cancel">Cancel</button>
       <button class="modal-btn modal-ok" id="mo" title="Save">Save</button>
@@ -186,7 +186,7 @@ function showMetadataEditor(playlistKey,index){
   </div>`;
   o.style.display='flex';
   const close=()=>{o.style.display='none';};
-  const save=()=>{
+  const save=async ()=>{
     const oldTitle=song.title,oldArtist=song.artist;
     song.title=$('metaTitle').value.trim()||oldTitle||'Unknown';
     song.artist=$('metaArtist').value.trim()||'Unknown';
@@ -197,7 +197,8 @@ function showMetadataEditor(playlistKey,index){
     song.sourceUrl=$('metaSourceUrl').value.trim()||undefined;
     song.metadataEdited=true;
     song.metadataSource='manual';
-    if(normalizeMeta(oldTitle)!==normalizeMeta(song.title)||normalizeMeta(oldArtist)!==normalizeMeta(song.artist)){
+    const metaChanged=normalizeMeta(oldTitle)!==normalizeMeta(song.title)||normalizeMeta(oldArtist)!==normalizeMeta(song.artist);
+    if(metaChanged){
       deleteCachedLyrics(song);
     }
     if(playlistKey===currentPlaylist&&index===currentSongIndex){
@@ -211,6 +212,30 @@ function showMetadataEditor(playlistKey,index){
     renderPlaylistGrid();
     saveState();
     close();
+    if(metaChanged&&isTauri()&&inv){
+      showToast('Searching for cover...');
+      try{
+        const res=await inv('search_deezer_cover',{title:song.title,artist:song.artist,index:0});
+        if(res&&res.length){
+          const best=res[0];
+          const r=await inv('pick_deezer_cover',{coverUrl:best.cover_url,title:song.title,artist:song.artist});
+          if(r&&r[0]){
+            song.cover='data:'+r[1]+';base64,'+r[0];
+            song.coverKey=r[2];
+            song.metadataSource='deezer';
+            saveState();
+            if(playlistKey===currentPlaylist&&index===currentSongIndex){
+              updateHeroSection();
+            }
+            showToast('Cover updated');
+          }else{
+            showToast('No cover found');
+          }
+        }else{
+          showToast('No cover found');
+        }
+      }catch(e){console.warn('Auto cover fetch failed:',e);}
+    }
   };
   const kh=e=>{if(e.key==='Escape'){document.removeEventListener('keydown',kh);close();}if(e.key==='Enter'){e.preventDefault();document.removeEventListener('keydown',kh);save();}};
   document.addEventListener('keydown',kh);
@@ -254,7 +279,6 @@ function showDeezerCoverPicker(song, title, artist, playlistKey, songIdx){
   ov.onclick=e=>{if(e.target===ov)closePicker();};
 
   let currentPage=0;
-  const loadedIds=new Set();
   const container=$('dzResults');
   const footer=$('dzFooter');
 
@@ -327,36 +351,39 @@ function showDeezerCoverPicker(song, title, artist, playlistKey, songIdx){
 
   function loadPage(){
     const searchIdx=currentPage*25;
-    inv('search_deezer_cover',{title:'',artist,index:searchIdx}).then(results=>{
-      if(!results||!results.length){
-        if(currentPage===0){
-          container.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text3)">No results from Deezer</div>';
-        }
+    container.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text3)">Searching...</div>';
+    footer.querySelectorAll('.dz-nav').forEach(n=>n.remove());
+    inv('search_deezer_cover',{title:'',artist,index:searchIdx}).then(raw=>{
+      if(!raw||!raw.length){
+        container.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text3)">No results from Deezer</div>';
         return;
       }
-      if(currentPage===0)container.innerHTML='';
-      results.forEach(r=>{
-        if(loadedIds.has(r.track_id))return;
-        loadedIds.add(r.track_id);
-        container.appendChild(createCard(r));
-      });
-      let nb=footer.querySelector('.dz-next');
-      if(results.length<25){
-        if(nb)nb.style.display='none';
-      }else{
-        if(!nb){
-          nb=document.createElement('button');
-          nb.className='modal-btn dz-next';
-          nb.textContent='Next \u2192';
-          nb.onclick=()=>{currentPage++;loadPage();};
-          footer.insertBefore(nb,footer.firstChild);
-        }
+      const al=artist.toLowerCase();
+      const filtered=raw.filter(r=>r.artist.toLowerCase().includes(al));
+      if(!filtered.length){
+        container.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text3)">No results from Deezer</div>';
+        return;
       }
+      container.innerHTML='';
+      filtered.forEach(r=>container.appendChild(createCard(r)));
+      const frag=document.createDocumentFragment();
+      if(currentPage>0){
+        const b=document.createElement('button');
+        b.className='modal-btn dz-nav';
+        b.textContent='\u2190 Back';
+        b.onclick=()=>{currentPage--;loadPage();};
+        frag.appendChild(b);
+      }
+      if(raw.length>=25){
+        const b=document.createElement('button');
+        b.className='modal-btn dz-nav';
+        b.textContent='Next \u2192';
+        b.onclick=()=>{currentPage++;loadPage();};
+        frag.appendChild(b);
+      }
+      if(frag.childNodes.length)footer.insertBefore(frag,footer.firstChild);
     }).catch(()=>{
-      if(currentPage===0){
-        const c=$('dzResults');
-        if(c)c.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text3)">Failed to search cover from Deezer</div>';
-      }
+      container.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text3)">Failed to search cover from Deezer</div>';
     });
   }
 
