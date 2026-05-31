@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>LumiTune – Edit Metadata</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #141414;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+  }
+
+  .modal {
+    background: #1c1c1c;
+    border: 1px solid #c0392b;
+    border-radius: 12px;
+    width: 440px;
+    padding: 30px;
+    color: #fff;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  }
+
+  .modal-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 22px;
+    letter-spacing: 0.5px;
+  }
+
+  .field-group {
+    margin-bottom: 14px;
+  }
+
+  label {
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    color: #777;
+    letter-spacing: 1.1px;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+
+  input {
+    width: 100%;
+    background: #272727;
+    border: 1px solid #333;
+    border-radius: 7px;
+    color: #ddd;
+    font-size: 13px;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input:focus { border-color: #c0392b; }
+  input[readonly] { color: #555; cursor: default; }
+
+  .row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .file-info {
+    background: #222;
+    border-radius: 7px;
+    padding: 8px 12px;
+    font-size: 11px;
+    color: #555;
+    margin-top: 4px;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .hint {
+    font-size: 10.5px;
+    color: #4a4a4a;
+    margin-bottom: 18px;
+    line-height: 1.5;
+  }
+
+  /* ── Cover action buttons ── */
+  .cover-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 22px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: none;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 10px 14px;
+    transition: all 0.15s ease;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid #3a3a3a;
+    color: #999;
+  }
+
+  .btn-ghost:hover {
+    border-color: #c0392b;
+    color: #e0e0e0;
+    background: rgba(192,57,43,0.08);
+  }
+
+  .btn-destructive {
+    background: rgba(192,57,43,0.15);
+    border: 1px solid #c0392b;
+    color: #e05a4a;
+  }
+
+  .btn-destructive:hover {
+    background: rgba(192,57,43,0.25);
+    color: #ff6b5b;
+  }
+
+  /* ── Divider ── */
+  .divider {
+    border: none;
+    border-top: 1px solid #2a2a2a;
+    margin-bottom: 20px;
+  }
+
+  /* ── Primary action buttons ── */
+  .modal-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  .btn-cancel {
+    padding: 10px 22px;
+    background: transparent;
+    border: 1px solid #3a3a3a;
+    color: #888;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-cancel:hover {
+    border-color: #555;
+    color: #ccc;
+  }
+
+  .btn-save {
+    padding: 10px 30px;
+    background: #c0392b;
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s;
+    letter-spacing: 0.4px;
+  }
+
+  .btn-save:hover { background: #a93226; }
+
+  svg { flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<div class="modal">
+  <div class="modal-title">Edit Metadata</div>
+
+  <div class="field-group">
+    <label>Custom Title (for display)</label>
+    <input type="text" value="[MV] プロポーズ / 9Lana cover" />
+  </div>
+
+  <div class="field-group">
+    <label>Original Title (for metadata)</label>
+    <input type="text" value="Propose" />
+  </div>
+
+  <div class="field-group">
+    <label>Artist</label>
+    <input type="text" value="9Lana" />
+  </div>
+
+  <div class="row-2">
+    <div class="field-group">
+      <label>Album</label>
+      <input type="text" value="J POP" />
+    </div>
+    <div class="field-group">
+      <label>Genre</label>
+      <input type="text" placeholder="—" />
+    </div>
+  </div>
+
+  <div class="row-2">
+    <div class="field-group">
+      <label>Year</label>
+      <input type="text" placeholder="—" />
+    </div>
+    <div class="field-group">
+      <label>Duration</label>
+      <input type="text" value="3:53" readonly />
+    </div>
+  </div>
+
+  <div class="field-group">
+    <label>Link</label>
+    <input type="text" placeholder="https://..." />
+  </div>
+
+  <div class="file-info">
+    <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#555" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm12-3c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2z"/>
+    </svg>
+    9Lana (cover) – Propose.mp3
+  </div>
+  <div class="hint">Custom Title is for display only. Original Title is used for lyrics &amp; cover search.</div>
+
+  <!-- Cover buttons -->
+  <div class="cover-actions">
+    <button class="btn btn-ghost">
+      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="m21 21-4.35-4.35"/>
+      </svg>
+      Search Cover from Deezer
+    </button>
+    <button class="btn btn-destructive">
+      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+      </svg>
+      Delete Cover
+    </button>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- Primary actions -->
+  <div class="modal-actions">
+    <button class="btn-cancel">Cancel</button>
+    <button class="btn-save">Save</button>
+  </div>
+</div>
+
+</body>
+</html>

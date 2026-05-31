@@ -523,6 +523,57 @@ $('songList').addEventListener('click',e=>{
     }
 });
 
+/* ── Hero art click → custom cover picker ── */
+$('heroArt').addEventListener('click',()=>{
+  const pl=playlists[currentPlaylistPlaying];
+  if(!currentPlaylistPlaying||!pl)return;
+  const song=getSong(pl.songs[currentSongIndex]);
+  if(!song)return;
+  $('heroCoverInput').click();
+});
+$('heroCoverInput').addEventListener('change',async ()=>{
+  const file=$('heroCoverInput').files[0];
+  if(!file)return;
+  const pl=playlists[currentPlaylistPlaying];
+  if(!currentPlaylistPlaying||!pl){$('heroCoverInput').value='';return;}
+  const song=getSong(pl.songs[currentSongIndex]);
+  if(!song){$('heroCoverInput').value='';return;}
+  const reader=new FileReader();
+  reader.onload=async (e)=>{
+    const dataUrl=e.target.result;
+    const mime=file.type||'image/jpeg';
+    if(isTauri()&&inv){
+      const base64=dataUrl.split(',')[1];
+      try{
+        const res=await inv('save_custom_cover',{data:base64,mime,title:song.title,artist:song.artist});
+        if(res&&res[0]){
+          song.cover='data:'+res[1]+';base64,'+res[0];
+          song.coverKey=res[2];
+        }else{
+          showToast('Failed to save cover');
+          $('heroCoverInput').value='';return;
+        }
+      }catch(e){console.warn('save custom cover:',e);showToast('Failed to save cover');$('heroCoverInput').value='';return;}
+    }else{
+      song.cover=dataUrl;
+    }
+    saveState();
+    updateHeroSection();
+    const aa=$('albumArt');
+    if(aa){
+      aa.style.backgroundImage=`url(${JSON.stringify(song.cover)})`;
+      aa.style.backgroundSize='cover';
+      aa.style.backgroundPosition='center';
+      aa.classList.add('has-cover');
+      const emoji=aa.querySelector('.art-emoji');
+      if(emoji)emoji.style.display='none';
+    }
+    showToast('Cover updated');
+    $('heroCoverInput').value='';
+  };
+  reader.readAsDataURL(file);
+});
+
 document.addEventListener('click',closeAllDropdowns);
 
 let dragTrackSource=null;

@@ -397,6 +397,17 @@ fn save_yt_thumbnail(thumbnail_url: String, title: String, artist: String, paths
 }
 
 #[tauri::command]
+fn save_custom_cover(data: String, mime: String, title: String, artist: String, paths: tauri::State<AppPaths>) -> Result<Option<(String, String, String)>, String> {
+    let bytes = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &data)
+        .map_err(|e| format!("base64 decode: {}", e))?;
+    let covers_dir = paths.covers_dir.to_string_lossy().to_string();
+    let _path = metadata::save_raw_cover_to_dir(&title, &artist, &bytes, &mime, &covers_dir);
+    let ext = if mime.contains("png") { "png" } else if mime.contains("webp") { "webp" } else { "jpg" };
+    let key = format!("yt_{:x}.{}", metadata::metadata_hash(&title, &artist), ext);
+    Ok(Some((data, mime, key)))
+}
+
+#[tauri::command]
 fn search_deezer_cover(title: String, artist: String, index: usize) -> Result<Vec<metadata::DeezerMatch>, String> {
     metadata::search_deezer(&title, &artist, 25, index)
 }

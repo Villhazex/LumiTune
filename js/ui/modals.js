@@ -154,7 +154,7 @@ function showMetadataEditor(playlistKey,index){
   o.innerHTML=`<div class="modal-box metadata-box">
     <div class="modal-msg">Edit Metadata</div>
     <label class="modal-field-label" for="metaCustomTitle">Custom Title (for display)</label>
-    <input type="text" class="modal-input" id="metaCustomTitle" value="${esc(displayTitle(song))}">
+    <input type="text" class="modal-input" id="metaCustomTitle" value="${esc(song.title)}">
     <label class="modal-field-label" for="metaOriginalTitle">Original Title (for metadata)</label>
     <input type="text" class="modal-input" id="metaOriginalTitle" value="${esc(song.title)}">
     <label class="modal-field-label" for="metaArtist">Artist</label>
@@ -185,7 +185,11 @@ function showMetadataEditor(playlistKey,index){
       Original File: <span id="metaFileName">${esc(displayFileName(song))}</span>
     </div>
     <div class="modal-hint">Custom Title is for display only. Original Title is used for lyrics &amp; cover search.</div>
-    <div style="text-align:center;margin:16px 0 18px"><button class="modal-btn" id="metaDeezerCover">Search Cover from Deezer</button></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px">
+      <button class="modal-btn" id="metaDeezerCover">Search Cover from Deezer</button>
+      <button class="modal-btn" id="metaDeleteCover" style="background:var(--red2, #b33);color:var(--text);${song.cover||song.coverKey?'':'display:none'}">Delete Cover</button>
+    </div>
+    <hr style="border:none;border-top:1px solid var(--border,#2a2a2a);margin-bottom:20px">
     <div class="modal-actions">
       <button class="modal-btn" id="mc" title="Cancel">Cancel</button>
       <button class="modal-btn modal-ok" id="mo" title="Save">Save</button>
@@ -260,6 +264,25 @@ function showMetadataEditor(playlistKey,index){
     const ar=$('metaArtist').value.trim()||song.artist;
     if(!ti&&!ar)return;
     showDeezerCoverPicker(song,ti,ar,playlistKey,index);
+  };
+  $('metaDeleteCover').onclick=async ()=>{
+    const ok=await showConfirm('Delete cover for "'+esc(displayTitle(song))+'" ?');
+    if(!ok)return;
+    delete song.cover;
+    delete song.coverKey;
+    saveState();
+    $('metaDeleteCover').style.display='none';
+    if(playlistKey===currentPlaylist&&index===currentSongIndex){
+      updateHeroSection();
+      const aa=$('albumArt');
+      if(aa){
+        aa.style.backgroundImage='';
+        aa.classList.remove('has-cover');
+        const emoji=aa.querySelector('.art-emoji');
+        if(emoji)emoji.style.display='';
+      }
+    }
+    showToast('Cover deleted');
   };
   o.onclick=e=>{if(e.target===o){document.removeEventListener('keydown',kh);close();}};
 }
