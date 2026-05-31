@@ -115,6 +115,7 @@ pub fn fetch_deezer_cover(title: &str, artist: &str) -> Result<Option<(Vec<u8>, 
     // Download the cover image
     let img_resp = client
         .get(cover_url)
+        .header("User-Agent", "LumiTune/1.0 (music-player@lumitune.app)")
         .timeout(Duration::from_secs(10))
         .send()
         .map_err(|e| format!("Deezer cover download: {}", e))?;
@@ -132,31 +133,32 @@ pub fn fetch_deezer_cover(title: &str, artist: &str) -> Result<Option<(Vec<u8>, 
 
     let bytes = img_resp.bytes().map_err(|e| format!("Deezer cover read: {}", e))?;
 
-    if bytes.len() > 1_000_000 {
+    if bytes.len() > 5_000_000 {
         return Ok(None);
     }
 
     Ok(Some((bytes.to_vec(), mime)))
 }
 
-pub fn search_deezer(title: &str, artist: &str, limit: usize) -> Result<Vec<DeezerMatch>, String> {
+pub fn search_deezer(title: &str, artist: &str, limit: usize, index: usize) -> Result<Vec<DeezerMatch>, String> {
     if title.is_empty() && artist.is_empty() {
         return Ok(vec![]);
     }
 
     throttle_api();
 
-    let query = format!(
-        "artist:\"{}\" track:\"{}\"",
-        url_encode(artist),
-        url_encode(title)
-    );
+    let query = if title.trim().is_empty() {
+        url_encode(artist)
+    } else {
+        format!("{} {}", url_encode(artist), url_encode(title))
+    };
 
     let limit = limit.clamp(1, 25);
     let url = format!(
-        "https://api.deezer.com/search?q={}&limit={}&output=json",
+        "https://api.deezer.com/search?q={}&limit={}&index={}&output=json",
         url_encode(&query),
-        limit
+        limit,
+        index
     );
 
     let client = reqwest::blocking::Client::builder()
@@ -180,10 +182,14 @@ pub fn search_deezer(title: &str, artist: &str, limit: usize) -> Result<Vec<Deez
         Err(_) => return Ok(vec![]),
     };
 
+    let search_artist_lower = artist.trim().to_lowercase();
     let results = deez
         .data
         .into_iter()
         .filter_map(|t| {
+            if !t.artist.name.trim().to_lowercase().contains(&search_artist_lower) {
+                return None;
+            }
             let cover_url = t
                 .album
                 .cover_xl
@@ -210,13 +216,14 @@ pub fn download_deezer_cover(
     covers_dir: &str,
 ) -> Result<Option<(Vec<u8>, String)>, String> {
     let client = reqwest::blocking::Client::builder()
-        .timeout(Duration::from_secs(10))
+        .timeout(Duration::from_secs(15))
+        .user_agent("LumiTune/1.0 (music-player@lumitune.app)")
         .build()
         .map_err(|e| format!("HTTP client: {}", e))?;
 
     let img_resp = client
         .get(cover_url)
-        .timeout(Duration::from_secs(10))
+        .timeout(Duration::from_secs(15))
         .send()
         .map_err(|e| format!("Deezer cover download: {}", e))?;
 
@@ -235,7 +242,7 @@ pub fn download_deezer_cover(
         .bytes()
         .map_err(|e| format!("Deezer cover read: {}", e))?;
 
-    if bytes.len() > 1_000_000 {
+    if bytes.len() > 5_000_000 {
         return Ok(None);
     }
 

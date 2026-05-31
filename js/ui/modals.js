@@ -1,11 +1,11 @@
-function showConfirm(msg){
+function showConfirm(msg, confirmText){
   return new Promise(resolve=>{
     const o=$('confirmOverlay');
     o.innerHTML=`<div class="modal-box">
       <div class="modal-msg">${msg}</div>
       <div class="modal-actions">
         <button class="modal-btn" id="mc" title="Cancel">Cancel</button>
-        <button class="modal-btn modal-ok" id="mo" title="Confirm">Delete</button>
+        <button class="modal-btn modal-ok" id="mo" title="Confirm">${confirmText||'Delete'}</button>
       </div>
     </div>`;
     o.style.display='flex';
@@ -178,7 +178,7 @@ function showMetadataEditor(playlistKey,index){
       </div>
     </div>
     <div class="modal-hint">Changes update LumiTune's library metadata. The original audio file is left untouched.</div>
-    <div style="text-align:center;margin:10px 0 0"><button class="modal-btn" id="metaDeezerCover">Cari Cover dari Deezer</button></div>
+    <div style="text-align:center;margin:10px 0 0"><button class="modal-btn" id="metaDeezerCover">Search Cover from Deezer</button></div>
     <div class="modal-actions">
       <button class="modal-btn" id="mc" title="Cancel">Cancel</button>
       <button class="modal-btn modal-ok" id="mo" title="Save">Save</button>
@@ -211,29 +211,6 @@ function showMetadataEditor(playlistKey,index){
     renderPlaylistGrid();
     saveState();
     close();
-    if(isTauri()&&inv){
-      inv('fetch_song_cover',{title:song.title,artist:song.artist})
-        .then(r=>{
-          if(r&&r[0]){
-            song.cover='data:'+r[1]+';base64,'+r[0];
-            saveState();
-            renderSongList($('searchInput').value);
-            renderPlaylistGrid();
-            if(playlistKey===currentPlaylist&&index===currentSongIndex){
-              updateHeroSection();
-              const aa=$('albumArt');
-              if(aa){
-                const emoji=aa.querySelector('.art-emoji');
-                aa.style.backgroundImage=`url(${JSON.stringify(song.cover)})`;
-                aa.style.backgroundSize='cover';
-                aa.style.backgroundPosition='center';
-                aa.classList.add('has-cover');
-                if(emoji)emoji.style.display='none';
-              }
-            }
-          }
-        }).catch(()=>{});
-    }
   };
   const kh=e=>{if(e.key==='Escape'){document.removeEventListener('keydown',kh);close();}if(e.key==='Enter'){e.preventDefault();document.removeEventListener('keydown',kh);save();}};
   document.addEventListener('keydown',kh);
@@ -248,21 +225,23 @@ function showMetadataEditor(playlistKey,index){
   };
   o.onclick=e=>{if(e.target===o){document.removeEventListener('keydown',kh);close();}};
 }
-function showDeezerCoverPicker(song, title, artist, playlistKey, index){
+function showDeezerCoverPicker(song, title, artist, playlistKey, songIdx){
   if(!isTauri()||!inv)return;
   const ole=$('confirmOverlay');
   const ov=document.createElement('div');
   ov.className='modal-overlay';
   ov.style.cssText='display:flex;position:fixed;inset:0;z-index:1001;background:var(--overlay);align-items:center;justify-content:center';
-  ov.innerHTML=`<div class="modal-box" style="width:580px;max-width:92vw;max-height:85vh;overflow-y:auto;padding:20px">
+  ov.innerHTML=`<div class="modal-box" style="width:90vw;max-width:1100px;padding:20px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div><strong style="font-size:16px">Cari Cover dari Deezer</strong><br><span style="font-size:13px;color:var(--text3)">${esc(title)} — ${esc(artist)}</span></div>
+      <div><strong style="font-size:16px">Search Cover from Deezer</strong><br><span style="font-size:13px;color:var(--text3)">${esc(title)} — ${esc(artist)}</span></div>
       <button class="modal-btn dz-picker-close" style="font-size:14px;padding:4px 12px">✕</button>
     </div>
-    <div id="dzResults" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;min-height:100px">
-      <div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text3)">Mencari...</div>
+    <div id="dzResults" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;min-height:100px">
+      <div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text3)">Searching...</div>
     </div>
-    <div style="text-align:center;margin-top:12px"><button class="modal-btn dz-picker-close" style="font-size:13px">Cancel</button></div>
+    <div id="dzFooter" style="text-align:center;margin-top:12px;display:flex;justify-content:center;gap:8px">
+      <button class="modal-btn dz-picker-close" style="font-size:13px">Cancel</button>
+    </div>
   </div>`;
   document.body.appendChild(ov);
 
@@ -274,57 +253,114 @@ function showDeezerCoverPicker(song, title, artist, playlistKey, index){
   ov.querySelectorAll('.dz-picker-close').forEach(b=>b.onclick=closePicker);
   ov.onclick=e=>{if(e.target===ov)closePicker();};
 
-  inv('search_deezer_cover',{title,artist}).then(results=>{
-    const container=$('dzResults');
-    if(!container||!results||!results.length){
-      container.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text3)">Tidak ada hasil dari Deezer</div>';
-      return;
-    }
-    container.innerHTML='';
-    results.forEach(r=>{
-      const card=document.createElement('div');
-      card.style.cssText='border-radius:8px;overflow:hidden;background:var(--surface2);cursor:pointer;transition:.15s;border:2px solid transparent';
-      card.innerHTML=`
-        <div style="aspect-ratio:1;background:var(--surface1);display:flex;align-items:center;justify-content:center;overflow:hidden">
-          <img src="${esc(r.cover_url)}" alt="" style="width:100%;height:100%;object-fit:cover" loading="lazy">
-        </div>
-        <div style="padding:6px 8px">
-          <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.title)}</div>
-          <div style="font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.artist)}</div>
-          <div style="font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.album)}</div>
-        </div>`;
-      card.onmouseenter=()=>{card.style.borderColor='var(--accent)';card.style.background='var(--surface3)';};
-      card.onmouseleave=()=>{card.style.borderColor='transparent';card.style.background='var(--surface2)';};
-      card.onclick=()=>{
-        card.style.borderColor='var(--accent)';
-        inv('pick_deezer_cover',{cover_url:r.cover_url,title:r.title,artist:r.artist}).then(res=>{
-          if(res&&res[0]){
-            song.cover='data:'+res[1]+';base64,'+res[0];
-            saveState();
-            if(playlistKey===currentPlaylist&&index===currentSongIndex){
-              updateHeroSection();
-              const aa=$('albumArt');
-              if(aa){
-                aa.style.backgroundImage=`url(${JSON.stringify(song.cover)})`;
-                aa.style.backgroundSize='cover';
-                aa.style.backgroundPosition='center';
-                aa.classList.add('has-cover');
-                const emoji=aa.querySelector('.art-emoji');
-                if(emoji)emoji.style.display='none';
-              }
+  let currentPage=0;
+  const loadedIds=new Set();
+  const container=$('dzResults');
+  const footer=$('dzFooter');
+
+  function createCard(r){
+    const card=document.createElement('div');
+    card.style.cssText='border-radius:8px;overflow:hidden;background:var(--surface2);cursor:pointer;transition:.15s;border:2px solid transparent';
+    card.innerHTML=`
+      <div style="aspect-ratio:1;background:var(--surface1);display:flex;align-items:center;justify-content:center;overflow:hidden">
+        <img src="${esc(r.cover_url)}" alt="" style="width:100%;height:100%;object-fit:cover" loading="lazy">
+      </div>
+      <div style="padding:6px 8px">
+        <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.title)}</div>
+        <div style="font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.artist)}</div>
+        <div style="font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.album)}</div>
+      </div>`;
+    card.onmouseenter=()=>{card.style.borderColor='var(--accent)';card.style.background='var(--surface3)';};
+    card.onmouseleave=()=>{card.style.borderColor='transparent';card.style.background='var(--surface2)';};
+    card.onclick=()=>{
+      card.style.borderColor='var(--accent)';
+      showToast('Downloading cover...');
+      inv('pick_deezer_cover',{coverUrl:r.cover_url,title:r.title,artist:r.artist}).then(res=>{
+        if(res&&res[0]){
+          song.cover='data:'+res[1]+';base64,'+res[0];
+          song.coverKey=res[2];
+          showToast('Cover downloaded');
+          if(playlistKey===currentPlaylist&&songIdx===currentSongIndex){
+            updateHeroSection();
+            const aa=$('albumArt');
+            if(aa){
+              aa.style.backgroundImage=`url(${JSON.stringify(song.cover)})`;
+              aa.style.backgroundSize='cover';
+              aa.style.backgroundPosition='center';
+              aa.classList.add('has-cover');
+              const emoji=aa.querySelector('.art-emoji');
+              if(emoji)emoji.style.display='none';
             }
           }
-          closePicker();
-          // Restore metadata editor if it was hidden
-          if(ole.style.display!=='flex')ole.style.display='flex';
-        }).catch(()=>closePicker());
-      };
-      container.appendChild(card);
+        }else{
+          showToast('Cover failed: empty response from server');
+          console.log('pick_deezer_cover returned null/empty:',res);
+        }
+        closePicker();
+        if(ole.style.display!=='flex')ole.style.display='flex';
+        if(res&&res[0]){
+          showConfirm('Also update song metadata from Deezer?','Yes').then(overwrite=>{
+            if(overwrite){
+              song.title=r.title;
+              song.artist=r.artist;
+              song.album=r.album||'';
+              song.metadataEdited=true;
+              song.metadataSource='deezer';
+              if(playlistKey===currentPlaylist&&songIdx===currentSongIndex){
+                $('trackTitle').textContent=song.title;
+                $('trackArtist').textContent=song.artist;
+                updateHeroSection();
+                fetchLyricsForSong(song);
+              }
+            }
+            saveState();
+          });
+        }
+      }).catch(err=>{
+        showToast('Cover failed: '+err);
+        console.error('pick_deezer_cover error:',err);
+        closePicker();
+      });
+    };
+    return card;
+  }
+
+  function loadPage(){
+    const searchIdx=currentPage*25;
+    inv('search_deezer_cover',{title:'',artist,index:searchIdx}).then(results=>{
+      if(!results||!results.length){
+        if(currentPage===0){
+          container.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text3)">No results from Deezer</div>';
+        }
+        return;
+      }
+      if(currentPage===0)container.innerHTML='';
+      results.forEach(r=>{
+        if(loadedIds.has(r.track_id))return;
+        loadedIds.add(r.track_id);
+        container.appendChild(createCard(r));
+      });
+      let nb=footer.querySelector('.dz-next');
+      if(results.length<25){
+        if(nb)nb.style.display='none';
+      }else{
+        if(!nb){
+          nb=document.createElement('button');
+          nb.className='modal-btn dz-next';
+          nb.textContent='Next \u2192';
+          nb.onclick=()=>{currentPage++;loadPage();};
+          footer.insertBefore(nb,footer.firstChild);
+        }
+      }
+    }).catch(()=>{
+      if(currentPage===0){
+        const c=$('dzResults');
+        if(c)c.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text3)">Failed to search cover from Deezer</div>';
+      }
     });
-  }).catch(()=>{
-    const container=$('dzResults');
-    if(container)container.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text3)">Gagal mencari cover dari Deezer</div>';
-  });
+  }
+
+  loadPage();
 }
 
 function showScanProgress(){

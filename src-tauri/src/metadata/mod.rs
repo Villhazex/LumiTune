@@ -64,7 +64,7 @@ fn cover_to_b64(data: &[u8]) -> String {
     base64::engine::general_purpose::STANDARD.encode(data)
 }
 
-fn metadata_hash(title: &str, artist: &str) -> u64 {
+pub fn metadata_hash(title: &str, artist: &str) -> u64 {
     use std::hash::{Hash, Hasher};
     let mut h = std::collections::hash_map::DefaultHasher::new();
     title.hash(&mut h);

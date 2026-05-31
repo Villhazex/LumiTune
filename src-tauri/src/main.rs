@@ -380,7 +380,7 @@ fn fetch_song_cover(title: String, artist: String, paths: tauri::State<AppPaths>
 }
 
 #[tauri::command]
-fn save_yt_thumbnail(thumbnail_url: String, title: String, artist: String, paths: tauri::State<AppPaths>) -> Result<Option<(String, String)>, String> {
+fn save_yt_thumbnail(thumbnail_url: String, title: String, artist: String, paths: tauri::State<AppPaths>) -> Result<Option<(String, String, String)>, String> {
     let covers_dir = paths.covers_dir.to_string_lossy().to_string();
     let client = reqwest::blocking::Client::builder()
         .timeout(std::time::Duration::from_secs(15))
@@ -389,23 +389,27 @@ fn save_yt_thumbnail(thumbnail_url: String, title: String, artist: String, paths
     let resp = client.get(&thumbnail_url).send().map_err(|e| format!("Fetch thumbnail: {}", e))?;
     let bytes = resp.bytes().map_err(|e| format!("Read thumbnail: {}", e))?;
     let mime = if thumbnail_url.ends_with(".png") { "image/png" } else { "image/jpeg" };
-    let path = metadata::save_raw_cover_to_dir(&title, &artist, &bytes, mime, &covers_dir);
+    let _path = metadata::save_raw_cover_to_dir(&title, &artist, &bytes, mime, &covers_dir);
     let b64 = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &bytes);
-    Ok(Some((b64, mime.to_string())))
+    let ext = if mime.contains("png") { "png" } else { "jpg" };
+    let key = format!("yt_{:x}.{}", metadata::metadata_hash(&title, &artist), ext);
+    Ok(Some((b64, mime.to_string(), key)))
 }
 
 #[tauri::command]
-fn search_deezer_cover(title: String, artist: String) -> Result<Vec<metadata::DeezerMatch>, String> {
-    metadata::search_deezer(&title, &artist, 10)
+fn search_deezer_cover(title: String, artist: String, index: usize) -> Result<Vec<metadata::DeezerMatch>, String> {
+    metadata::search_deezer(&title, &artist, 25, index)
 }
 
 #[tauri::command]
-fn pick_deezer_cover(cover_url: String, title: String, artist: String, paths: tauri::State<AppPaths>) -> Result<Option<(String, String)>, String> {
+fn pick_deezer_cover(cover_url: String, title: String, artist: String, paths: tauri::State<AppPaths>) -> Result<Option<(String, String, String)>, String> {
     let covers_dir = paths.covers_dir.to_string_lossy().to_string();
     match metadata::download_deezer_cover(&cover_url, &title, &artist, &covers_dir) {
         Ok(Some((data, mime))) => {
             let b64 = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &data);
-            Ok(Some((b64, mime)))
+            let ext = if mime.contains("png") { "png" } else if mime.contains("webp") { "webp" } else { "jpg" };
+            let key = format!("yt_{:x}.{}", metadata::metadata_hash(&title, &artist), ext);
+            Ok(Some((b64, mime, key)))
         }
         Ok(None) => Ok(None),
         Err(e) => Err(e),
@@ -413,8 +417,14 @@ fn pick_deezer_cover(cover_url: String, title: String, artist: String, paths: ta
 }
 
 #[tauri::command]
-fn read_cover(cover_path: String) -> Result<Vec<u8>, String> {
-    std::fs::read(&cover_path).map_err(|e| format!("Read cover: {}", e))
+fn read_cover(key: String, paths: tauri::State<AppPaths>) -> Result<Option<(String, String)>, String> {
+    let path = paths.covers_dir.join(&key);
+    if !path.exists() { return Ok(None); }
+    let data = std::fs::read(&path).map_err(|e| format!("Read cover: {}", e))?;
+    let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("jpg");
+    let mime = match ext { "png" => "image/png", "webp" => "image/webp", _ => "image/jpeg" };
+    let b64 = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &data);
+    Ok(Some((b64, mime.to_string())))
 }
 
 #[tauri::command]

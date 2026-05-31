@@ -61,7 +61,7 @@ async function handleYouTubeImport(){
     let coverData=info.thumbnail_url||undefined;
     if(info.thumbnail_url&&isTauri()&&inv){
       try{
-        const r=await inv('save_yt_thumbnail',{thumbnail_url:info.thumbnail_url,title:songTitle,artist:songArtist});
+        const r=await inv('save_yt_thumbnail',{thumbnailUrl:info.thumbnail_url,title:songTitle,artist:songArtist});
         if(r&&r[0])coverData='data:'+r[1]+';base64,'+r[0];
       }catch(e){}
     }

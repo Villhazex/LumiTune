@@ -21,6 +21,9 @@ function saveState(){
   const songData={};
   Object.entries(songs).forEach(([id,s])=>{
     const{file,...r}=s;
+    if(typeof r.cover==='string'&&r.cover.startsWith('data:')){
+      delete r.cover;
+    }
     songData[id]=r;
   });
   try{
@@ -134,9 +137,16 @@ async function loadCoversFromDB(){
   const urlCovers=Object.values(songs).filter(s=>s.cover&&typeof s.cover==='string'&&s.cover.startsWith('http'));
   for(const song of urlCovers){
     try{
-      const r=await inv('save_yt_thumbnail',{thumbnail_url:song.cover,title:song.title,artist:song.artist});
-      if(r&&r[0]){song.cover='data:'+r[1]+';base64,'+r[0];changed++;}
+      const r=await inv('save_yt_thumbnail',{thumbnailUrl:song.cover,title:song.title,artist:song.artist});
+      if(r&&r[0]){song.cover='data:'+r[1]+';base64,'+r[0];song.coverKey=r[2];changed++;}
     }catch(e){}
+  }
+  const diskCovers=Object.values(songs).filter(s=>s.coverKey&&!s.cover);
+  for(const song of diskCovers){
+    try{
+      const r=await inv('read_cover',{key:song.coverKey});
+      if(r&&r[0]){song.cover='data:'+r[1]+';base64,'+r[0];changed++;}
+    }catch(e){console.warn('read_cover:',e);}
   }
   if(changed>0){
     saveState();

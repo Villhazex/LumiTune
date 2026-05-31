@@ -551,7 +551,7 @@ body[data-theme="shibuya"] .track-row {
   border: 1px solid transparent;
   position: relative;
 }
-body[data-theme="shibuya"] .track-row:hover { background: var(--surface2); border-color: var(--border-soft); }
+body[data-theme="shibuya"] .track-row:hover { background: var(--surface2); border-color: var(--border-soft); transform: none; }
 body[data-theme="shibuya"] .track-row.active { background: var(--red-dim); border-color: var(--red); }
 body[data-theme="shibuya"] .track-row.dragging { opacity: 0.4; }
 body[data-theme="shibuya"] .track-row.drag-over-top { border-top: 2px solid var(--red); }
