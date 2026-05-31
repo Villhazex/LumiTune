@@ -323,14 +323,14 @@ body[data-theme="mecha"] .now-playing-hero::after {
 }
 
 body[data-theme="mecha"] .album-art-hero {
-  width: 90px; height: 90px;
+  width: 180px; height: 180px;
   background: #d4c9b0;
   display: flex; align-items: center; justify-content: center;
   border: 3px solid #0a0a0a;
   position: relative;
   overflow: hidden;
   flex-shrink: 0;
-  font-size: 34px;
+  font-size: 48px;
   transition: all 0.3s;
   clip-path: polygon(0 0, 82% 0, 100% 18%, 100% 100%, 18% 100%, 0 82%);
   box-shadow: 4px 4px 0 #0a0a0a;
@@ -506,7 +506,7 @@ body[data-theme="mecha"] .collection-mark {
 body[data-theme="mecha"] .smart-mark { background: rgba(91,185,116,0.12); color: #3a8a50; }
 body[data-theme="mecha"] .bulk-bar {
   display: flex; gap: 8px; align-items: center;
-  padding: 8px 28px; flex-wrap: wrap;
+  padding: 8px 0; flex-wrap: wrap;
 }
 body[data-theme="mecha"] .bulk-btn {
   border: 2px solid #0a0a0a;

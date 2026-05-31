@@ -1,270 +1,492 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>LumiTune – Edit Metadata</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>LumiTune – Track List</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    background: #141414;
+    background: #111;
+    font-family: 'DM Sans', sans-serif;
+    color: #ccc;
+    padding: 32px;
+    min-height: 100vh;
+  }
+
+  /* ── Header bar ── */
+  .list-header {
     display: flex;
     align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    font-family: 'Segoe UI', system-ui, sans-serif;
+    justify-content: space-between;
+    margin-bottom: 10px;
   }
 
-  .modal {
-    background: #1c1c1c;
-    border: 1px solid #c0392b;
-    border-radius: 12px;
-    width: 440px;
-    padding: 30px;
-    color: #fff;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  .playlist-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
 
-  .modal-title {
-    font-size: 17px;
+  .playlist-name {
+    font-size: 13px;
     font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
     color: #fff;
-    margin-bottom: 22px;
+  }
+
+  .track-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    background: #c0392b;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 20px;
     letter-spacing: 0.5px;
   }
 
-  .field-group {
-    margin-bottom: 14px;
-  }
-
-  label {
-    display: block;
-    font-size: 10px;
-    font-weight: 600;
-    color: #777;
-    letter-spacing: 1.1px;
-    text-transform: uppercase;
-    margin-bottom: 5px;
-  }
-
-  input {
-    width: 100%;
-    background: #272727;
-    border: 1px solid #333;
-    border-radius: 7px;
-    color: #ddd;
-    font-size: 13px;
-    padding: 9px 12px;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-
-  input:focus { border-color: #c0392b; }
-  input[readonly] { color: #555; cursor: default; }
-
-  .row-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-
-  .file-info {
-    background: #222;
-    border-radius: 7px;
-    padding: 8px 12px;
-    font-size: 11px;
-    color: #555;
-    margin-top: 4px;
-    margin-bottom: 5px;
+  .header-actions {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
   }
 
-  .hint {
-    font-size: 10.5px;
-    color: #4a4a4a;
-    margin-bottom: 18px;
-    line-height: 1.5;
-  }
-
-  /* ── Cover action buttons ── */
-  .cover-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 22px;
-  }
-
-  .btn {
+  .action-btn {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: 6px;
-    border: none;
-    border-radius: 7px;
-    font-size: 12px;
+    gap: 5px;
+    font-size: 11px;
     font-weight: 600;
-    cursor: pointer;
-    padding: 10px 14px;
-    transition: all 0.15s ease;
-    letter-spacing: 0.3px;
-    white-space: nowrap;
-  }
-
-  .btn-ghost {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #2e2e2e;
     background: transparent;
-    border: 1px solid #3a3a3a;
-    color: #999;
+    color: #888;
+    cursor: pointer;
+    letter-spacing: 0.4px;
+    transition: all 0.15s;
   }
+  .action-btn:hover { border-color: #555; color: #ddd; }
+  .action-btn.danger { border-color: #3a1a1a; color: #c0392b; }
+  .action-btn.danger:hover { background: rgba(192,57,43,0.1); border-color: #c0392b; }
 
-  .btn-ghost:hover {
-    border-color: #c0392b;
-    color: #e0e0e0;
-    background: rgba(192,57,43,0.08);
-  }
-
-  .btn-destructive {
-    background: rgba(192,57,43,0.15);
-    border: 1px solid #c0392b;
-    color: #e05a4a;
-  }
-
-  .btn-destructive:hover {
-    background: rgba(192,57,43,0.25);
-    color: #ff6b5b;
-  }
-
-  /* ── Divider ── */
-  .divider {
-    border: none;
-    border-top: 1px solid #2a2a2a;
-    margin-bottom: 20px;
-  }
-
-  /* ── Primary action buttons ── */
-  .modal-actions {
+  /* ── Toolbar ── */
+  .toolbar {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    gap: 10px;
+    gap: 8px;
+    padding: 8px 0 12px;
+    border-bottom: 1px solid #1e1e1e;
+    margin-bottom: 4px;
   }
 
-  .btn-cancel {
-    padding: 10px 22px;
-    background: transparent;
-    border: 1px solid #3a3a3a;
-    color: #888;
-    border-radius: 7px;
-    font-size: 13px;
+  .toolbar-btn {
+    font-size: 11px;
     font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 5px;
+    border: 1px solid #2e2e2e;
+    background: transparent;
+    color: #777;
     cursor: pointer;
     transition: all 0.15s;
   }
+  .toolbar-btn:hover { color: #ccc; border-color: #444; }
 
-  .btn-cancel:hover {
-    border-color: #555;
-    color: #ccc;
+  .selection-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: #444;
+    margin-left: 2px;
   }
 
-  .btn-save {
-    padding: 10px 30px;
-    background: #c0392b;
-    color: #fff;
-    border: none;
-    border-radius: 7px;
-    font-size: 13px;
-    font-weight: 700;
+  .toolbar-sep {
+    flex: 1;
+  }
+
+  .toolbar-actions {
+    display: flex;
+    gap: 6px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+  .toolbar-actions.visible {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .tbar-act {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 11px;
+    border-radius: 5px;
+    border: 1px solid #2e2e2e;
+    background: transparent;
+    color: #888;
     cursor: pointer;
-    transition: background 0.15s;
-    letter-spacing: 0.4px;
+    transition: all 0.15s;
+  }
+  .tbar-act:hover { color: #ddd; border-color: #555; }
+  .tbar-act.red { color: #c0392b; border-color: #3a1a1a; }
+  .tbar-act.red:hover { background: rgba(192,57,43,0.1); border-color: #c0392b; }
+
+  /* ── Column labels ── */
+  .col-labels {
+    display: grid;
+    grid-template-columns: 32px 1fr auto 40px 24px;
+    align-items: center;
+    padding: 0 12px 6px;
+    gap: 12px;
+  }
+  .col-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #3a3a3a;
+  }
+  .col-label.right { text-align: right; }
+
+  /* ── Track row ── */
+  .track-list { display: flex; flex-direction: column; gap: 2px; }
+
+  .track-row {
+    display: grid;
+    grid-template-columns: 32px 1fr auto 40px 24px;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.12s;
+    border: 1px solid transparent;
   }
 
-  .btn-save:hover { background: #a93226; }
+  .track-row:hover {
+    background: #191919;
+    border-color: #222;
+  }
 
-  svg { flex-shrink: 0; }
+  .track-row.selected {
+    background: rgba(192,57,43,0.07);
+    border-color: rgba(192,57,43,0.2);
+  }
+
+  .track-row.playing {
+    background: rgba(192,57,43,0.05);
+  }
+
+  /* ── Custom checkbox ── */
+  .check-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+  }
+
+  .custom-check {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 1.5px solid #333;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s cubic-bezier(0.4,0,0.2,1);
+    flex-shrink: 0;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .custom-check svg {
+    width: 9px;
+    height: 9px;
+    stroke: #fff;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.15s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* hover state on row → show faint check */
+  .track-row:hover .custom-check {
+    border-color: #555;
+  }
+
+  /* checked state */
+  .track-row.selected .custom-check {
+    background: #c0392b;
+    border-color: #c0392b;
+    box-shadow: 0 0 0 3px rgba(192,57,43,0.15);
+  }
+
+  .track-row.selected .custom-check svg {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* ── Track info ── */
+  .track-info { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+
+  .track-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: #ddd;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .track-row.playing .track-title { color: #e05a4a; }
+
+  .track-artist {
+    font-size: 11px;
+    color: #555;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .playing-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #c0392b;
+    flex-shrink: 0;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  /* ── Duration ── */
+  .track-duration {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: #444;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  /* ── Fav button ── */
+  .fav-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    transition: color 0.15s;
+  }
+  .fav-btn:hover { color: #c0392b; }
+  .fav-btn.active { color: #c0392b; }
+
+  /* ── More btn ── */
+  .more-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    opacity: 0;
+    transition: all 0.15s;
+  }
+  .track-row:hover .more-btn { opacity: 1; color: #777; }
+  .more-btn:hover { color: #ddd !important; }
+
+  /* ── Number shown when not selected ── */
+  .track-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: #3a3a3a;
+    text-align: center;
+    position: absolute;
+    left: 12px;
+    width: 32px;
+    transition: opacity 0.1s;
+  }
+
+  .track-row:hover .track-num,
+  .track-row.selected .track-num { opacity: 0; }
+  .track-row:hover .custom-check,
+  .track-row.selected .custom-check { opacity: 1; }
+
+  /* default: hide checkbox, show number */
+  .check-wrap {
+    position: relative;
+  }
+  .track-num-abs {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: #3a3a3a;
+    pointer-events: none;
+    transition: opacity 0.12s;
+  }
+  .custom-check { opacity: 0; }
+  .track-row:hover .custom-check,
+  .track-row.selected .custom-check { opacity: 1; }
+  .track-row:hover .track-num-abs,
+  .track-row.selected .track-num-abs { opacity: 0; }
 </style>
 </head>
 <body>
 
-<div class="modal">
-  <div class="modal-title">Edit Metadata</div>
-
-  <div class="field-group">
-    <label>Custom Title (for display)</label>
-    <input type="text" value="[MV] プロポーズ / 9Lana cover" />
+<!-- Header -->
+<div class="list-header">
+  <div class="playlist-label">
+    <span class="playlist-name">Suisei</span>
+    <span class="track-badge">8 TRACKS</span>
   </div>
-
-  <div class="field-group">
-    <label>Original Title (for metadata)</label>
-    <input type="text" value="Propose" />
-  </div>
-
-  <div class="field-group">
-    <label>Artist</label>
-    <input type="text" value="9Lana" />
-  </div>
-
-  <div class="row-2">
-    <div class="field-group">
-      <label>Album</label>
-      <input type="text" value="J POP" />
-    </div>
-    <div class="field-group">
-      <label>Genre</label>
-      <input type="text" placeholder="—" />
-    </div>
-  </div>
-
-  <div class="row-2">
-    <div class="field-group">
-      <label>Year</label>
-      <input type="text" placeholder="—" />
-    </div>
-    <div class="field-group">
-      <label>Duration</label>
-      <input type="text" value="3:53" readonly />
-    </div>
-  </div>
-
-  <div class="field-group">
-    <label>Link</label>
-    <input type="text" placeholder="https://..." />
-  </div>
-
-  <div class="file-info">
-    <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#555" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm12-3c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2z"/>
-    </svg>
-    9Lana (cover) – Propose.mp3
-  </div>
-  <div class="hint">Custom Title is for display only. Original Title is used for lyrics &amp; cover search.</div>
-
-  <!-- Cover buttons -->
-  <div class="cover-actions">
-    <button class="btn btn-ghost">
-      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="m21 21-4.35-4.35"/>
-      </svg>
-      Search Cover from Deezer
+  <div class="header-actions">
+    <button class="action-btn">
+      <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M12 5v14M5 12l7-7 7 7"/></svg>
+      Queue All
     </button>
-    <button class="btn btn-destructive">
-      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-      </svg>
-      Delete Cover
+    <button class="action-btn">
+      <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M16 3h5v5M4 20L21 3M8 21H3v-5"/></svg>
+      Shuffle
     </button>
-  </div>
-
-  <hr class="divider" />
-
-  <!-- Primary actions -->
-  <div class="modal-actions">
-    <button class="btn-cancel">Cancel</button>
-    <button class="btn-save">Save</button>
+    <button class="action-btn danger">Cancel</button>
   </div>
 </div>
 
+<!-- Toolbar -->
+<div class="toolbar">
+  <button class="toolbar-btn" onclick="selectAll()">Select Visible</button>
+  <button class="toolbar-btn" onclick="clearAll()">Clear</button>
+  <span class="selection-count" id="selCount">0 / 8 selected</span>
+  <div class="toolbar-sep"></div>
+  <div class="toolbar-actions" id="toolbarActions">
+    <button class="tbar-act">Add to Playlist</button>
+    <button class="tbar-act">Move</button>
+    <button class="tbar-act">Favourite</button>
+    <button class="tbar-act">Queue</button>
+    <button class="tbar-act">Edit</button>
+    <button class="tbar-act red">Delete</button>
+  </div>
+</div>
+
+<!-- Column labels -->
+<div class="col-labels">
+  <div></div>
+  <div class="col-label">Title</div>
+  <div class="col-label right">Album</div>
+  <div class="col-label right">Duration</div>
+  <div></div>
+</div>
+
+<!-- Track list -->
+<div class="track-list" id="trackList">
+</div>
+
+<script>
+const tracks = [
+  { title: "Carmel Pain",                           artist: "Hoshimachi Suisei",   duration: "3:00", fav: false, playing: false },
+  { title: "KING / 星街すいせい(Cover)",              artist: "Suisei Channel",      duration: "2:14", fav: false, playing: false },
+  { title: "灰色と青/常闇トワ×星街すいせい(cover)",  artist: "Towa Ch. 常闇トワ",   duration: "5:35", fav: false, playing: false },
+  { title: "suisei (Cover)",                        artist: "Hoshimachi Suisei",   duration: "4:51", fav: false, playing: true  },
+  { title: "ビビデバ / 星街すいせい(official)",       artist: "Hoshimachi Suisei",   duration: "2:51", fav: false, playing: false },
+  { title: "GHOST / 星街すいせい(official)",         artist: "Hoshimachi Suisei",   duration: "4:41", fav: false, playing: false },
+  { title: "Stellar Stellar / 星街すいせい(official)", artist: "Hoshimachi Suisei", duration: "5:04", fav: false, playing: false },
+  { title: "NEXT COLOR PLANET",                     artist: "Hoshimachi Suisei",   duration: "4:12", fav: true,  playing: false },
+];
+
+let selected = new Set();
+
+function render() {
+  const list = document.getElementById('trackList');
+  list.innerHTML = tracks.map((t, i) => `
+    <div class="track-row${selected.has(i) ? ' selected' : ''}${t.playing ? ' playing' : ''}" onclick="toggleSelect(${i})">
+
+      <div class="check-wrap">
+        <div class="track-num-abs">${i + 1}</div>
+        <div class="custom-check">
+          <svg viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5"/></svg>
+        </div>
+      </div>
+
+      <div class="track-info">
+        <div class="track-title">
+          ${t.playing ? '<span class="playing-dot"></span>' : ''}
+          ${t.title}
+        </div>
+        <div class="track-artist">${t.artist}</div>
+      </div>
+
+      <div class="track-duration" style="color:#2a2a2a;font-size:11px;">—</div>
+
+      <div class="track-duration">${t.duration}</div>
+
+      <div style="display:flex;align-items:center;gap:2px;">
+        <button class="fav-btn${t.fav ? ' active' : ''}" onclick="toggleFav(event,${i})">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="${t.fav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </button>
+        <button class="more-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('selCount').textContent = `${selected.size} / ${tracks.length} selected`;
+  document.getElementById('toolbarActions').classList.toggle('visible', selected.size > 0);
+}
+
+function toggleSelect(i) {
+  if (selected.has(i)) selected.delete(i);
+  else selected.add(i);
+  render();
+}
+
+function toggleFav(e, i) {
+  e.stopPropagation();
+  tracks[i].fav = !tracks[i].fav;
+  render();
+}
+
+function selectAll() {
+  tracks.forEach((_, i) => selected.add(i));
+  render();
+}
+
+function clearAll() {
+  selected.clear();
+  render();
+}
+
+render();
+</script>
 </body>
 </html>

@@ -192,7 +192,7 @@ body[data-theme="retro"] .now-playing-hero {
 body[data-theme="retro"] .now-playing-hero::before { display: none; }
 
 body[data-theme="retro"] .album-art-hero {
-  width: 86px; height: 86px;
+  width: 180px; height: 180px; font-size: 48px;
   border-radius: 2px;
   border: 2px solid #7a5020;
   background:

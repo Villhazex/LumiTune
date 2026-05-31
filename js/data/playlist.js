@@ -29,8 +29,10 @@ async function handleAddTracks(e){
   const loading=showLoading(`<div class="yt-loading"><div class="yt-spinner"></div><div class="yt-step">0 of ${files.length}</div><div>Adding files&hellip;</div></div>`);
   for(const[idx,file]of files.entries()){
     const id=startId+idx;const fk=`file-${targetKey}-${id}`;
-    const[cover]=await Promise.all([extractCoverFromFile(file),dbStore(fk,file)]);
-    songs[id]={id,title:file.name.replace(/\.[^/.]+$/,''),artist:'Unknown',album:'',genre:'',year:'',duration:'--:--',addedAt:new Date().toISOString(),file,fileKey:fk,cover,fileName:file.name};
+    const[cover,,tags]=await Promise.all([extractCoverFromFile(file),dbStore(fk,file),readID3Tags(file)]);
+    const t=tags||{};
+    const dur=typeof t.duration==='number'?fmt(Math.round(t.duration)):t.duration||'--:--';
+    songs[id]={id,title:t.title||file.name.replace(/\.[^/.]+$/,''),artist:t.artist||'Unknown',album:t.album||'',genre:t.genre||'',year:String(t.year||''),duration:dur,addedAt:new Date().toISOString(),file,fileKey:fk,cover,fileName:file.name,metadataSource:t.title?'id3':''};
     pl.songs.push(String(id));
     if(idx%5===0)loading(`<div class="yt-loading"><div class="yt-spinner"></div><div class="yt-step">${idx+1} of ${files.length}</div><div>Adding files&hellip;</div></div>`);
   }
@@ -102,13 +104,14 @@ function selectedRefs(){
   return[...bulkSelected].map(parseSongRefKey).filter(r=>playlists[r.playlistKey]?.songs[r.index]);
 }
 async function runBulkAction(action){
-  const refs=selectedRefs();
-  if(!refs.length)return;
   if(action==='clear'){bulkSelected.clear();renderSongList($('searchInput').value);return;}
   if(action==='select-all'){
-    document.querySelectorAll('.bulk-check').forEach(ch=>bulkSelected.add(ch.dataset.bulk));
+    const pl=playlists[currentPlaylist];
+    if(pl)pl.songs.forEach((id,i)=>bulkSelected.add(currentPlaylist+'::'+i));
     renderSongList($('searchInput').value);return;
   }
+  const refs=selectedRefs();
+  if(!refs.length)return;
   if(action==='playlist'){
     const target=await showPlaylistPicker();if(!target)return;
     const pl=playlists[target];
@@ -137,6 +140,8 @@ async function runBulkAction(action){
     refs.sort((a,b)=>a.playlistKey.localeCompare(b.playlistKey)||b.index-a.index);
     for(const r of refs)await deleteSongRef(r.playlistKey,r.index);
     bulkSelected.clear();
+  }else if(action==='edit'){
+    showBulkMetadataEditor(refs);
   }
   libraryOrder=null;renderPlaylistGrid();renderSongList($('searchInput').value);saveState();
 }

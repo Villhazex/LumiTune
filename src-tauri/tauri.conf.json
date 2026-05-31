@@ -37,6 +37,7 @@
     "windows": [
       {
         "decorations": false,
+        "fileDropEnabled": false,
         "fullscreen": false,
         "resizable": true,
         "title": "LumiTune",

@@ -17,6 +17,7 @@ function renderVirtualRows(title,sub,songs,filter=''){
     const isActive=song.playlistKey===currentPlaylist&&song.songIndex===currentSongIndex;
     return makeRow(song,song.songIndex,isActive,favorites.has(String(song.id)),song.playlistKey,true,playlists[song.playlistKey]?.name||song.playlistKey);
   });
+  updateBulkBar(filtered);
 }
 
 let featuredKeys=null;
@@ -48,6 +49,8 @@ function renderSongList(filter=''){
     const stc=$('searchTabsContainer');
     if(stc)stc.remove();
   }
+  const bt=$('bulkToggleBtn');
+  if(bt)bt.style.display='';
   if(currentView==='home')renderHome(filter);
   else if(currentView==='library')renderLibrary(filter);
   else if(currentView==='artists')renderArtists(filter);
@@ -77,7 +80,8 @@ function makeRow(song,origIdx,isActive,isLiked,plKey,showDel,extra){
     <button class="dropdown-item" data-edit="${origIdx}" data-edit-pl="${plKey}" title="Edit metadata">Edit metadata</button>
     <button class="dropdown-item" data-download="${origIdx}" data-download-pl="${plKey}" title="Download MP3">Download MP3</button>
     ${showDel?`<div class="dropdown-divider"></div><button class="dropdown-item danger" data-del="${origIdx}" data-del-pl="${plKey}" title="Delete track">Delete</button>`:''}`;
-  return`<div class="track-row ${isActive?'active':''}" draggable="true" data-index="${origIdx}" data-playlist="${plKey}">
+  return`<div class="track-row ${isActive?'active':''}${bulkMode?' bulk-active':''}" draggable="true" data-index="${origIdx}" data-playlist="${plKey}"${bulkMode?' style="padding-left:36px"':''}>
+    ${bulkMode?`<input type="checkbox" class="bulk-check" data-bulk="${plKey}::${origIdx}" ${bulkSelected.has(plKey+'::'+origIdx)?'checked':''}>`:''}
     <div class="t-info">
       <span class="t-title">${esc(displayTitle(song))}</span>
       <span class="t-artist">${song.artist}${reliBadge}${statusBadge?' ':''}${statusBadge}</span>
@@ -96,6 +100,9 @@ function makeRow(song,origIdx,isActive,isLiked,plKey,showDel,extra){
 function renderHome(filter){
   $('trackHeader').style.display='';
   if(filter){
+    const bt=$('bulkToggleBtn');
+    if(bt)bt.style.display='none';
+    updateBulkBar();
     const all=[];
     Object.entries(playlists).forEach(([pk,pl])=>pl.songs.forEach((songId,i)=>{
       const song=getSong(songId);
@@ -122,6 +129,8 @@ function renderHome(filter){
   $('secCount').textContent=songIds.length+' tracks';
   $('breadcrumbTitle').textContent=pl.name;
   $('breadcrumbSub').textContent=pl.sub;
+  const bt=$('bulkToggleBtn');
+  if(bt)bt.style.display='';
   if(!songIds.length){$('songList').innerHTML='';$('emptyState').style.display='block';updateHeroSection();return;}
   $('emptyState').style.display='none';
   const isCustom=!DEFAULT_KEYS.includes(currentPlaylist);
@@ -131,6 +140,7 @@ function renderHome(filter){
     const isActive=i===currentSongIndex&&currentPlaylist===currentPlaylistPlaying;
     return makeRow(song,i,isActive,favorites.has(String(songId)),currentPlaylist,isCustom,song.duration);
   });
+  updateBulkBar(songIds.map((id,i)=>({...getSong(id),playlistKey:currentPlaylist,songIndex:i})).filter(Boolean));
   updateHeroSection();
 }
 
@@ -179,6 +189,7 @@ function renderSearchTracks(filter){
     const isActive=song.playlistKey===currentPlaylist&&song.songIndex===currentSongIndex;
     return makeRow(song,song.songIndex,isActive,favorites.has(String(song.id)),song.playlistKey,true,playlists[song.playlistKey]?.name||song.playlistKey);
   });
+  updateBulkBar(filtered);
 }
 function renderSearchPlaylists(filter){
   $('trackHeader').style.display='none';
@@ -248,6 +259,7 @@ function renderLibrary(filter){
       const isActive=song.playlistKey===currentPlaylist&&song.songIndex===currentSongIndex;
       return makeRow(song,song.songIndex,isActive,favorites.has(String(song.id)),song.playlistKey,true,playlists[song.playlistKey]?.name||song.playlistKey);
     });
+    updateBulkBar(filtered);
     libraryOrder=null;
     return;
   }
@@ -265,6 +277,7 @@ function renderLibrary(filter){
     const isActive=song.playlistKey===currentPlaylist&&song.songIndex===currentSongIndex;
     return makeRow(song,song.songIndex,isActive,favorites.has(String(song.id)),song.playlistKey,true,playlists[song.playlistKey]?.name||song.playlistKey);
   });
+  updateBulkBar(libraryOrder);
 }
 
 function renderArtists(filter){
@@ -395,16 +408,30 @@ function getDuplicateGroups(){
 
 function renderBulkBar(songs){
   const selected=bulkSelected.size;
+  const total=songs?songs.length:0;
   return`<div class="bulk-bar">
-    <button class="bulk-btn" data-bulk-action="select-all" title="Select all visible">Select visible</button>
+    <button class="bulk-btn" data-bulk-action="select-all" title="Select all visible">Select all</button>
     <button class="bulk-btn" data-bulk-action="clear" title="Clear selection">Clear</button>
-    <span class="bulk-count">${selected} selected</span>
+    <span class="bulk-count">${selected}${total?'/'+total:''} selected</span>
     <button class="bulk-btn" data-bulk-action="playlist" ${selected?'':'disabled'} title="Add to playlist">Add to playlist</button>
     <button class="bulk-btn" data-bulk-action="move" ${selected?'':'disabled'} title="Move to playlist">Move to playlist</button>
     <button class="bulk-btn" data-bulk-action="favorite" ${selected?'':'disabled'} title="Favorite selected">Favorite</button>
     <button class="bulk-btn" data-bulk-action="queue" ${selected?'':'disabled'} title="Add to queue">Queue</button>
+    <button class="bulk-btn" data-bulk-action="edit" ${selected?'':'disabled'} title="Edit metadata">Edit</button>
     <button class="bulk-btn danger" data-bulk-action="delete" ${selected?'':'disabled'} title="Delete selected">Delete</button>
   </div>`;
+}
+function updateBulkBar(songs){
+  const wrap=document.querySelector('.track-list-wrap');
+  const oldBar=wrap?.querySelector('.bulk-bar');
+  if(oldBar)oldBar.remove();
+  if(bulkMode&&wrap){
+    const bar=document.createElement('div');
+    bar.innerHTML=renderBulkBar(songs);
+    const header=wrap.querySelector('.track-list-header');
+    if(header)header.after(bar.firstElementChild);
+    else wrap.prepend(bar.firstElementChild);
+  }
 }
 
 function renderFavs(filter){
@@ -428,6 +455,7 @@ function renderFavs(filter){
     const isActive=song.playlistKey===currentPlaylist&&song.songIndex===currentSongIndex;
     return makeRow(song,song.songIndex,isActive,true,song.playlistKey,true,playlists[song.playlistKey]?.name||song.playlistKey);
   });
+  updateBulkBar(filtered);
 }
 
 function renderLooseSongs(filter){
@@ -444,6 +472,7 @@ function renderLooseSongs(filter){
   setVirtualSongList(filtered,(song,i)=>{
     return makeRow(song,i,false,favorites.has(String(song.id)),'__loose',false,'Not in a playlist');
   });
+  updateBulkBar(filtered);
 }
 
 function renderPlaylists(filter){
@@ -465,6 +494,7 @@ function renderPlaylists(filter){
       const isActive=i===currentSongIndex&&currentPlaylist===currentPlaylistPlaying;
       return makeRow(song,i,isActive,favorites.has(String(songId)),currentPlaylist,isCustom,song.duration);
     });
+    updateBulkBar(songIds.map((id,i)=>({...getSong(id),playlistKey:currentPlaylist,songIndex:i})).filter(Boolean));
     return;
   }
   const q=filter.trim().toLowerCase();
@@ -524,7 +554,12 @@ function renderPlaylists(filter){
         <div class="card-name">${esc(name)}</div>
         <div class="card-count">${songs.length} track${songs.length!==1?'s':''}</div>
       </div>`;
-    }).join('')}</div>`;
+    }).join('')}`;
+    html+=`<div class="playlist-card new-pl-card" id="newPlCard">
+      <div class="new-pl-icon">+</div>
+      <div class="card-name">New Playlist</div>
+      <div class="card-count">Empty</div>
+    </div></div>`;
   }
   
   $('songList').innerHTML=html;
@@ -574,6 +609,9 @@ function updateHeroProgress(){
 
 function switchPlaylist(key){
   currentPlaylist=key;sortColumn='';sortAsc=true;
+  bulkMode=false;bulkSelected.clear();
+  const bt=$('bulkToggleBtn');
+  if(bt)bt.textContent='☐ Select';
   recordPlay(key);
   renderPlaylistNav();renderPlaylistGrid();
   renderSongList($('searchInput').value);saveState();

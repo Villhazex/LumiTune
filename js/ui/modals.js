@@ -154,31 +154,31 @@ function showMetadataEditor(playlistKey,index){
   o.innerHTML=`<div class="modal-box metadata-box">
     <div class="modal-msg">Edit Metadata</div>
     <label class="modal-field-label" for="metaCustomTitle">Custom Title (for display)</label>
-    <input type="text" class="modal-input" id="metaCustomTitle" value="${esc(song.title)}">
+    <div class="input-wrap"><input type="text" class="modal-input" id="metaCustomTitle" value="${esc(song.title)}"><button class="copy-btn" data-copy="metaCustomTitle" data-tip="Copied!" title="Copy"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>
     <label class="modal-field-label" for="metaOriginalTitle">Original Title (for metadata)</label>
-    <input type="text" class="modal-input" id="metaOriginalTitle" value="${esc(song.title)}">
+    <div class="input-wrap"><input type="text" class="modal-input" id="metaOriginalTitle" value="${esc(song.title)}"><button class="copy-btn" data-copy="metaOriginalTitle" data-tip="Copied!" title="Copy"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>
     <label class="modal-field-label" for="metaArtist">Artist</label>
-    <input type="text" class="modal-input" id="metaArtist" value="${esc(song.artist)}">
+    <div class="input-wrap"><input type="text" class="modal-input" id="metaArtist" value="${esc(song.artist)}"><button class="copy-btn" data-copy="metaArtist" data-tip="Copied!" title="Copy"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>
     <div class="metadata-grid">
       <div>
         <label class="modal-field-label" for="metaAlbum">Album</label>
-        <input type="text" class="modal-input" id="metaAlbum" value="${esc(song.album||'')}">
+        <div class="input-wrap"><input type="text" class="modal-input" id="metaAlbum" value="${esc(song.album||'')}"><button class="copy-btn" data-copy="metaAlbum" data-tip="Copied!" title="Copy"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>
       </div>
       <div>
         <label class="modal-field-label" for="metaGenre">Genre</label>
-        <input type="text" class="modal-input" id="metaGenre" value="${esc(song.genre||'')}">
+        <div class="input-wrap"><input type="text" class="modal-input" id="metaGenre" value="${esc(song.genre||'')}"><button class="copy-btn" data-copy="metaGenre" data-tip="Copied!" title="Copy"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>
       </div>
       <div>
         <label class="modal-field-label" for="metaYear">Year</label>
-        <input type="text" class="modal-input" id="metaYear" value="${esc(song.year||'')}">
+        <div class="input-wrap"><input type="text" class="modal-input" id="metaYear" value="${esc(song.year||'')}"><button class="copy-btn" data-copy="metaYear" data-tip="Copied!" title="Copy"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>
       </div>
       <div>
         <label class="modal-field-label" for="metaDuration">Duration</label>
-        <input type="text" class="modal-input" id="metaDuration" value="${esc(song.duration||'--:--')}">
+        <div class="input-wrap"><input type="text" class="modal-input" id="metaDuration" value="${esc(song.duration||'--:--')}"><button class="copy-btn" data-copy="metaDuration" data-tip="Copied!" title="Copy"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>
       </div>
       <div style="grid-column:1/-1">
         <label class="modal-field-label" for="metaSourceUrl">Link</label>
-        <input type="text" class="modal-input" id="metaSourceUrl" value="${esc(song.sourceUrl||'')}">
+        <div class="input-wrap"><input type="text" class="modal-input" id="metaSourceUrl" value="${esc(song.sourceUrl||'')}"><button class="copy-btn" data-copy="metaSourceUrl" data-tip="Copied!" title="Copy"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>
       </div>
     </div>
     <div style="font-size:12px;color:var(--text3);margin:8px 0;padding:6px 8px;background:var(--surface2);border-radius:4px">
@@ -187,7 +187,7 @@ function showMetadataEditor(playlistKey,index){
     <div class="modal-hint">Custom Title is for display only. Original Title is used for lyrics &amp; cover search.</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px">
       <button class="modal-btn" id="metaDeezerCover">Search Cover from Deezer</button>
-      <button class="modal-btn" id="metaDeleteCover" style="background:var(--red2, #b33);color:var(--text);${song.cover||song.coverKey?'':'display:none'}">Delete Cover</button>
+      <button class="modal-btn" id="metaDeleteCover" style="${song.cover||song.coverKey?'':'display:none'}">Delete Cover</button>
     </div>
     <hr style="border:none;border-top:1px solid var(--border,#2a2a2a);margin-bottom:20px">
     <div class="modal-actions">
@@ -283,6 +283,92 @@ function showMetadataEditor(playlistKey,index){
       }
     }
     showToast('Cover deleted');
+  };
+  o.onclick=e=>{if(e.target===o){document.removeEventListener('keydown',kh);close();}};
+}
+function showBulkMetadataEditor(refs){
+  if(!refs||!refs.length)return;
+  const o=$('confirmOverlay');
+  const n=refs.length;
+  o.innerHTML=`<div class="modal-box metadata-box">
+    <div class="modal-msg">Edit Metadata — ${n} song${n!==1?'s':''}</div>
+    <div style="font-size:11px;color:var(--text3);margin:-10px 0 16px">Leave fields blank to keep original values</div>
+    <label class="modal-field-label" for="bmetaTitle">Title</label>
+    <div class="input-wrap"><input type="text" class="modal-input" id="bmetaTitle" placeholder="— unchanged —"><button class="copy-btn" data-copy="bmetaTitle" data-tip="Copied!" title="Copy"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>
+    <label class="modal-field-label" for="bmetaArtist">Artist</label>
+    <div class="input-wrap"><input type="text" class="modal-input" id="bmetaArtist" placeholder="— unchanged —"><button class="copy-btn" data-copy="bmetaArtist" data-tip="Copied!" title="Copy"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>
+    <div class="metadata-grid">
+      <div>
+        <label class="modal-field-label" for="bmetaAlbum">Album</label>
+        <div class="input-wrap"><input type="text" class="modal-input" id="bmetaAlbum" placeholder="— unchanged —"><button class="copy-btn" data-copy="bmetaAlbum" data-tip="Copied!" title="Copy"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>
+      </div>
+      <div>
+        <label class="modal-field-label" for="bmetaGenre">Genre</label>
+        <div class="input-wrap"><input type="text" class="modal-input" id="bmetaGenre" placeholder="— unchanged —"><button class="copy-btn" data-copy="bmetaGenre" data-tip="Copied!" title="Copy"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>
+      </div>
+      <div>
+        <label class="modal-field-label" for="bmetaYear">Year</label>
+        <div class="input-wrap"><input type="text" class="modal-input" id="bmetaYear" placeholder="— unchanged —"><button class="copy-btn" data-copy="bmetaYear" data-tip="Copied!" title="Copy"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>
+      </div>
+      <div>
+        <label class="modal-field-label" for="bmetaCoverDelete">Cover</label>
+        <div class="meta-field-wrap"><button class="modal-btn" id="bmetaCoverDelete" style="width:100%">Delete Cover</button></div>
+      </div>
+    </div>
+    <hr style="border:none;border-top:1px solid var(--border,#2a2a2a);margin-bottom:20px">
+    <div class="modal-actions">
+      <button class="modal-btn" id="mc" title="Cancel">Cancel</button>
+      <button class="modal-btn modal-ok" id="mo" title="Apply">Apply</button>
+    </div>
+  </div>`;
+  o.style.display='flex';
+  const close=()=>{o.style.display='none';};
+  const save=()=>{
+    const title=$('bmetaTitle').value.trim();
+    const artist=$('bmetaArtist').value.trim();
+    const album=$('bmetaAlbum').value.trim();
+    const genre=$('bmetaGenre').value.trim();
+    const year=$('bmetaYear').value.trim();
+    let changed=false;
+    for(const r of refs){
+      const song=getSong(playlists[r.playlistKey].songs[r.index]);
+      if(!song)continue;
+      if(title){song.title=title;changed=true;}
+      if(artist){song.artist=artist;changed=true;}
+      if(album)song.album=album;
+      if(genre)song.genre=genre;
+      if(year)song.year=year;
+      if(bulkDelCover){
+        delete song.cover;
+        delete song.coverKey;
+      }
+    }
+    if(changed&&title)deleteCachedLyrics(refs.map(r=>getSong(playlists[r.playlistKey].songs[r.index])).filter(Boolean));
+    close();
+    if(bulkDelCover&&refs.some(r=>r.playlistKey===currentPlaylistPlaying&&r.index===currentSongIndex)){
+      updateHeroSection();
+      const aa=$('albumArt');
+      if(aa){
+        aa.style.backgroundImage='';
+        aa.classList.remove('has-cover');
+        const emoji=aa.querySelector('.art-emoji');
+        if(emoji)emoji.style.display='';
+      }
+    }
+    bulkSelected.clear();
+    libraryOrder=null;renderSongList($('searchInput').value);saveState();
+    showToast('Updated '+refs.length+' song'+(refs.length!==1?'s':''));
+  };
+  let bulkDelCover=false;
+  const kh=e=>{if(e.key==='Escape'){document.removeEventListener('keydown',kh);close();}if(e.key==='Enter'){e.preventDefault();document.removeEventListener('keydown',kh);save();}};
+  document.addEventListener('keydown',kh);
+  $('bmetaTitle').focus();
+  $('mc').onclick=()=>{document.removeEventListener('keydown',kh);close();};
+  $('mo').onclick=()=>{document.removeEventListener('keydown',kh);save();};
+  $('bmetaCoverDelete').onclick=()=>{
+    bulkDelCover=!bulkDelCover;
+    $('bmetaCoverDelete').classList.toggle('modal-ok');
+    $('bmetaCoverDelete').textContent=bulkDelCover?'✓ Delete Cover':'Delete Cover';
   };
   o.onclick=e=>{if(e.target===o){document.removeEventListener('keydown',kh);close();}};
 }

@@ -40,6 +40,7 @@ let libraryOrder=null;
 let selectedArtist='';
 let selectedAlbum='';
 let selectedSmart='';
+let bulkMode=false;
 let bulkSelected=new Set();
 let totalPlayTime=0;
 let sessionPlayTime=0;

@@ -311,7 +311,7 @@ body[data-theme="synthwave"] .now-playing-hero::after {
 }
 
 body[data-theme="synthwave"] .album-art-hero {
-  width: 88px; height: 88px;
+  width: 180px; height: 180px;
   background: var(--surface3);
   border-radius: 6px;
   display: flex; align-items: center; justify-content: center;
@@ -319,7 +319,7 @@ body[data-theme="synthwave"] .album-art-hero {
   position: relative;
   overflow: hidden;
   flex-shrink: 0;
-  font-size: 34px;
+  font-size: 48px;
   box-shadow: 0 0 20px rgba(255,45,155,0.2), inset 0 0 20px rgba(180,77,255,0.08);
   transition: border-color 0.3s;
 }
@@ -516,7 +516,7 @@ body[data-theme="synthwave"] .smart-mark { background: rgba(0,255,231,0.1); colo
 
 body[data-theme="synthwave"] .bulk-bar {
   display: flex; gap: 8px; align-items: center;
-  padding: 8px 26px; flex-wrap: wrap;
+  padding: 8px 0; flex-wrap: wrap;
 }
 body[data-theme="synthwave"] .bulk-btn {
   border: 1px solid var(--border);

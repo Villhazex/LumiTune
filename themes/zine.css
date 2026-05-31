@@ -234,11 +234,11 @@ body[data-theme="zine"] .now-playing-hero::after {
 }
 
 body[data-theme="zine"] .album-art-hero {
-  width: 82px; height: 82px;
+  width: 180px; height: 180px;
   background: var(--surface3);
   border: 2px solid var(--border-soft);
   clip-path: polygon(0 0, 100% 0, 100% 88%, 88% 100%, 0 100%);
-  font-size: 32px;
+  font-size: 48px;
   position: relative;
 }
 body[data-theme="zine"] .album-art-hero.playing { border-color: var(--accent); }

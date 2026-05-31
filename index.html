@@ -91,11 +91,6 @@
 
     <div class="sidebar-divider"></div>
 
-    <button class="sidebar-action" id="newPlaylistBtn" title="New Playlist">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg>
-      <span class="sa-icon">+</span>
-      <span class="sa-text">New Playlist</span>
-    </button>
     <button class="sidebar-action" id="addTracksBtn" title="Add Tracks">
       <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2l6 8H2z"/></svg>
       <span class="sa-icon">↑</span>
@@ -153,7 +148,7 @@
               <button class="dropdown-item" id="heroAddpl" data-hero-action="addpl" title="Add to playlist">Add to playlist</button>
               <button class="dropdown-item" id="heroMovepl" data-hero-action="movepl" title="Move to playlist">Move to playlist</button>
               <button class="dropdown-item" id="heroEdit" data-hero-action="edit" title="Edit metadata">Edit metadata</button>
-              <button class="dropdown-item" data-hero-action="download" title="Download MP3">Download MP3</button>
+              <button class="dropdown-item" data-hero-action="delcover" title="Delete Cover">Delete Cover</button>
               <div class="dropdown-divider"></div>
               <button class="dropdown-item danger" id="heroDel" data-hero-action="del" title="Delete track">Delete</button>
             </div>
@@ -190,6 +185,7 @@
       <div style="display:flex;gap:8px">
         <button class="section-action" id="queueAllBtn" title="Queue all tracks">↓ Queue All</button>
         <button class="section-action" id="randomizeBtn" title="Shuffle track order">⇌ SHUFFLE ORDER</button>
+        <button class="section-action" id="bulkToggleBtn" title="Toggle multi-select" style="display:none">☐ Select</button>
       </div>
     </div>
 

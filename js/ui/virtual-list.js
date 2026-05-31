@@ -22,6 +22,10 @@ function setVirtualSongList(items,renderFn){
     const end=Math.min(items.length,Math.ceil((scrollTop+viewH)/itemHeight)+buffer);
     if(start===lastStart&&end===lastEnd)return;
 
+    if(el.dragInProgress){
+      lastStart=start;lastEnd=end;
+      return;
+    }
     lastStart=start;lastEnd=end;
     el.innerHTML='';
     el.style.height=items.length*itemHeight+'px';
