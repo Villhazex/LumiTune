@@ -315,18 +315,42 @@ function showSettingsModal(){
           btn.innerHTML='<svg viewBox="0 0 16 16" fill="currentColor" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px"><path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h4.88a1.5 1.5 0 0 1 1.06.44l.88.88A1.5 1.5 0 0 0 10.38 3H13.5A1.5 1.5 0 0 1 15 4.5V12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V2.5Z"/></svg> Scanning...';
           status.textContent='Scanning folder...';
           try{
-            const files=await inv('scan_library',{path:folder});
+            const allFiles=await inv('scan_library',{path:folder});
             const folderName=folder.split('\\').pop().split('/').pop()||'Music';
-            status.textContent=`Showing ${files.length} songs from "${esc(folderName)}"`;
-            const plKey=createPlaylistFromScan(files,null,folderName);
-            showToast(`✅ Added ${files.length} songs to "${esc(folderName)}"`);
-            if(enrichmentEnabled&&files.length>0){
+            status.textContent=`Showing ${allFiles.length} songs from "${esc(folderName)}"`;
+            const basePath=folder.replace(/[\\\/]+$/,'');
+            const groups={};
+            const rootFiles=[];
+            for(const f of allFiles){
+              const dir=f.path.substring(0,f.path.lastIndexOf('\\'));
+              if(dir===basePath){
+                rootFiles.push(f);
+              }else{
+                if(!groups[dir])groups[dir]={name:dir.split('\\').pop(),files:[]};
+                groups[dir].files.push(f);
+              }
+            }
+            const allPlKeys=[];
+            if(rootFiles.length>0)allPlKeys.push(createPlaylistFromScan(rootFiles,null,folderName,true));
+            const subDirs=Object.keys(groups).sort();
+            for(const dir of subDirs){
+              const g=groups[dir];
+              if(g.files.length>0)allPlKeys.push(createPlaylistFromScan(g.files,null,g.name,true));
+            }
+            saveState();
+            renderPlaylistNav();
+            renderPlaylistGrid();
+            if(allPlKeys.length>0)switchPlaylist(allPlKeys[0]);
+            const subCount=subDirs.length;
+            const plCount=allPlKeys.length;
+            showToast(`✅ Added ${allFiles.length} songs across ${plCount} playlist${plCount>1?'s':''}`);
+            if(enrichmentEnabled&&allFiles.length>0){
               status.textContent='Starting background enrichment...';
               await startBackgroundEnrichment(({done,total,status:s})=>{
                 fill.style.width=(total>0?(done/total*100).toFixed(0):'0')+'%';
                 txt.textContent=`${done} / ${total}`;
                 if(s)status.textContent=s;
-              },ACOUSTID_API_KEY,3,files,plKey);
+              },ACOUSTID_API_KEY,3,allFiles,allPlKeys[0]);
             }
             btn.innerHTML='<svg viewBox="0 0 16 16" fill="currentColor" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px"><path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h4.88a1.5 1.5 0 0 1 1.06.44l.88.88A1.5 1.5 0 0 0 10.38 3H13.5A1.5 1.5 0 0 1 15 4.5V12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V2.5Z"/></svg> Scan Folder';
             btn.disabled=false;
@@ -582,8 +606,8 @@ function applyCanonicalUpdate(song,result){
   if(result.cover_data_base64)song.cover='data:'+result.cover_mime+';base64,'+result.cover_data_base64;
 }
 
-function createPlaylistFromScan(files,results,playlistName){
-  const plKey='scanned-'+Date.now();
+function createPlaylistFromScan(files,results,playlistName,skipSaveRender){
+  const plKey='scanned-'+Date.now()+'-'+Math.random().toString(36).slice(2,6);
   const ids=files.map(f=>{
     const existing=Object.values(songs).find(s=>s.filePath===f.path);
     if(existing){
@@ -627,18 +651,20 @@ function createPlaylistFromScan(files,results,playlistName){
     return sid;
   });
   playlists[plKey]={name:playlistName,emoji:'📂',color:'#'+Math.floor(Math.random()*0xffffff).toString(16).padStart(6,'0'),sub:ids.length+' tracks',songs:ids};
-  saveState();
-  renderPlaylistNav();
-  renderPlaylistGrid();
-  switchPlaylist(plKey);
-  if(results){
-    const ok=results.filter(r=>r.success).length;
-    const failed=results.filter(r=>!r.success);
-    let msg=`${ok}/${results.length} → "${playlistName}"`;
-    if(failed.length>0)msg+=` | ${failed.length} failed: ${esc(failed[0].error||'?')}`;
-    showToast(`✅ ${msg}`);
-  }else{
-    showToast(`✅ Added ${ids.length} songs to "${esc(playlistName)}"`);
+  if(!skipSaveRender){
+    saveState();
+    renderPlaylistNav();
+    renderPlaylistGrid();
+    switchPlaylist(plKey);
+    if(results){
+      const ok=results.filter(r=>r.success).length;
+      const failed=results.filter(r=>!r.success);
+      let msg=`${ok}/${results.length} → "${playlistName}"`;
+      if(failed.length>0)msg+=` | ${failed.length} failed: ${esc(failed[0].error||'?')}`;
+      showToast(`✅ ${msg}`);
+    }else{
+      showToast(`✅ Added ${ids.length} songs to "${esc(playlistName)}"`);
+    }
   }
   return plKey;
 }
@@ -735,21 +761,45 @@ async function doScanFolder(){
   const prog=showScanProgress();
   try{
     prog.update({done:0,total:1,status:'Scanning folder...',label:'Scanning '+esc(folderName)});
-    const files=await inv('scan_library',{path:folder});
-    prog.update({done:1,total:1,status:`Found ${files.length} songs`,label:'Creating playlist...'});
+    const allFiles=await inv('scan_library',{path:folder});
+    prog.update({done:1,total:1,status:`Found ${allFiles.length} songs`,label:'Creating playlists...'});
     await sleep(100);
     if(prog.cancelled()){prog.close();return;}
-    const plKey=createPlaylistFromScan(files,null,folderName);
+    const basePath=folder.replace(/[\\\/]+$/,'');
+    const groups={};
+    const rootFiles=[];
+    for(const f of allFiles){
+      const dir=f.path.substring(0,f.path.lastIndexOf('\\'));
+      if(dir===basePath){
+        rootFiles.push(f);
+      }else{
+        if(!groups[dir])groups[dir]={name:dir.split('\\').pop(),files:[]};
+        groups[dir].files.push(f);
+      }
+    }
+    const allPlKeys=[];
+    if(rootFiles.length>0)allPlKeys.push(createPlaylistFromScan(rootFiles,null,folderName,true));
+    const subDirs=Object.keys(groups).sort();
+    for(const dir of subDirs){
+      const g=groups[dir];
+      if(g.files.length>0)allPlKeys.push(createPlaylistFromScan(g.files,null,g.name,true));
+    }
+    const subCount=subDirs.length;
     saveState();
-    if(files.length>0){
-      prog.update({done:0,total:files.length,status:'Starting identification...',label:'Identifying '+esc(folderName)});
+    renderPlaylistNav();
+    renderPlaylistGrid();
+    if(allPlKeys.length>0)switchPlaylist(allPlKeys[0]);
+    if(allFiles.length>0){
+      const label=subCount>0?folderName+' + '+subCount+' subfolder'+(subCount>1?'s':''):folderName;
+      prog.update({done:0,total:allFiles.length,status:'Starting identification...',label:'Identifying '+esc(label)});
       await startBackgroundEnrichment(({done,total,status:s})=>{
-        prog.update({done,total,status:s||'',label:'Identifying '+esc(folderName)});
-      },ACOUSTID_API_KEY,3,files,plKey);
+        prog.update({done,total,status:s||'',label:'Identifying '+esc(label)});
+      },ACOUSTID_API_KEY,3,allFiles,allPlKeys[0]);
     }
     if(!prog.cancelled()){
       prog.close();
-      showToast(`✅ Added ${files.length} songs to "${esc(folderName)}"`);
+      const plCount=allPlKeys.length;
+      showToast(`✅ Added ${allFiles.length} songs across ${plCount} playlist${plCount>1?'s':''}`);
     }
   }catch(e){
     prog.close();

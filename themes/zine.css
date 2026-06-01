@@ -497,10 +497,10 @@ body[data-theme="zine"] .t-title {
 }
 body[data-theme="zine"] .track-row.active .t-title { color: var(--accent); }
 body[data-theme="zine"] .t-artist { font-size: 10px; color: var(--text-dim); margin-top: 1px; }
-body[data-theme="zine"] .t-extra {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 600; text-transform: uppercase;
+body[data-theme="zine"] .t-dur {
+  font-family: 'Space Mono', monospace;
   font-size: 11px; color: var(--text-muted);
+  text-align: right;
 }
 body[data-theme="zine"] .t-actions { gap: 4px; }
 body[data-theme="zine"] .t-actions button {

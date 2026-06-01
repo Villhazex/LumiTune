@@ -482,8 +482,6 @@ body[data-theme="blackwhite"] .card-count { font-size: 9px; color: #555; margin-
 /* ── TRACK LIST ── */
 body[data-theme="blackwhite"] .track-list-wrap { padding: 0; }
 body[data-theme="blackwhite"] .track-list-header {
-  display: grid;
-  grid-template-columns: 1fr 80px auto;
   gap: 10px;
   padding: 8px 24px;
   border-bottom: 1px solid #2a2a2a;
@@ -493,8 +491,7 @@ body[data-theme="blackwhite"] .track-list-header {
 }
 
 body[data-theme="blackwhite"] .track-row {
-  display: grid;
-  grid-template-columns: 1fr 80px auto;
+  grid-template-columns: 1fr auto;
   gap: 10px;
   align-items: center;
   padding: 11px 24px;
@@ -508,7 +505,7 @@ body[data-theme="blackwhite"] .track-row.active { background: #f2ede6; }
 body[data-theme="blackwhite"] .track-row.active .t-num,
 body[data-theme="blackwhite"] .track-row.active .t-title,
 body[data-theme="blackwhite"] .track-row.active .t-artist,
-body[data-theme="blackwhite"] .track-row.active .t-extra,
+body[data-theme="blackwhite"] .track-row.active .t-dur,
 body[data-theme="blackwhite"] .track-row.active .track-dur { color: #0a0a0a !important; }
 body[data-theme="blackwhite"] .track-row.active .t-actions button { color: #555; }
 body[data-theme="blackwhite"] .track-row.active .t-actions button:hover { color: #0a0a0a; background: rgba(0,0,0,0.08); }
@@ -532,9 +529,9 @@ body[data-theme="blackwhite"] .t-title {
   letter-spacing: 0.02em;
 }
 body[data-theme="blackwhite"] .t-artist { font-size: 10px; color: #555; margin-top: 2px; }
-body[data-theme="blackwhite"] .t-extra {
+body[data-theme="blackwhite"] .t-dur {
   font-size: 11px; color: #555;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; text-align: right;
 }
 body[data-theme="blackwhite"] .track-album { display: none; }
 body[data-theme="blackwhite"] .track-dur { font-size: 10px; color: #555; text-align: right; }

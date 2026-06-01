@@ -362,6 +362,14 @@ fn retry_failed(db: tauri::State<db::Database>) -> Result<usize, String> {
 }
 
 #[tauri::command]
+fn identify_single_file(db: tauri::State<db::Database>, path: String, acoustid_key: String, paths: tauri::State<AppPaths>) -> Result<metadata::IdentificationResult, String> {
+    let file_id = db.mark_file_pending_by_path(&path)?;
+    let file = db.get_file_entry(file_id)?;
+    let covers_dir = paths.covers_dir.to_string_lossy().to_string();
+    metadata::identify_file(&db, file.id, &file.path, &acoustid_key, &file.audio_hash, &covers_dir)
+}
+
+#[tauri::command]
 fn read_file_bytes(path: String) -> Result<Vec<u8>, String> {
     std::fs::read(&path).map_err(|e| format!("Read file: {}", e))
 }
@@ -526,7 +534,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             yt_info, yt_download, yt_download_mp3, yt_download_file,
             tb_minimize, tb_maximize, tb_close, tb_is_maximized,
-            scan_library, identify_next, get_scan_stats, get_pending_ids, pick_folder, read_file_bytes, read_cover, fetch_song_cover, save_yt_thumbnail, extract_file_cover, batch_get_covers, retry_failed,
+            scan_library, identify_next, identify_single_file, get_scan_stats, get_pending_ids, pick_folder, read_file_bytes, read_cover, fetch_song_cover, save_yt_thumbnail, extract_file_cover, batch_get_covers, retry_failed,
             search_deezer_cover, pick_deezer_cover,
             start_queue, stop_queue, pause_queue, resume_queue, get_queue_status, drain_processed,
         ])

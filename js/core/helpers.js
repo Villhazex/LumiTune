@@ -145,3 +145,44 @@ function debounce(fn,ms){
   debounced.cancel=()=>clearTimeout(timer);
   return debounced;
 }
+
+async function rescanTrack(song){
+  if(!isTauri()||!inv){showToast('Rescan only available in desktop app');return;}
+  if(!song.filePath){showToast('No local file path for this track');return;}
+  showToast('Rescanning track...');
+  try{
+    const result=await inv('identify_single_file',{path:song.filePath,acoustidKey:ACOUSTID_API_KEY});
+    if(result&&result.success){
+      const oldTitle=displayTitle(song),oldArtist=song.artist;
+      song.title=result.title||song.title;
+      song.artist=result.artist||song.artist;
+      song.album=result.album||song.album;
+      song.year=result.year||song.year;
+      song.genre=result.genre||song.genre;
+      if(result.duration!=null&&result.duration>0)song.duration=fmt(result.duration);
+      if(result.cover_data_base64&&!song.cover)song.cover='data:'+result.cover_mime+';base64,'+result.cover_data_base64;
+      song.metadataSource=result.method;
+      song.reliability=result.reliability||'low';
+      song.suspectedSwapped=!!result.suspected_swapped;
+      if(result.title_similarity!=null)song.titleSimilarity=result.title_similarity;
+      if(result.artist_similarity!=null)song.artistSimilarity=result.artist_similarity;
+      if(result.final_score)song.finalScore=result.final_score;
+      saveState();
+      renderSongList($('searchInput').value);
+      renderPlaylistGrid();
+      const loc=findSongLocation(song);
+      if(loc&&loc.playlistKey===currentPlaylist&&loc.index===currentSongIndex){
+        $('trackTitle').textContent=displayTitle(song);
+        $('trackArtist').textContent=song.artist;
+        updateHeroSection();
+        fetchLyricsForSong(song);
+      }
+      const changed=displayTitle(song)!==oldTitle||song.artist!==oldArtist;
+      showToast((changed?'✅ ':'ℹ️ ')+(changed?'Updated: ':'No change to title/artist. ')+displayTitle(song)+' — '+song.artist);
+    }else{
+      showToast('❌ Rescan failed: '+(result?.error||'Unknown error'));
+    }
+  }catch(e){
+    showToast('❌ Rescan error: '+e);
+  }
+}

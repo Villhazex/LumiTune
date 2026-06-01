@@ -293,8 +293,8 @@ function showLyricsNotFound(song){
 </div>
 <div class="lyrics-actions">
   <button class="lyrics-add-btn primary" id="lyricEditMeta" title="Edit metadata">Edit Metadata</button>
+  <button class="lyrics-add-btn" id="lyricRescanTrack" title="Re-identify this track via audio fingerprinting">Rescan Song</button>
   <a class="lyrics-add-btn" href="https://lrclib.net/" target="_blank" rel="noopener">Open LRCLIB Search</a>
-  <a class="lyrics-add-btn" href="${apiUrl}" target="_blank" rel="noopener">Check Exact Match</a>
   <button class="lyrics-add-btn" id="lyricAddPlain" title="Add plain lyrics">Add Plain Lyrics</button>
   <button class="lyrics-add-btn" id="lyricAddTimestamp" title="Add timed lyrics">Add Timestamp Lyrics</button>
 </div>`;
@@ -305,6 +305,7 @@ function showLyricsNotFound(song){
     });
     $('lyricAddPlain')?.addEventListener('click',()=>showAddPlainLyricsModal(song));
     $('lyricAddTimestamp')?.addEventListener('click',()=>showAddTimestampLyricsModal(song));
+    $('lyricRescanTrack')?.addEventListener('click',()=>rescanTrack(song));
   },0);
 }
 function showAddPlainLyricsModal(song,existing){

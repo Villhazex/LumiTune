@@ -662,8 +662,8 @@ body {
 
 .track-list-wrap { padding: 0 28px 12px; }
 .track-list-header {
-  display: grid;
-  grid-template-columns: 1fr 80px auto;
+  display: flex;
+  align-items: center;
   gap: 10px;
   font-size: 11px; color: var(--text-dim);
   letter-spacing: 0.12em; text-transform: uppercase;
@@ -671,10 +671,11 @@ body {
   border-bottom: 1px solid var(--border-soft);
   margin-bottom: 6px;
 }
+#sortDuration { margin-left: auto; }
 
 .track-row {
   display: grid;
-  grid-template-columns: 1fr 80px auto;
+  grid-template-columns: 1fr auto;
   gap: 10px;
   align-items: center;
   padding: 10px 12px;
@@ -742,14 +743,15 @@ body {
 .t-row { display: contents; }
 .t-num { font-size: 12px; color: var(--text-dim); text-align: center; }
 .t-num.playing { color: var(--accent); }
-.t-info { min-width: 0; }
+.t-info { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.t-info-inner { flex: 1; min-width: 0; max-width: 75%; }
 .t-title { font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .t-artist { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
 .reliability-badge { cursor: help; font-size: 10px; margin-left: 2px; vertical-align: middle; }
 .reli-dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; vertical-align: middle; }
 .reli-med { background: var(--accent); }
 .reli-low { background: var(--text-dim); }
-.t-extra { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.t-dur { font-size: 12px; color: var(--text-muted); white-space: nowrap; text-align: right; flex-shrink: 0; width: 65px; }
 .t-actions { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
 .t-actions button {
   background: none; border: none; color: var(--text-dim);
@@ -760,6 +762,7 @@ body {
 .t-actions button:hover { color: var(--accent); background: var(--accent-dim); }
 .t-actions .like-btn { font-size: 18px; padding: 6px 7px; }
 .t-actions .like-btn.liked { color: #E24B4A; }
+.t-actions .edit-btn { font-size: 11px; padding: 6px 8px; font-weight: 500; }
 .track-more-wrap { position: relative; }
 .track-more-btn { font-size: 18px !important; padding: 6px 10px !important; letter-spacing: 0; }
 .track-more-dropdown {
@@ -2371,8 +2374,8 @@ body {
   .bottom-left { justify-content: center; }
   .bottom-right { display: none; }
   .metadata-grid { grid-template-columns: 1fr; }
-  .track-list-header, .track-row { grid-template-columns: 1fr auto; }
-  .track-list-header span:nth-child(3), .track-row .track-album { display: none; }
+  .t-dur { display: none; }
+  #sortDuration { display: none; }
 }
 
 /* Scanner / progress */

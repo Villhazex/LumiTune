@@ -776,7 +776,7 @@ init();
 setTimeout(()=>{
   const s=$('splash');
   if(s){s.style.opacity='0';setTimeout(()=>s.remove(),400);}
-},3000);
+},5000);
 addEventListener('beforeunload',()=>{localStorage.setItem('lumi-pt',String(totalPlayTime));});
 $('infinityBtn')?.addEventListener('click',()=>{
   const modes=['off','song','playlist'];

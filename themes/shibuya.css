@@ -515,8 +515,6 @@ body[data-theme="shibuya"] .bulk-check { width: 11px; height: 11px; margin-right
 
 body[data-theme="shibuya"] .track-list-wrap { padding: 0 20px 12px; }
 body[data-theme="shibuya"] .track-list-header {
-  display: grid;
-  grid-template-columns: 1fr 80px auto;
   gap: 10px;
   font-size: 10px; color: var(--text-dim);
   letter-spacing: 0.14em; text-transform: uppercase;
@@ -527,8 +525,7 @@ body[data-theme="shibuya"] .track-list-header {
 }
 
 body[data-theme="shibuya"] .track-row {
-  display: grid;
-  grid-template-columns: 1fr 80px auto;
+  grid-template-columns: 1fr auto;
   gap: 10px;
   align-items: center;
   padding: 9px 10px;
@@ -577,7 +574,7 @@ body[data-theme="shibuya"] .t-num.playing { color: var(--red2); }
 body[data-theme="shibuya"] .t-info { min-width: 0; }
 body[data-theme="shibuya"] .t-title { font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 body[data-theme="shibuya"] .t-artist { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
-body[data-theme="shibuya"] .t-extra { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body[data-theme="shibuya"] .t-dur { font-size: 11px; color: var(--text-muted); white-space: nowrap; text-align: right; }
 body[data-theme="shibuya"] .t-actions { display: flex; align-items: center; gap: 5px; justify-content: flex-end; }
 body[data-theme="shibuya"] .t-actions button {
   background: none; border: none; color: var(--text-dim);

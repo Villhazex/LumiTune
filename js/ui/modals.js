@@ -120,7 +120,7 @@ function showPlaylistPicker(){
       <div class="picker-list">${keys.map(k=>{
         const pl=playlists[k];
         return`<button class="picker-item" data-pick="${esc(k)}" title="Select playlist">
-          <span class="picker-emoji">${esc(pl.emoji||'♫')}</span>
+          <span class="picker-emoji"><svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h4.88a1.5 1.5 0 0 1 1.06.44l.88.88A1.5 1.5 0 0 0 10.38 3H13.5A1.5 1.5 0 0 1 15 4.5V12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V2.5Z"/></svg></span>
           <span class="picker-name">${esc(pl.name)}</span>
           <span class="picker-count">${pl.songs.length} tracks</span>
         </button>`;
@@ -154,7 +154,7 @@ function showMetadataEditor(playlistKey,index){
   o.innerHTML=`<div class="modal-box metadata-box">
     <div class="modal-msg">Edit Metadata</div>
     <label class="modal-field-label" for="metaCustomTitle">Custom Title (for display)</label>
-    <div class="input-wrap"><input type="text" class="modal-input" id="metaCustomTitle" value="${esc(song.title)}"><button class="copy-btn" data-copy="metaCustomTitle" data-tip="Copied!" title="Copy"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>
+    <div class="input-wrap"><input type="text" class="modal-input" id="metaCustomTitle" value="${esc(displayTitle(song))}"><button class="copy-btn" data-copy="metaCustomTitle" data-tip="Copied!" title="Copy"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>
     <label class="modal-field-label" for="metaOriginalTitle">Original Title (for metadata)</label>
     <div class="input-wrap"><input type="text" class="modal-input" id="metaOriginalTitle" value="${esc(song.title)}"><button class="copy-btn" data-copy="metaOriginalTitle" data-tip="Copied!" title="Copy"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>
     <label class="modal-field-label" for="metaArtist">Artist</label>
@@ -189,6 +189,7 @@ function showMetadataEditor(playlistKey,index){
       <button class="modal-btn" id="metaDeezerCover">Search Cover from Deezer</button>
       <button class="modal-btn" id="metaDeleteCover" style="${song.cover||song.coverKey?'':'display:none'}">Delete Cover</button>
     </div>
+    <button class="modal-btn" id="metaRescanTrack" style="width:100%;margin-bottom:22px">Rescan Track</button>
     <hr style="border:none;border-top:1px solid var(--border,#2a2a2a);margin-bottom:20px">
     <div class="modal-actions">
       <button class="modal-btn" id="mc" title="Cancel">Cancel</button>
@@ -265,6 +266,7 @@ function showMetadataEditor(playlistKey,index){
     if(!ti&&!ar)return;
     showDeezerCoverPicker(song,ti,ar,playlistKey,index);
   };
+  $('metaRescanTrack').onclick=()=>{close();rescanTrack(song);};
   $('metaDeleteCover').onclick=async ()=>{
     const ok=await showConfirm('Delete cover for "'+esc(displayTitle(song))+'" ?');
     if(!ok)return;

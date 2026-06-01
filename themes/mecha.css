@@ -524,8 +524,6 @@ body[data-theme="mecha"] .bulk-check { width: 12px; height: 12px; margin-right: 
 
 body[data-theme="mecha"] .track-list-wrap { padding: 0 28px 12px; }
 body[data-theme="mecha"] .track-list-header {
-  display: grid;
-  grid-template-columns: 1fr 80px auto;
   gap: 10px;
   font-size: 10px; color: #7a6e5a;
   letter-spacing: 0.14em; text-transform: uppercase;
@@ -537,7 +535,7 @@ body[data-theme="mecha"] .track-list-header {
 
 body[data-theme="mecha"] .track-row {
   display: grid;
-  grid-template-columns: 1fr 80px auto;
+  grid-template-columns: 1fr auto;
   gap: 10px;
   align-items: center;
   padding: 9px 12px;
@@ -584,7 +582,7 @@ body[data-theme="mecha"] .t-num.playing { color: #0a0a0a; }
 body[data-theme="mecha"] .t-info { min-width: 0; }
 body[data-theme="mecha"] .t-title { font-size: 13px; color: #0a0a0a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 body[data-theme="mecha"] .t-artist { font-size: 10px; color: #7a6e5a; margin-top: 2px; }
-body[data-theme="mecha"] .t-extra { font-size: 11px; color: #3a3428; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body[data-theme="mecha"] .t-dur { font-size: 11px; color: #3a3428; white-space: nowrap; text-align: right; }
 body[data-theme="mecha"] .t-actions { display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
 body[data-theme="mecha"] .t-actions button {
   background: none; border: none; color: #7a6e5a;
@@ -1223,6 +1221,6 @@ body[data-theme="mecha"] .settings-page-header .modal-ok { background: #0a0a0a; 
   body[data-theme="mecha"] .bottom-left { justify-content: center; }
   body[data-theme="mecha"] .bottom-right { display: none; }
   body[data-theme="mecha"] .metadata-grid { grid-template-columns: 1fr; }
-  body[data-theme="mecha"] .track-list-header, body[data-theme="mecha"] .track-row {   grid-template-columns: 1fr auto; }
-  body[data-theme="mecha"] .track-list-header span:nth-child(3), body[data-theme="mecha"] .track-row .track-album { display: none; }
+  body[data-theme="mecha"] .t-dur { display: none; }
+  body[data-theme="mecha"] #sortDuration { display: none; }
 }

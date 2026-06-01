@@ -403,6 +403,36 @@ impl Database {
         Ok(val)
     }
 
+    pub fn get_file_entry(&self, id: i64) -> Result<FileEntry, String> {
+        let conn = self.conn.lock().map_err(|e| format!("DB lock: {}", e))?;
+        conn.query_row(
+            "SELECT id, path, size, modified, status, audio_hash FROM files WHERE id = ?1",
+            params![id],
+            |r| Ok(FileEntry {
+                id: r.get(0)?,
+                path: r.get(1)?,
+                size: r.get(2)?,
+                modified: r.get(3)?,
+                status: r.get(4)?,
+                audio_hash: r.get::<_, Option<String>>(5)?.unwrap_or_default(),
+            })
+        ).map_err(|e| format!("DB get file: {}", e))
+    }
+
+    pub fn mark_file_pending_by_path(&self, path: &str) -> Result<i64, String> {
+        let conn = self.conn.lock().map_err(|e| format!("DB lock: {}", e))?;
+        let id: i64 = conn.query_row(
+            "SELECT id FROM files WHERE path = ?1",
+            params![path],
+            |r| r.get(0),
+        ).map_err(|e| format!("File not found in DB: {}", e))?;
+        conn.execute(
+            "UPDATE files SET status = 'pending', retry_count = 0, last_error = NULL, last_attempt_at = NULL WHERE id = ?1",
+            params![id],
+        ).map_err(|e| format!("DB update: {}", e))?;
+        Ok(id)
+    }
+
     pub fn get_stats(&self) -> Result<(i64, i64, i64, i64), String> {
         let conn = self.conn.lock().map_err(|e| format!("DB lock: {}", e))?;
         let total: i64 = conn.query_row("SELECT COUNT(*) FROM files", [], |r| r.get(0)).unwrap_or(0);

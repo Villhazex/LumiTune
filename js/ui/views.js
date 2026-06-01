@@ -83,12 +83,15 @@ function makeRow(song,origIdx,isActive,isLiked,plKey,showDel,extra){
   return`<div class="track-row ${isActive?'active':''}${bulkMode?' bulk-active':''}" draggable="true" data-index="${origIdx}" data-playlist="${plKey}"${bulkMode?' style="padding-left:36px"':''}>
     ${bulkMode?`<input type="checkbox" class="bulk-check" data-bulk="${plKey}::${origIdx}" ${bulkSelected.has(plKey+'::'+origIdx)?'checked':''}>`:''}
     <div class="t-info">
-      <span class="t-title">${esc(displayTitle(song))}</span>
-      <span class="t-artist">${song.artist}${reliBadge}${statusBadge?' ':''}${statusBadge}</span>
+      <div class="t-info-inner">
+        <span class="t-title">${esc(displayTitle(song))}</span>
+        <span class="t-artist">${song.artist}${reliBadge}${statusBadge?' ':''}${statusBadge}</span>
+      </div>
+      <span class="t-dur">${song.duration||''}</span>
     </div>
-    <div class="t-extra">${extra}</div>
     <div class="t-actions">
       <button class="like-btn ${isLiked?'liked':''}" data-song-id="${song.id}" title="Like">${isLiked?'★':'☆'}</button>
+      <button class="edit-btn" data-edit="${origIdx}" data-edit-pl="${plKey}" title="Edit metadata">Edit</button>
       <div class="track-more-wrap">
         <button class="track-more-btn" data-more="${origIdx}" title="More">⋮</button>
         <div class="track-more-dropdown">${moreItems}</div>
@@ -669,7 +672,7 @@ function toggleSort(col){
 function updateSortIndicator(){
   const home=currentView==='home';
   const st=$('sortTitle');if(st)st.textContent='Title'+(home&&sortColumn==='title'?(sortAsc?' ▲':' ▼'):'');
-  const sd=$('sortDuration');if(sd)sd.textContent=(home?'Duration':'Playlist')+(home&&sortColumn==='duration'?(sortAsc?' ▲':' ▼'):'');
+  const sd=$('sortDuration');if(sd)sd.textContent='Duration'+(sortColumn==='duration'?(sortAsc?' ▲':' ▼'):'');
 }
 
 /* ── RIGHT PANEL ── */
