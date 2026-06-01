@@ -74,11 +74,13 @@ function makeRow(song,origIdx,isActive,isLiked,plKey,showDel,extra){
   const reliBadge=song.reliability&&song.reliability!=='high'
     ?` <span class="reliability-badge" title="Source: ${methodLabel} · Reliability: ${song.reliability||'low'}${trustNote}${swapNote}${simNote}"><span class="reli-dot ${song.reliability==='low'?'reli-low':'reli-med'}"></span></span>`
     :'';
+  const hasCover=song.cover||song.coverKey;
   const moreItems=`<button class="dropdown-item" data-qadd="${origIdx}" data-qpl="${plKey}" title="Add to queue">Add to queue</button>
     <button class="dropdown-item" data-addpl="${origIdx}" data-addpl-pl="${plKey}" title="Add to playlist">Add to playlist</button>
     <button class="dropdown-item" data-movepl="${origIdx}" data-movepl-pl="${plKey}" title="Move to playlist">Move to playlist</button>
     <button class="dropdown-item" data-edit="${origIdx}" data-edit-pl="${plKey}" title="Edit metadata">Edit metadata</button>
     <button class="dropdown-item" data-download="${origIdx}" data-download-pl="${plKey}" title="Download MP3">Download MP3</button>
+    ${hasCover?`<button class="dropdown-item" data-delcover="${origIdx}" data-delcover-pl="${plKey}" title="Delete Cover">Delete Cover</button>`:''}
     ${showDel?`<div class="dropdown-divider"></div><button class="dropdown-item danger" data-del="${origIdx}" data-del-pl="${plKey}" title="Delete track">Delete</button>`:''}`;
   return`<div class="track-row ${isActive?'active':''}${bulkMode?' bulk-active':''}" draggable="true" data-index="${origIdx}" data-playlist="${plKey}"${bulkMode?' style="padding-left:36px"':''}>
     ${bulkMode?`<input type="checkbox" class="bulk-check" data-bulk="${plKey}::${origIdx}" ${bulkSelected.has(plKey+'::'+origIdx)?'checked':''}>`:''}
@@ -93,7 +95,7 @@ function makeRow(song,origIdx,isActive,isLiked,plKey,showDel,extra){
       <button class="like-btn ${isLiked?'liked':''}" data-song-id="${song.id}" title="Like">${isLiked?'★':'☆'}</button>
       <button class="edit-btn" data-edit="${origIdx}" data-edit-pl="${plKey}" title="Edit metadata">Edit</button>
       <div class="track-more-wrap">
-        <button class="track-more-btn" data-more="${origIdx}" title="More">⋮</button>
+        <button class="track-more-btn hero-more-btn" data-more="${origIdx}" title="More">⋮</button>
         <div class="track-more-dropdown">${moreItems}</div>
       </div>
     </div>

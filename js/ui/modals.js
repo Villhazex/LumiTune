@@ -257,6 +257,17 @@ function showMetadataEditor(playlistKey,index){
   };
   const kh=e=>{if(e.key==='Escape'){document.removeEventListener('keydown',kh);close();}if(e.key==='Enter'){e.preventDefault();document.removeEventListener('keydown',kh);save();}};
   document.addEventListener('keydown',kh);
+  o.addEventListener('click',function _copyHandler(e){
+    const btn=e.target.closest('.copy-btn');
+    if(!btn)return;
+    const inp=btn.closest('.input-wrap')?.querySelector('.modal-input')??$(btn.dataset.copy);
+    if(!inp)return;
+    const t=inp.value;if(!t)return;
+    navigator.clipboard.writeText(t).then(()=>{
+      btn.classList.add('copied','show-tip');
+      setTimeout(()=>btn.classList.remove('copied','show-tip'),1500);
+    }).catch(()=>{});
+  });
   $('metaCustomTitle').focus();$('metaCustomTitle').select();
   $('mc').onclick=()=>{document.removeEventListener('keydown',kh);close();};
   $('mo').onclick=()=>{document.removeEventListener('keydown',kh);save();};
