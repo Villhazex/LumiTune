@@ -33,7 +33,7 @@
       ]
     },
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; connect-src 'self' https://cdn.jsdelivr.net https://lrclib.net; media-src 'self' blob:; img-src 'self' data: https: blob:; font-src 'self' data: https://fonts.gstatic.com"
     },
     "windows": [
       {
