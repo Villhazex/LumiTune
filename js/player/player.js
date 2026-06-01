@@ -102,21 +102,27 @@ async function playSong(index,playlistKey,addToQueue){
   requestAnimationFrame(()=>{mainEl.scrollTop=scrollPos;});
   updateUpNext();
 
+  if(!song.file&&song.filePath&&isTauri()&&inv){
+    try{
+      const bytes=await inv('read_file_bytes',{path:song.filePath});
+      const ext=song.filePath.split('.').pop().toLowerCase();
+      const mime={mp3:'audio/mpeg',wav:'audio/wav',flac:'audio/flac',ogg:'audio/ogg',m4a:'audio/mp4',aac:'audio/aac',wma:'audio/x-ms-wma'}[ext]||'audio/mpeg';
+      song.file=new Blob([new Uint8Array(bytes)],{type:mime});
+    }catch(e){console.warn('read_file_bytes failed:',e);}
+  }
   if(song.file||song.filePath)playReal(song.file,song);else simPlay(song.duration);
   fetchLyricsForSong(song);
 }
 
 async function playReal(file,song){
   clearInterval(playbackInterval);
-  currentAudioFile=file||song.filePath||true;
+  currentAudioFile=file||true;
   let src;
-  if(song.filePath&&!file){
-    src=YT_SERVER+'/api/stream?path='+encodeURIComponent(song.filePath);
+  if(file){
+    src=URL.createObjectURL(file);
   }else if(song.filePath){
     src=convertFileSrc(song.filePath);
-  }else{
-    src=URL.createObjectURL(file);
-  }
+  }else return;
   console.log('playReal src:',src,'filePath:',song.filePath,'hasFile:',!!file);
   audioPlayer.src=src;
   audioPlayer.load();

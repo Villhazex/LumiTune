@@ -646,7 +646,7 @@ function createPlaylistFromScan(files,results,playlistName,skipSaveRender){
       titleSimilarity:0,
       artistSimilarity:0,
       finalScore:0,
-      hasEmbeddedCover:!!f.has_embedded_cover,
+      hasEmbeddedCover:true,
     };
     return sid;
   });
