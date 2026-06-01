@@ -550,15 +550,9 @@ function renderPlaylists(filter){
       const isDefault=DEFAULT_KEYS.includes(key);
       const songs=playlistSongs(pl);
       const name=pl?.name||'Untitled Playlist';
-      return`<div class="playlist-card" data-playlist="${esc(key)}" role="button" tabindex="0" title="${esc(name)}">
-        ${isDefault?'':`<div style="position:absolute;top:8px;right:8px;display:flex;gap:3px;z-index:2;opacity:0;transition:opacity 0.14s;">
-          <button class="ctrl-btn" style="width:22px;height:22px;font-size:10px;background:var(--surface2);border:1px solid var(--border-soft);border-radius:4px;" data-rename="${esc(key)}" title="Rename">✎</button>
-          <button class="ctrl-btn" style="width:22px;height:22px;font-size:10px;background:var(--surface2);border:1px solid var(--border-soft);border-radius:4px;" data-delete="${esc(key)}" title="Delete">×</button>
-        </div>`}
-        <svg class="card-folder" viewBox="0 0 36 30"><path class="folder-body" d="M0 6a3 3 0 0 1 3-3h10l3 4h17a3 3 0 0 1 3 3v17a3 3 0 0 1-3 3H3a3 3 0 0 1-3-3V6z"/></svg>
-        <div class="card-name">${esc(name)}</div>
-        <div class="card-count">${songs.length} track${songs.length!==1?'s':''}</div>
-      </div>`;
+      var _btns='<button class="ctrl-btn" style="width:22px;height:22px;font-size:10px;background:var(--surface2);border:1px solid var(--border-soft);border-radius:4px;" data-rescan="'+esc(key)+'" title="Re-identify all tracks in this playlist">⟳</button>';
+      if(!isDefault)_btns+='<button class="ctrl-btn" style="width:22px;height:22px;font-size:10px;background:var(--surface2);border:1px solid var(--border-soft);border-radius:4px;" data-rename="'+esc(key)+'" title="Rename">✎</button><button class="ctrl-btn" style="width:22px;height:22px;font-size:10px;background:var(--surface2);border:1px solid var(--border-soft);border-radius:4px;" data-delete="'+esc(key)+'" title="Delete">×</button>';
+      return'<div class="playlist-card" data-playlist="'+esc(key)+'" role="button" tabindex="0" title="'+esc(name)+'"><div style="position:absolute;top:8px;right:8px;display:flex;gap:3px;z-index:2;opacity:0;transition:opacity 0.14s;">'+_btns+'</div><svg class="card-folder" viewBox="0 0 36 30"><path class="folder-body" d="M0 6a3 3 0 0 1 3-3h10l3 4h17a3 3 0 0 1 3 3v17a3 3 0 0 1-3 3H3a3 3 0 0 1-3-3V6z"/></svg><div class="card-name">'+esc(name)+'</div><div class="card-count">'+songs.length+' track'+(songs.length!==1?'s':'')+'</div></div>';
     }).join('')}`;
     html+=`<div class="playlist-card new-pl-card" id="newPlCard">
       <div class="new-pl-icon">+</div>

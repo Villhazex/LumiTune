@@ -109,6 +109,11 @@ $('bulkToggleBtn').addEventListener('click',()=>{
   $('bulkToggleBtn').textContent=bulkMode?'☑ Done':'☐ Select';
   renderSongList($('searchInput').value);
 });
+$('rescanBtn').addEventListener('click',()=>{
+  if(currentView==='library')handleRescanAll();
+  else if(currentPlaylist)handleRescanPlaylist(currentPlaylist);
+  else showToast('No playlist selected');
+});
 $('repeatBtn').addEventListener('click',toggleRepeat);
 $('heroRepeatBtn')?.addEventListener('click',toggleRepeat);
 $('likeBtn').addEventListener('click',()=>{if(currentSongIndex!==-1)toggleFav(String(playlists[currentPlaylist].songs[currentSongIndex]));});
@@ -538,6 +543,7 @@ $('songList').addEventListener('click',e=>{
    const artist=e.target.closest('[data-artist]');if(artist){recordNav();selectedArtist=artist.dataset.artist;currentView='artists';renderSongList($('searchInput').value);return;}
    const album=e.target.closest('[data-album]');if(album){recordNav();selectedAlbum=album.dataset.album;currentView='albums';renderSongList($('searchInput').value);return;}
    const smart=e.target.closest('[data-smart]');if(smart){recordNav();selectedSmart=smart.dataset.smart;currentView='smart';renderSongList($('searchInput').value);return;}
+  const rescanPl=e.target.closest('[data-rescan]');if(rescanPl){e.stopPropagation();handleRescanPlaylist(rescanPl.dataset.rescan);return;}
   const card=e.target.closest('.pl-card,.playlist-card:not(#newPlCard)');
   if(card){recordNav();playlistsViewMode='detail';switchPlaylist(card.dataset.playlist);return;}
   const row=e.target.closest('.track-row');
@@ -759,6 +765,101 @@ function handleDeleteCover(plKey,index){
     showToast('Cover deleted');
   });
 }
+
+async function rescanSongFromBlob(song){
+  const blob=song.file||(song.fileKey?await dbGet(song.fileKey):null);
+  if(!blob)return 0;
+  try{
+    const [tags,cover]=await Promise.all([
+      readID3Tags(blob),
+      extractCoverFromFile(blob)
+    ]);
+    if(tags){
+      if(tags.title)song.title=tags.title;
+      if(tags.artist)song.artist=tags.artist;
+      if(tags.album)song.album=tags.album;
+      if(tags.genre)song.genre=tags.genre;
+      if(tags.year)song.year=String(tags.year);
+      if(tags.duration!=null)song.duration=fmt(tags.duration);
+    }
+    if(cover&&!song.coverKey)song.cover=cover;
+    return 1;
+  }catch(e){
+    console.warn('rescanSongFromBlob error:',e);
+    return -1;
+  }
+}
+
+async function rescanSongViaTauri(song){
+  if(!song.filePath||!isTauri()||!inv)return 0;
+  try{
+    const result=await inv('identify_single_file',{path:song.filePath,acoustidKey:ACOUSTID_API_KEY});
+    if(result&&result.success){
+      song.title=result.title||song.title;
+      song.artist=result.artist||song.artist;
+      song.album=result.album||song.album;
+      song.year=result.year||song.year;
+      song.genre=result.genre||song.genre;
+      if(result.duration!=null&&result.duration>0)song.duration=fmt(result.duration);
+      if(result.cover_data_base64&&!song.coverKey)song.cover='data:'+result.cover_mime+';base64,'+result.cover_data_base64;
+      song.metadataSource=result.method;
+      song.reliability=result.reliability||'low';
+      song.suspectedSwapped=!!result.suspected_swapped;
+      if(result.title_similarity!=null)song.titleSimilarity=result.title_similarity;
+      if(result.artist_similarity!=null)song.artistSimilarity=result.artist_similarity;
+      if(result.final_score)song.finalScore=result.final_score;
+      return 1;
+    }
+    return 0;
+  }catch(e){
+    console.warn('rescanSongViaTauri error:',e);
+    return -1;
+  }
+}
+
+async function handleRescanPlaylist(plKey){
+  const pl=playlists[plKey];
+  if(!pl||!pl.songs.length){showToast('No tracks to rescan');return;}
+  showToast('Rescanning '+pl.songs.length+' tracks...');
+  let updated=0,failed=0;
+  for(let i=0;i<pl.songs.length;i++){
+    const song=getSong(pl.songs[i]);
+    if(!song)continue;
+    let r=0;
+    if(song.filePath&&isTauri()&&inv)r=await rescanSongViaTauri(song);
+    else r=await rescanSongFromBlob(song);
+    if(r>0)updated++;
+    else if(r<0)failed++;
+  }
+  saveState();
+  renderSongList($('searchInput')?.value||'');
+  renderPlaylistGrid();
+  const msg=updated+' track'+(updated!==1?'s':'')+' updated';
+  showToast(failed?msg+', '+failed+' failed':msg);
+}
+
+async function handleRescanAll(){
+  const all=[];
+  Object.values(playlists).forEach(pl=>pl.songs.forEach(sid=>{if(!all.includes(sid))all.push(sid);}));
+  if(!all.length){showToast('No tracks to rescan');return;}
+  showToast('Rescanning '+all.length+' tracks...');
+  let updated=0,failed=0;
+  for(let i=0;i<all.length;i++){
+    const song=getSong(all[i]);
+    if(!song)continue;
+    let r=0;
+    if(song.filePath&&isTauri()&&inv)r=await rescanSongViaTauri(song);
+    else r=await rescanSongFromBlob(song);
+    if(r>0)updated++;
+    else if(r<0)failed++;
+  }
+  saveState();
+  renderSongList($('searchInput')?.value||'');
+  renderPlaylistGrid();
+  const msg=updated+' track'+(updated!==1?'s':'')+' updated';
+  showToast(failed?msg+', '+failed+' failed':msg);
+}
+
 async function init(){
   playlists={};
   for(const[k,v]of Object.entries(DEFAULT_PLAYLISTS))playlists[k]=JSON.parse(JSON.stringify(v));
