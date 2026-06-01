@@ -272,8 +272,8 @@ function playPrev(){
 function togglePlay(){
   if(currentSongIndex===-1){if(Object.keys(playlists).length){playlistCardHistory=[];playSong(0);}return;}
   isPlaying=!isPlaying;updatePlayBtn();
-  if(isPlaying){$('albumArt').classList.add('playing');$('vizBars').classList.add('active');if(currentAudioFile)audioPlayer.play();showToast('▶ Playing',1200);}
-  else{$('albumArt').classList.remove('playing');$('vizBars').classList.remove('active');if(currentAudioFile)audioPlayer.pause();localStorage.setItem('lumi-pt',String(totalPlayTime));showToast('⏸ Paused',1200);}
+  if(isPlaying){$('albumArt').classList.add('playing');$('vizBars').classList.add('active');if(currentAudioFile)audioPlayer.play();}
+  else{$('albumArt').classList.remove('playing');$('vizBars').classList.remove('active');if(currentAudioFile)audioPlayer.pause();localStorage.setItem('lumi-pt',String(totalPlayTime));}
   updateHeroSection();
   const ar=document.querySelector('.track-row.active');
   if(ar){

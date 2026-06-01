@@ -468,7 +468,7 @@ $('searchDropdown').addEventListener('click',e=>{
   if(type==='track'){
     const pk=item.dataset.playlist;
     const idx=parseInt(item.dataset.index);
-    if(playlists[pk]&&idx>=0&&playlists[pk].songs[idx]){currentQueueIdx=-1;playlistCardHistory=[];playSong(idx,pk,false);showToast('♪ Playing from '+esc(playlists[pk]?.name||'playlist'));}
+    if(playlists[pk]&&idx>=0&&playlists[pk].songs[idx]){currentQueueIdx=-1;playlistCardHistory=[];playSong(idx,pk,false);}
     $('searchInput').value='';
     $('searchClear').classList.remove('show');
     $('searchDropdown').classList.remove('show');
@@ -479,7 +479,7 @@ $('searchDropdown').addEventListener('click',e=>{
     let found=false;
     for(const[pk,pl]of Object.entries(playlists)){
       const idx=pl.songs.indexOf(songId);
-      if(idx!==-1){currentQueueIdx=-1;playlistCardHistory=[];playSong(idx,pk,false);showToast('♪ Playing from '+esc(pl.name||'playlist'));found=true;break;}
+      if(idx!==-1){currentQueueIdx=-1;playlistCardHistory=[];playSong(idx,pk,false);found=true;break;}
     }
     if(!found)showToast('Song not found');
     $('searchInput').value='';
@@ -560,7 +560,6 @@ $('songList').addEventListener('click',e=>{
       const plKey=row.dataset.playlist||currentPlaylist;
       if(plKey==='__loose'){showToast('⊕ Add this song to a playlist first');return;}
       currentQueueIdx=-1;playlistCardHistory=[];playSong(parseInt(row.dataset.index),plKey,false);
-      showToast('♪ Playing from '+esc(playlists[plKey]?.name||'playlist'));
     }
 });
 
