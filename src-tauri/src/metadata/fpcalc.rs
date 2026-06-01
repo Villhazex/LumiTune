@@ -6,6 +6,9 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
 
+#[cfg(windows)]
+use std::os::windows::process::CommandExt;
+
 const FPCALC_NAME: &str = "fpcalc.exe";
 
 fn fpcalc_log_path() -> String {
@@ -47,36 +50,6 @@ fn fpcalc_bin() -> String {
     FPCALC_NAME.to_string()
 }
 
-/// Hide the console window created for a spawned child process.
-/// Attaches to the child's console, hides the window, then detaches.
-#[cfg(windows)]
-fn hide_child_console(child_pid: u32) {
-    use windows_sys::Win32::System::Console::{AttachConsole, FreeConsole, GetConsoleWindow, SetStdHandle, STD_INPUT_HANDLE, STD_OUTPUT_HANDLE, STD_ERROR_HANDLE};
-    use windows_sys::Win32::UI::WindowsAndMessaging::{ShowWindow, SW_HIDE};
-
-    for _ in 0..50 {
-        unsafe {
-            if AttachConsole(child_pid) != 0 {
-                let hwnd = GetConsoleWindow();
-                if !hwnd.is_null() {
-                    ShowWindow(hwnd, SW_HIDE);
-                }
-                FreeConsole();
-                // Reset std handles — FreeConsole leaves them dangling
-                SetStdHandle(STD_INPUT_HANDLE, std::ptr::null_mut());
-                SetStdHandle(STD_OUTPUT_HANDLE, std::ptr::null_mut());
-                SetStdHandle(STD_ERROR_HANDLE, std::ptr::null_mut());
-                return;
-            }
-        }
-        thread::sleep(Duration::from_millis(20));
-    }
-    log_to_file("hide_child_console: failed to AttachConsole after 50 tries");
-}
-
-#[cfg(not(windows))]
-fn hide_child_console(_child_pid: u32) {}
-
 pub fn run_fpcalc(path: &str) -> Result<(String, i64), String> {
     let bin = fpcalc_bin();
     log_to_file(&format!("run_fpcalc: bin={:?} path={:?}", bin, path));
@@ -97,6 +70,9 @@ pub fn run_fpcalc(path: &str) -> Result<(String, i64), String> {
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
 
+        #[cfg(windows)]
+        cmd.creation_flags(0x08000000);
+
         let child = match cmd.spawn() {
             Ok(c) => {
                 log_to_file("spawn: ok");
@@ -111,10 +87,8 @@ pub fn run_fpcalc(path: &str) -> Result<(String, i64), String> {
 
         let pid = child.id();
         log_to_file(&format!("spawn: pid={}", pid));
-        let hide_h = thread::spawn(move || hide_child_console(pid));
 
         let result = child.wait_with_output();
-        hide_h.join().ok();
         log_to_file("wait_with_output: done");
         tx.send(result).ok();
     });
