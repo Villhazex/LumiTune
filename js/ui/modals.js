@@ -228,7 +228,7 @@ function showMetadataEditor(playlistKey,index){
     libraryOrder=null;
     renderSongList($('searchInput').value);
     renderPlaylistGrid();
-    saveState();
+    saveStateNow();
     close();
     if(metaChanged&&isTauri()&&inv){
       showToast('Searching for cover...');
@@ -241,7 +241,7 @@ function showMetadataEditor(playlistKey,index){
             song.cover='data:'+r[1]+';base64,'+r[0];
             song.coverKey=r[2];
             song.metadataSource='deezer';
-            saveState();
+            saveStateNow();
             if(playlistKey===currentPlaylist&&index===currentSongIndex){
               updateHeroSection();
             }
@@ -440,6 +440,7 @@ function showDeezerCoverPicker(song, title, artist, playlistKey, songIdx){
               if(emoji)emoji.style.display='none';
             }
           }
+          renderSongList($('searchInput').value);
         }else{
           showToast('Cover failed: empty response from server');
           console.log('pick_deezer_cover returned null/empty:',res);
@@ -461,7 +462,7 @@ function showDeezerCoverPicker(song, title, artist, playlistKey, songIdx){
                 fetchLyricsForSong(song);
               }
             }
-            saveState();
+            saveStateNow();
           });
         }
       }).catch(err=>{

@@ -274,7 +274,19 @@ function togglePlay(){
   isPlaying=!isPlaying;updatePlayBtn();
   if(isPlaying){$('albumArt').classList.add('playing');$('vizBars').classList.add('active');if(currentAudioFile)audioPlayer.play();showToast('▶ Playing',1200);}
   else{$('albumArt').classList.remove('playing');$('vizBars').classList.remove('active');if(currentAudioFile)audioPlayer.pause();localStorage.setItem('lumi-pt',String(totalPlayTime));showToast('⏸ Paused',1200);}
-  updateHeroSection();renderSongList($('searchInput').value);
+  updateHeroSection();
+  const ar=document.querySelector('.track-row.active');
+  if(ar){
+    const oldBadge=ar.querySelector('.badge');
+    if(oldBadge)oldBadge.remove();
+    const ta=ar.querySelector('.t-artist');
+    if(ta){
+      const b=document.createElement('span');
+      b.className='badge '+(isPlaying?'badge-playing':'badge-paused');
+      b.innerHTML='<span class="badge-dot"></span>'+(isPlaying?'Playing':'Paused');
+      ta.appendChild(b);
+    }
+  }
 }
 function updatePlayBtn(){
   $('playIcon').style.display=isPlaying?'none':'inline';
@@ -289,7 +301,11 @@ function toggleRepeat(){repeatMode=(repeatMode+1)%3;$('repeatBtn').classList.tog
 function toggleFav(id){
   id=String(id);
   if(favorites.has(id))favorites.delete(id);else favorites.add(id);
-  updateLikeBtn();renderSongList($('searchInput').value);saveState();
+  updateLikeBtn();
+  const ar=document.querySelector('.track-row.active');
+  const lb=ar?.querySelector('.like-btn');
+  if(lb){lb.classList.toggle('liked',favorites.has(id));lb.textContent=favorites.has(id)?'★':'☆';}
+  saveState();
   showToast(favorites.has(id)?'♥ Added to Favorites':'♡ Removed from Favorites');
 }
 function updateLikeBtn(){

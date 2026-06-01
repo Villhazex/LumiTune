@@ -777,7 +777,7 @@ setTimeout(()=>{
   const s=$('splash');
   if(s){s.style.opacity='0';setTimeout(()=>s.remove(),400);}
 },5000);
-addEventListener('beforeunload',()=>{localStorage.setItem('lumi-pt',String(totalPlayTime));});
+addEventListener('beforeunload',()=>{localStorage.setItem('lumi-pt',String(totalPlayTime));saveStateNow();});
 $('infinityBtn')?.addEventListener('click',()=>{
   const modes=['off','song','playlist'];
   const idx=modes.indexOf(infinityMode);

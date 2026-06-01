@@ -10,8 +10,30 @@ function getDB(){
 const dbStore=(k,f)=>getDB().then(d=>new Promise((res,rej)=>{const tx=d.transaction('files','readwrite');tx.objectStore('files').put(f,k);tx.oncomplete=res;tx.onerror=e=>rej(e.target.error);}));
 const dbGet=k=>getDB().then(d=>new Promise((res,rej)=>{const req=d.transaction('files','readonly').objectStore('files').get(k);req.onsuccess=()=>res(req.result);req.onerror=e=>rej(e.target.error);}));
 const dbDel=k=>getDB().then(d=>new Promise((res,rej)=>{const tx=d.transaction('files','readwrite');tx.objectStore('files').delete(k);tx.oncomplete=res;tx.onerror=e=>rej(e.target.error);}));
-
+function dbGetAll(keys){
+  return getDB().then(d=>new Promise((res,rej)=>{
+    if(!keys.length){res({});return;}
+    const tx=d.transaction('files','readonly');
+    const store=tx.objectStore('files');
+    const results={};
+    let remaining=keys.length;
+    for(const key of keys){
+      const req=store.get(key);
+      req.onsuccess=()=>{results[key]=req.result;remaining--;if(remaining===0)res(results);};
+      req.onerror=()=>{results[key]=null;remaining--;if(remaining===0)res(results);};
+    }
+  }));
+}
+let _saveTimer=null;
 function saveState(){
+  if(_saveTimer)clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(_saveStateImpl,200);
+}
+function saveStateNow(){
+  if(_saveTimer){clearTimeout(_saveTimer);_saveTimer=null;}
+  _saveStateImpl();
+}
+function _saveStateImpl(){
   const custom={};
   for(const key of Object.keys(playlists)){
     if(DEFAULT_KEYS.includes(key))continue;
@@ -21,7 +43,7 @@ function saveState(){
   const songData={};
   Object.entries(songs).forEach(([id,s])=>{
     const{file,...r}=s;
-    if(typeof r.cover==='string'&&r.cover.startsWith('data:')){
+    if(typeof r.cover==='string'&&r.cover.startsWith('data:')&&!r.coverKey){
       delete r.cover;
     }
     songData[id]=r;
@@ -53,14 +75,18 @@ async function loadState(){
     let migrated=false;
     if(songsRaw){
       const songData=JSON.parse(songsRaw);
+      const entries=Object.entries(songData);
+      const keys=entries.filter(([,s])=>s.fileKey).map(([,s])=>s.fileKey);
+      const filesMap=keys.length>0?await dbGetAll(keys):{};
       for(const[id,s]of Object.entries(songData)){
-        const file=await dbGet(s.fileKey).catch(()=>null);
+        const file=filesMap[s.fileKey]||null;
         songs[id]=file?{...s,file,fileKey:s.fileKey}:{...s};
         if(s.displayTitle&&!s.customTitle)songs[id].customTitle=s.displayTitle;
       }
     }
     if(raw){
       const custom=JSON.parse(raw);
+      const missingKeys=[];
       for(const[key,pl]of Object.entries(custom)){
         if(Array.isArray(pl.songs)&&pl.songs.length>0&&typeof pl.songs[0]==='object'){
           migrated=true;
@@ -69,8 +95,7 @@ async function loadState(){
             const sid=String(s.id);
             if(!songs[sid]){
               const fk=s.fileKey||`file-${key}-${sid}`;
-              const file=await dbGet(fk).catch(()=>null);
-              songs[sid]=file?{...s,file,fileKey:fk}:{...s};
+              missingKeys.push({sid,fk,old:s});
             }
             oldIds.push(sid);
           }
@@ -80,13 +105,22 @@ async function loadState(){
             for(const id of pl.songs){
               if(!songs[id]){
                 const fk=`file-${key}-${id}`;
-                const file=await dbGet(fk).catch(()=>null);
-                songs[id]=file?{id,file,fileKey:fk}:{id};
+                missingKeys.push({sid:id,fk,old:{id}});
               }
             }
           }
         }
         playlists[key]={...pl};
+      }
+      if(missingKeys.length>0){
+        const fks=missingKeys.map(m=>m.fk);
+        const filesMap=await dbGetAll(fks);
+        for(const m of missingKeys){
+          const file=filesMap[m.fk]||null;
+          const sid=m.sid;
+          if(songs[sid])continue;
+          songs[sid]=file?{...m.old,file,fileKey:m.fk}:{...m.old};
+        }
       }
       if(migrated){
         saveState();
@@ -136,18 +170,20 @@ async function loadCoversFromDB(){
     }catch(e){console.warn('loadCoversFromDB:',e);}
   }
   const urlCovers=Object.values(songs).filter(s=>s.cover&&typeof s.cover==='string'&&s.cover.startsWith('http'));
-  for(const song of urlCovers){
-    try{
-      const r=await inv('save_yt_thumbnail',{thumbnailUrl:song.cover,title:song.title,artist:song.artist});
-      if(r&&r[0]){song.cover='data:'+r[1]+';base64,'+r[0];song.coverKey=r[2];changed++;}
-    }catch(e){}
+  if(urlCovers.length>0){
+    await Promise.all(urlCovers.map(song=>
+      inv('save_yt_thumbnail',{thumbnailUrl:song.cover,title:song.title,artist:song.artist}).then(r=>{
+        if(r&&r[0]){song.cover='data:'+r[1]+';base64,'+r[0];song.coverKey=r[2];changed++;}
+      }).catch(()=>{})
+    ));
   }
   const diskCovers=Object.values(songs).filter(s=>s.coverKey&&!s.cover);
-  for(const song of diskCovers){
-    try{
-      const r=await inv('read_cover',{key:song.coverKey});
-      if(r&&r[0]){song.cover='data:'+r[1]+';base64,'+r[0];changed++;}
-    }catch(e){console.warn('read_cover:',e);}
+  if(diskCovers.length>0){
+    await Promise.all(diskCovers.map(song=>
+      inv('read_cover',{key:song.coverKey}).then(r=>{
+        if(r&&r[0]){song.cover='data:'+r[1]+';base64,'+r[0];changed++;}
+      }).catch(e=>console.warn('read_cover:',e))
+    ));
   }
   if(changed>0){
     saveState();
