@@ -502,7 +502,7 @@ document.querySelector('.track-list-wrap')?.addEventListener('click',e=>{
   const bulkAction=e.target.closest('[data-bulk-action]');if(bulkAction){runBulkAction(bulkAction.dataset.bulkAction);return;}
 });
 $('songList').addEventListener('click',e=>{
-  const bulk=e.target.closest('.bulk-check');if(bulk){if(bulk.checked)bulkSelected.add(bulk.dataset.bulk);else bulkSelected.delete(bulk.dataset.bulk);renderSongList($('searchInput').value);return;}
+  const bulk=e.target.closest('.bulk-check');if(bulk){if(bulk.checked)bulkSelected.add(bulk.dataset.bulk);else bulkSelected.delete(bulk.dataset.bulk);updateBulkBar(playlists[currentPlaylist]?.songs||[]);return;}
   const ren=e.target.closest('[data-rename]');if(ren){handleRename(ren.dataset.rename);return;}
   const del=e.target.closest('[data-delete]');if(del){handleDeletePlaylist(del.dataset.delete);return;}
   const like=e.target.closest('.like-btn');if(like){toggleFav(like.dataset.songId);return;}

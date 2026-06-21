@@ -256,8 +256,10 @@ function toggleLyricsMode(){
 }
 function setLyricsMode(mode){
   lyricsMode=mode;
-  if(lyricLines.length&&lyricsSynced){renderLyricLines(lyricLines,lyricsShowEdit);if(lyricsShowEdit){$('lyricEditBtn')?.addEventListener('click',showEditLyricsModal);$('lyricDeleteBtn')?.addEventListener('click',deleteCurrentUserLyrics);}}
+  if(lyricLines.length&&lyricsSynced){renderLyricLines(lyricLines,lyricsShowEdit);if(lyricsShowEdit){const eb=$('lyricEditBtn'),db=$('lyricDeleteBtn');if(eb)eb.onclick=showEditLyricsModal;if(db)db.onclick=deleteCurrentUserLyrics;}}
 }
+let _lastLyricActiveIdx=-1;
+let _lyricScrollThrottle=false;
 function updateLyricHighlight(time){
   if(!lyricsSynced||!lyricLines.length)return;
   const el=$('lyricsContent');if(!el)return;
@@ -266,8 +268,12 @@ function updateLyricHighlight(time){
   for(let i=lyricLines.length-1;i>=0;i--){
     if(adjustedTime>=lyricLines[i].time){activeIdx=i;break;}
   }
+  if(activeIdx===_lastLyricActiveIdx)return;
+  _lastLyricActiveIdx=activeIdx;
   let changed=false;
-  el.querySelectorAll('.lyric-line').forEach((line,i)=>{
+  const lines=el.querySelectorAll('.lyric-line');
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
     const wasActive=line.classList.contains('active');
     const wasPast=line.classList.contains('past');
     if(i===activeIdx){
@@ -280,21 +286,27 @@ function updateLyricHighlight(time){
       if(wasPast){line.classList.remove('past');changed=true;}
       if(wasActive){line.classList.remove('active');changed=true;}
     }
-  });
-  if(changed&&activeIdx>=0){
+  }
+  if(changed&&activeIdx>=0&&!_lyricScrollThrottle){
+    _lyricScrollThrottle=true;
     const activeEl=el.querySelector('.lyric-line.active');
     if(activeEl)activeEl.scrollIntoView({block:'center',behavior:'smooth'});
+    setTimeout(()=>{_lyricScrollThrottle=false;},300);
   }
   if(karaokeActive){
     const kl=$('karaokeLyrics');
     if(kl){
-      kl.querySelectorAll('.lyric-line').forEach((line,i)=>{
+      const kLines=kl.querySelectorAll('.lyric-line');
+      for(let i=0;i<kLines.length;i++){
+        const line=kLines[i];
         line.classList.toggle('active',i===activeIdx);
         line.classList.toggle('past',i<activeIdx);
-      });
-      if(activeIdx>=0){
+      }
+      if(activeIdx>=0&&!_lyricScrollThrottle){
+        _lyricScrollThrottle=true;
         const activeEl=kl.querySelector('.lyric-line.active');
         if(activeEl)activeEl.scrollIntoView({block:'center',behavior:'smooth'});
+        setTimeout(()=>{_lyricScrollThrottle=false;},300);
       }
     }
   }

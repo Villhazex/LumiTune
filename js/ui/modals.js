@@ -12,6 +12,7 @@ function showConfirm(msg, confirmText){
     const close=r=>{o.style.display='none';resolve(r);};
     const kh=e=>{if(e.key==='Escape')close(false);};
     document.addEventListener('keydown',kh);
+    o.onclick=e=>{if(e.target===o){document.removeEventListener('keydown',kh);close(false);}};
     $('mc').onclick=()=>{document.removeEventListener('keydown',kh);close(false);};
     $('mo').onclick=()=>{document.removeEventListener('keydown',kh);close(true);};
   });
@@ -32,6 +33,7 @@ function showInput(label,def){
     const close=r=>{o.style.display='none';resolve(r);};
     const kh=e=>{if(e.key==='Escape')close(null);if(e.key==='Enter')$('mo').click();};
     document.addEventListener('keydown',kh);
+    o.onclick=e=>{if(e.target===o){document.removeEventListener('keydown',kh);close(null);}};
     $('mc').onclick=()=>{document.removeEventListener('keydown',kh);close(null);};
     $('mo').onclick=()=>{document.removeEventListener('keydown',kh);close($('mi').value.trim()||null);};
   });
@@ -47,6 +49,7 @@ function showMessage(msg,btn){
     const close=r=>{o.style.display='none';resolve(r);};
     const kh=e=>{if(e.key==='Enter'||e.key==='Escape')$('mo')?.click();};
     document.addEventListener('keydown',kh);
+    o.onclick=e=>{if(e.target===o){document.removeEventListener('keydown',kh);close(true);}};
     const b=$('mo');
     if(b)b.onclick=()=>{document.removeEventListener('keydown',kh);close(true);};
     else close(true);
@@ -68,6 +71,7 @@ function showRename(current){
     const close=r=>{o.style.display='none';resolve(r);};
     const kh=e=>{if(e.key==='Escape')close(null);if(e.key==='Enter')$('mo').click();};
     document.addEventListener('keydown',kh);
+    o.onclick=e=>{if(e.target===o){document.removeEventListener('keydown',kh);close(null);}};
     $('mc').onclick=()=>{document.removeEventListener('keydown',kh);close(null);};
     $('mo').onclick=()=>{document.removeEventListener('keydown',kh);close($('mi').value.trim()||null);};
   });
@@ -133,6 +137,7 @@ function showPlaylistPicker(){
     const close=r=>{o.style.display='none';resolve(r);};
     const kh=e=>{if(e.key==='Escape')close(null);};
     document.addEventListener('keydown',kh);
+    o.onclick=e=>{if(e.target===o){document.removeEventListener('keydown',kh);close(null);}};
     o.querySelectorAll('.picker-item').forEach(el=>el.addEventListener('click',()=>{document.removeEventListener('keydown',kh);close(el.dataset.pick);}));
     $('mc').onclick=()=>{document.removeEventListener('keydown',kh);close(null);};
   });

@@ -146,6 +146,13 @@ function debounce(fn,ms){
   return debounced;
 }
 
+function updatePlayingRow(){
+  const el=$('songList');if(!el)return;
+  el.querySelectorAll('.track-row.active').forEach(row=>row.classList.remove('active'));
+  const selector=`[data-playlist="${currentPlaylistPlaying}"][data-index="${currentSongIndex}"]`;
+  const row=el.querySelector(selector);
+  if(row)row.classList.add('active');
+}
 async function rescanTrack(song){
   if(!isTauri()||!inv){showToast('Rescan only available in desktop app');return;}
   if(!song.filePath){showToast('No local file path for this track');return;}

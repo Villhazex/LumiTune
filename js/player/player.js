@@ -1,3 +1,4 @@
+let _lastSavedVol=-1;
 function setVolume(newVol){
   volume=Math.max(0,Math.min(1,newVol));
   audioPlayer.volume=isMuted?0:volume;
@@ -5,7 +6,8 @@ function setVolume(newVol){
   const hs=$('heroVolSlider');if(hs)hs.value=Math.round(volume*100);
   const hl=$('heroVolLabel');if(hl)hl.textContent=`VOL ${Math.round(volume*100)}`;
   updateVolIcon();
-  saveState();
+  const rounded=Math.round(volume*100);
+  if(rounded!==_lastSavedVol){_lastSavedVol=rounded;saveState();}
   showVolPopup();
 }
 function toggleFullscreenMode(){
@@ -95,11 +97,8 @@ async function playSong(index,playlistKey,addToQueue){
   aa.classList.add('playing');
   $('vizBars').classList.add('active');
   lastTrackedPos=0;
-  const mainEl=document.querySelector('.main');
-  const scrollPos=mainEl.scrollTop;
   updateHeroSection();
-  renderSongList($('searchInput').value);
-  requestAnimationFrame(()=>{mainEl.scrollTop=scrollPos;});
+  updatePlayingRow();
   updateUpNext();
 
   if(!song.file&&song.filePath&&isTauri()&&inv){
@@ -222,7 +221,7 @@ document.addEventListener('visibilitychange',()=>{
 function stopPlayback(){
   isPlaying=false;updatePlayBtn();playlistCardHistory=[];
   $('albumArt').classList.remove('playing');$('vizBars').classList.remove('active');
-  updateHeroSection();renderSongList($('searchInput').value);showLyricsNone();updateUpNext();
+  updateHeroSection();updatePlayingRow();showLyricsNone();updateUpNext();
 }
 function playRandom(){
   const allKeys=Object.keys(playlists).filter(k=>(playlists[k]?.songs||[]).length>0);
@@ -355,7 +354,9 @@ function setVol(e){
   volume=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
   $('volFill').style.width=`${volume*100}%`;
   isMuted=false;audioPlayer.volume=volume;
-  updateVolIcon();saveState();
+  updateVolIcon();
+  const rounded=Math.round(volume*100);
+  if(rounded!==_lastSavedVol){_lastSavedVol=rounded;saveState();}
   const vs=$('heroVolSlider');if(vs)vs.value=Math.round(volume*100);
   const vl=$('heroVolLabel');if(vl)vl.textContent='VOL '+Math.round(volume*100);
   showVolPopup();
