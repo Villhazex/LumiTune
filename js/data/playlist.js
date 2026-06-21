@@ -32,7 +32,8 @@ async function handleAddTracks(e){
     const[cover,,tags]=await Promise.all([extractCoverFromFile(file),dbStore(fk,file),readID3Tags(file)]);
     const t=tags||{};
     const dur=typeof t.duration==='number'?fmt(Math.round(t.duration)):t.duration||'--:--';
-    songs[id]={id,title:t.title||file.name.replace(/\.[^/.]+$/,''),artist:t.artist||'Unknown',album:t.album||'',genre:t.genre||'',year:String(t.year||''),duration:dur,addedAt:new Date().toISOString(),file,fileKey:fk,cover,fileName:file.name,metadataSource:t.title?'id3':''};
+    const trackTitle=t.title||file.name.replace(/\.[^/.]+$/,'');const fileNameOnly=file.name.replace(/\.[^/.]+$/,'');
+    songs[id]={id,title:trackTitle,customTitle:t.title?fileNameOnly:undefined,artist:t.artist||'Unknown',album:t.album||'',genre:t.genre||'',year:String(t.year||''),duration:dur,addedAt:new Date().toISOString(),file,fileKey:fk,cover,fileName:file.name,metadataSource:t.title?'id3':''};
     pl.songs.push(String(id));
     if(idx%5===0)loading(`<div class="yt-loading"><div class="yt-spinner"></div><div class="yt-step">${idx+1} of ${files.length}</div><div>Adding files&hellip;</div></div>`);
   }

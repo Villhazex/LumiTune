@@ -82,6 +82,9 @@ async function loadState(){
         const file=filesMap[s.fileKey]||null;
         songs[id]=file?{...s,file,fileKey:s.fileKey}:{...s};
         if(s.displayTitle&&!s.customTitle)songs[id].customTitle=s.displayTitle;
+        if(!songs[id].customTitle&&songs[id].fileName&&songs[id].metadataSource!=='manual'){
+          songs[id].customTitle=songs[id].fileName.replace(/\.[^/.]+$/,'');
+        }
       }
     }
     if(raw){

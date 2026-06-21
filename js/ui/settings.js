@@ -623,10 +623,12 @@ function createPlaylistFromScan(files,results,playlistName,skipSaveRender){
     const title=f.display_title||name;
     const artist=f.display_artist||'Unknown';
     const scanCover=f.cover_data_base64&&f.cover_mime?'data:'+f.cover_mime+';base64,'+f.cover_data_base64:undefined;
+    const fileBaseName=fileName.replace(/\.[^/.]+$/,'');
     songs[sid]={
       id:sid,
       title,
       artist,
+      customTitle:fileBaseName,
       album:f.display_album||'',
       genre:'',
       year:'',
