@@ -51,6 +51,7 @@ let lyricsAbort=null;
 let lyricsAbortTimer=null;
 let kuroshiroReady=false;
 let kuroshiroInitAttempted=false;
+let kuroshiroCallbacks=[];
 let lyricsMode='romaji';
 let lyricsHasRomaji=false;
 let lyricsShowEdit=false;

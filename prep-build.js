@@ -22,3 +22,20 @@ if(fs.existsSync(ytSrc)){
 }
 // fpcalc.exe must be manually placed in src-tauri/resources/
 // Download from: https://github.com/acoustid/chromaprint/releases
+
+// download kuromoji dictionary for offline romaji
+const dictDir='js/lib/kuromoji-dict';
+if(!fs.existsSync(dictDir)||!fs.readdirSync(dictDir).length){
+  console.log('Downloading kuromoji dictionary...');
+  const {execSync}=require('child_process');
+  try{
+    execSync('npm pack kuromoji@0.1.2',{stdio:'pipe'});
+    const tgz=fs.readdirSync('.').find(f=>f.startsWith('kuromoji-')&&f.endsWith('.tgz'));
+    if(tgz){
+      fs.mkdirSync(dictDir,{recursive:true});
+      execSync(`tar -xzf ${tgz} -C ${dictDir} --strip-components=2 package/dict/`,{stdio:'pipe'});
+      fs.unlinkSync(tgz);
+      console.log('Kuromoji dictionary downloaded.');
+    }
+  }catch(e){console.warn('Failed to download kuromoji dict:',e.message);}
+}

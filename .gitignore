@@ -13,3 +13,4 @@ dist/
 app-icon.png
 metadata.txt
 AGENTS.md
+js/lib/kuromoji-dict/

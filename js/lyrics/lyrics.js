@@ -44,10 +44,11 @@ async function initKuroshiro(){
     if(typeof Kuroshiro==='undefined'||typeof KuromojiAnalyzer==='undefined')return;
     try{
       window.kuroshiroInst=new Kuroshiro();
-      const initPromise=window.kuroshiroInst.init(new KuromojiAnalyzer({dictPath:'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/'}));
+      const initPromise=window.kuroshiroInst.init(new KuromojiAnalyzer({dictPath:'js/lib/kuromoji-dict/'}));
       const tmo=new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout')),10000));
       await Promise.race([initPromise,tmo]);
       kuroshiroReady=true;
+      kuroshiroCallbacks.splice(0).forEach(fn=>fn());
     }catch(e){
       console.warn('Kuroshiro init failed:',e);
       kuroshiroPromise=null;
@@ -67,7 +68,10 @@ function saveRomajiCache(key,data){
   try{localStorage.setItem(key,JSON.stringify(data));}catch(e){}
 }
 async function convertLinesToRomaji(lines){
-  if(!kuroshiroReady){initKuroshiro();return null;}
+  if(!kuroshiroReady){
+    await initKuroshiro();
+    if(!kuroshiroReady)return null;
+  }
   if(!lines.some(l=>hasJapanese(l.text)))return null;
   const ckey=romajiCacheKey(lines);
   const cached=getRomajiCache(ckey);
@@ -195,6 +199,18 @@ async function renderLyrics(data,showEdit){
         updateLyricOffsetUI();
         syncKaraokeLyrics();
         return;
+      }
+      if(!romajiData){
+        const retryRomaji=()=>{
+          convertLinesToRomaji(parsed).then(rd=>{
+            if(rd&&rd.length&&lyricsSongId===lastLyricsSong?.id){
+              lyricLines=rd;
+              renderLyricLines(rd,showEdit);
+              updateLyricOffsetUI();
+            }
+          });
+        };
+        if(!kuroshiroReady)kuroshiroCallbacks.push(retryRomaji);
       }
       lyricLines=parsed;
       renderLyricLines(parsed,showEdit);
