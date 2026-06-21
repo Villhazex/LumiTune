@@ -111,7 +111,7 @@ async function playSong(index,playlistKey,addToQueue){
     }catch(e){console.warn('read_file_bytes failed:',e);}
   }
   if(song.file||song.filePath)playReal(song.file,song);else simPlay(song.duration);
-  fetchLyricsForSong(song);
+  fetchLyricsForSong(song).catch(e=>console.warn('fetchLyricsForSong error:',e));
 }
 
 async function playReal(file,song){

@@ -44,9 +44,14 @@ async function initKuroshiro(){
     if(typeof Kuroshiro==='undefined'||typeof KuromojiAnalyzer==='undefined')return;
     try{
       window.kuroshiroInst=new Kuroshiro();
-      await window.kuroshiroInst.init(new KuromojiAnalyzer({dictPath:'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/'}));
+      const initPromise=window.kuroshiroInst.init(new KuromojiAnalyzer({dictPath:'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/'}));
+      const tmo=new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout')),10000));
+      await Promise.race([initPromise,tmo]);
       kuroshiroReady=true;
-    }catch(e){console.warn('Kuroshiro init failed:',e);}
+    }catch(e){
+      console.warn('Kuroshiro init failed:',e);
+      kuroshiroPromise=null;
+    }
   })();
   return kuroshiroPromise;
 }
@@ -62,7 +67,8 @@ function saveRomajiCache(key,data){
   try{localStorage.setItem(key,JSON.stringify(data));}catch(e){}
 }
 async function convertLinesToRomaji(lines){
-  if(!kuroshiroReady||!lines.some(l=>hasJapanese(l.text)))return null;
+  if(!kuroshiroReady){initKuroshiro();return null;}
+  if(!lines.some(l=>hasJapanese(l.text)))return null;
   const ckey=romajiCacheKey(lines);
   const cached=getRomajiCache(ckey);
   if(cached)return cached;
@@ -79,12 +85,32 @@ async function convertLinesToRomaji(lines){
 }
 async function fetchLyrics(title,artist){
   if(lyricsAbort){lyricsAbort.abort();}
-  lyricsAbort=new AbortController();
+  if(isTauri()&&inv){
+    if(lyricsAbortTimer)clearTimeout(lyricsAbortTimer);
+    lyricsAbort=new AbortController();
+    lyricsAbortTimer=setTimeout(()=>{lyricsAbort?.abort();lyricsAbort=null;},15000);
+    try{
+      const res=await inv('fetch_lyrics',{track:title,artist});
+      clearTimeout(lyricsAbortTimer);lyricsAbortTimer=null;
+      if(res)return res;
+    }catch(e){
+      clearTimeout(lyricsAbortTimer);lyricsAbortTimer=null;
+      if(e?.name==='AbortError')return null;
+      console.warn('fetch_lyrics command failed, falling back to fetch():',e);
+    }
+  }
+  const controller=new AbortController();
+  lyricsAbort=controller;
+  const tmo=setTimeout(()=>controller.abort(),15000);
   const url=`https://lrclib.net/api/search?artist_name=${encodeURIComponent(artist)}&track_name=${encodeURIComponent(title)}`;
   try{
-    const r=await fetch(url,{signal:lyricsAbort.signal});
+    const r=await fetch(url,{signal:controller.signal});
+    clearTimeout(tmo);
     if(r.ok){const arr=await r.json();return arr.length?arr[0]:null;}
-  }catch(e){if(e.name==='AbortError')return null;}
+  }catch(e){
+    clearTimeout(tmo);
+    if(e.name==='AbortError')return null;
+  }
   return null;
 }
 function getLyricsCache(){

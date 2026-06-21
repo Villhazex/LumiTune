@@ -48,6 +48,7 @@ let lastTrackedPos=0;
 let lyricLines=[];
 let lyricsSynced=false;
 let lyricsAbort=null;
+let lyricsAbortTimer=null;
 let kuroshiroReady=false;
 let kuroshiroInitAttempted=false;
 let lyricsMode='romaji';

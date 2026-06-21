@@ -370,6 +370,28 @@ fn identify_single_file(db: tauri::State<db::Database>, path: String, acoustid_k
 }
 
 #[tauri::command]
+fn fetch_lyrics(track: String, artist: String) -> Result<Option<serde_json::Value>, String> {
+    let url = format!("https://lrclib.net/api/search?artist_name={}&track_name={}",
+        urlencoding(&artist), urlencoding(&track));
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(15))
+        .user_agent("LumiTune/1.0")
+        .build().map_err(|e| format!("Client: {}", e))?;
+    let resp = client.get(&url).send().map_err(|e| format!("Request: {}", e))?;
+    if !resp.status().is_success() { return Ok(None); }
+    let arr: Vec<serde_json::Value> = resp.json().map_err(|e| format!("JSON: {}", e))?;
+    Ok(arr.into_iter().next())
+}
+
+fn urlencoding(s: &str) -> String {
+    s.as_bytes().iter().map(|&b| match b {
+        b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => (b as char).to_string(),
+        b' ' => "+".to_string(),
+        _ => format!("%{:02X}", b),
+    }).collect()
+}
+
+#[tauri::command]
 fn read_file_bytes(path: String) -> Result<Vec<u8>, String> {
     std::fs::read(&path).map_err(|e| format!("Read file: {}", e))
 }
@@ -534,7 +556,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             yt_info, yt_download, yt_download_mp3, yt_download_file,
             tb_minimize, tb_maximize, tb_close, tb_is_maximized,
-            scan_library, identify_next, identify_single_file, get_scan_stats, get_pending_ids, pick_folder, read_file_bytes, read_cover, fetch_song_cover, save_yt_thumbnail, extract_file_cover, batch_get_covers, retry_failed,
+            scan_library, identify_next, identify_single_file, get_scan_stats, get_pending_ids, pick_folder, fetch_lyrics, read_file_bytes, read_cover, fetch_song_cover, save_yt_thumbnail, extract_file_cover, batch_get_covers, retry_failed,
             search_deezer_cover, pick_deezer_cover, save_custom_cover,
             start_queue, stop_queue, pause_queue, resume_queue, get_queue_status, drain_processed,
         ])

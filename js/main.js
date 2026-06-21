@@ -377,6 +377,9 @@ document.addEventListener('mouseup',()=>{isDraggingProgress=false;isDraggingVolu
       if(tab)switchTab('queue',tab);
     }
   });
+  document.querySelectorAll('.panel-tab').forEach(tab=>{
+    tab.addEventListener('click',()=>switchTab(tab.dataset.tab,tab));
+  });
 
 const doSearch=debounce(val=>{
   renderSongList(val);
