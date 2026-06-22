@@ -683,6 +683,7 @@ function switchTab(name, el){
 }
 
 function updateUpNext(){
+  _pm('updateUpNext-start');
   const list=$('upNextList');if(!list)return;
   let html='';
   const empty=$('upNextEmpty');if(empty)empty.style.display=queue.length||currentQueueIdx>=0?'none':'';
@@ -738,6 +739,7 @@ function updateUpNext(){
   if(np)np.scrollIntoView({block:'start',behavior:'smooth'});
   const remaining=currentQueueIdx>=0?queue.length-currentQueueIdx-1:queue.length;
   const count=$('queueCount');if(count)count.textContent=remaining+' tracks';
+  _pe('updateUpNext-start','updateUpNext-start');
 }
 
 function updateInfinityIndicator(){

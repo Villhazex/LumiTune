@@ -36,13 +36,23 @@ function toggleRightPanelDisplay(){
   }
 }
 
+function _pm(name){try{performance.mark(name)}catch(e){}}
+function _pe(name,startMark){try{performance.measure(name,startMark);performance.clearMarks(startMark);performance.clearMeasures(name)}catch(e){}}
 async function playSong(index,playlistKey,addToQueue){
+  _pm('playSong-start');
+  if(lyricsAbort){lyricsAbort.abort();lyricsAbort=null;}
+  if(lyricsAbortTimer){clearTimeout(lyricsAbortTimer);lyricsAbortTimer=null;}
+  _lyricsReqId++;
+  lyricsSongId=null;
+
   const wasDifferentPlaylist=playlistKey&&playlistKey!==currentPlaylist;
   if(wasDifferentPlaylist)recordNav();
 
+  _pm('playSong-audioStop');
   audioPlayer.pause();
   if(currentAudioFile){URL.revokeObjectURL(audioPlayer.src);audioPlayer.src='';currentAudioFile=null;}
   clearInterval(playbackInterval);
+  _pe('playSong-audioStop','playSong-audioStop');
 
   if(playlistKey)currentPlaylist=playlistKey;
   currentSongIndex=index;
@@ -72,80 +82,92 @@ async function playSong(index,playlistKey,addToQueue){
   const song=getSong(songId);
   if(!song)return;
 
+  _pm('playSong-domUpdate');
+  lastTrackedPos=0;
+  const aa=$('albumArt');
   $('trackTitle').textContent=displayTitle(song);
   $('trackArtist').textContent=song.artist;
-  const aa=$('albumArt');
-  const emoji=aa.querySelector('.art-emoji');
   if(song.cover){
     aa.style.backgroundImage=`url(${JSON.stringify(song.cover)})`;
     aa.style.backgroundSize='cover';
     aa.style.backgroundPosition='center';
     aa.classList.add('has-cover');
-    emoji.style.display='none';
   }else{
     aa.style.backgroundImage='';
     aa.classList.remove('has-cover');
-    emoji.style.display='';
   }
-  emoji.textContent='♫';
-  updateLikeBtn();
-  isPlaying=true;updatePlayBtn();
-  aa.classList.add('playing');
-  $('vizBars').classList.add('active');
-  lastTrackedPos=0;
-  updateHeroSection();
-  updatePlayingRow();
+  _pe('playSong-domUpdate','playSong-domUpdate');
+  requestAnimationFrame(()=>{
+    _pm('playSong-rAF');
+    const emoji=aa.querySelector('.art-emoji');
+    emoji.textContent='♫';
+    emoji.style.display=song.cover?'none':'';
+    updateLikeBtn();
+    isPlaying=true;updatePlayBtn();
+    aa.classList.add('playing');
+    $('vizBars').classList.add('active');
+    updateHeroSection();
+    updatePlayingRow();
+    _pe('playSong-rAF','playSong-rAF');
+  });
 
+  _pm('playSong-startAudio');
   if(song.file||song.filePath)playReal(song.file,song);else simPlay(song.duration);
+  _pe('playSong-startAudio','playSong-startAudio');
 
   setTimeout(()=>{
+    _pm('playSong-setTimeout0');
     incrementPlayCount(song.id,displayTitle(song),song.artist);
     trackRecentPlay(song,currentPlaylist);
     if(!song.cover)extractCoverBg(song);
     if(wasDifferentPlaylist){renderPlaylistNav();renderPlaylistGrid();saveState();}
     updateUpNext();
-    fetchLyricsForSong(song).catch(e=>console.warn('fetchLyricsForSong error:',e));
+    _pe('playSong-setTimeout0','playSong-setTimeout0');
   },0);
+  setTimeout(()=>{
+    _pm('playSong-fetchLyrics');
+    fetchLyricsForSong(song).catch(e=>console.warn('fetchLyricsForSong error:',e));
+    _pe('playSong-fetchLyrics','playSong-fetchLyrics');
+  },200);
+  _pe('playSong-start','playSong-start');
 }
 
 async function playReal(file,song){
+  _pm('playReal-start');
   const reqId=++_playReqId;
   clearInterval(playbackInterval);
   currentAudioFile=null;
   let src;
+  _pm('playReal-getSrc');
   if(file){
     src=URL.createObjectURL(file);
     currentAudioFile=file;
   }else if(song.filePath&&inv){
     try{
-      const b64=await inv('read_file_bytes_b64',{path:song.filePath});
-      if(reqId!==_playReqId)return;
-      const binary=atob(b64);
-      const bytes=new Uint8Array(binary.length);
-      for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
-      const ext=song.filePath.split('.').pop().toLowerCase();
-      const mime={mp3:'audio/mpeg',wav:'audio/wav',flac:'audio/flac',ogg:'audio/ogg',m4a:'audio/mp4',aac:'audio/aac'}[ext]||'audio/mpeg';
-      const blob=new Blob([bytes],{type:mime});
-      if(reqId!==_playReqId)return;
-      src=URL.createObjectURL(blob);
-      currentAudioFile=blob;
+      src=convertFileSrc(song.filePath);
+      currentAudioFile=src;
     }catch(e){
-      console.warn('read_file_bytes_b64 failed:',e);
+      console.warn('convertFileSrc failed:',e);
       return;
     }
   }else return;
+  _pe('playReal-getSrc','playReal-getSrc');
   console.log('playReal src:',src,'filePath:',song.filePath,'hasFile:',!!file, 'hasInv:',!!inv);
+  _pm('playReal-audioInit');
   audioPlayer.onerror=()=>console.warn('Audio error:',audioPlayer.error?.code,audioPlayer.error?.message,'src:',audioPlayer.src);
   audioPlayer.onloadedmetadata=()=>{totalDuration=audioPlayer.duration;$('totalTime').textContent=fmt(totalDuration);$('heroTotalTime').textContent=fmt(totalDuration);const ktt=$('karaokeTotalTime');if(ktt)ktt.textContent=fmt(totalDuration);song.duration=fmt(totalDuration);const activeRow=$('songList')?.querySelector('.track-row.active');if(activeRow){const durEl=activeRow.querySelector('.t-dur');if(durEl)durEl.textContent=song.duration;}};
   audioPlayer.ontimeupdate=()=>{if(!isDraggingProgress){currentPlaybackTime=audioPlayer.currentTime;if(isPlaying){const delta=currentPlaybackTime-lastTrackedPos;if(delta>0&&delta<5){totalPlayTime+=delta;sessionPlayTime+=delta;}}lastTrackedPos=currentPlaybackTime;updateLyricHighlight(currentPlaybackTime);$('currentTime').textContent=fmt(currentPlaybackTime);$('progressFill').style.width=`${(currentPlaybackTime/totalDuration)*100}%`;const kct=$('karaokeCurrentTime');if(kct)kct.textContent=fmt(currentPlaybackTime);const kpf=$('karaokeProgressFill');if(kpf)kpf.style.width=`${(currentPlaybackTime/totalDuration)*100}%`;updateHeroProgress();}};
   audioPlayer.onended=handleEnd;
   audioPlayer.volume=isMuted?0:volume;
+  _pm('playReal-loadAudio');
   audioPlayer.src=src;
   audioPlayer.load();
   audioPlayer.play().catch(e=>console.warn('play() failed:',e));
+  _pe('playReal-loadAudio','playReal-loadAudio');
   clearInterval(loudnessInterval);
   loudnessInterval=null;
-  if(audioStabilize){initAudioChain();applyGain(song);measureLoudness(song);}
+  if(audioStabilize){_pm('playReal-audioChain');initAudioChain();applyGain(song);measureLoudness(song);_pe('playReal-audioChain','playReal-audioChain');}
+  _pe('playReal-start','playReal-start');
 }
 
 function simPlay(durStr){
