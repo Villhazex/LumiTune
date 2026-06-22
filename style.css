@@ -87,6 +87,23 @@ body {
 .marquee-inner span { padding: 0 28px; }
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
+/* ── ENRICHMENT PROGRESS BAR (global, below marquee) ── */
+.enrich-bar {
+  display: none; height: 7px; position: relative; flex-shrink: 0;
+  background: var(--surface2);
+  overflow: hidden; cursor: default;
+}
+.enrich-bar-fill {
+  height: 100%; width: 0%;
+  background: var(--accent);
+  transition: width .4s ease;
+}
+.enrich-bar-text {
+  position: absolute; right: 8px; top: 4px;
+  font-size: 10px; color: var(--text-dim); white-space: nowrap;
+  pointer-events: none; font-family: inherit;
+}
+
 /* ── TITLE BAR (custom app-drawn, Tauri only) ── */
 #titlebar {
   display: none; height: 32px;

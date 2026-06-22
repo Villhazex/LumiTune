@@ -347,13 +347,16 @@ function showSettingsModal(){
             if(enrichmentEnabled&&allFiles.length>0){
               status.textContent='Starting background enrichment...';
               $('settingsBtn').classList.add('enriching');
+              showEnrichBar(0,allFiles.length,'Identifying...');
               startBackgroundEnrichment(({done,total,status:s})=>{
                 fill.style.width=(total>0?(done/total*100).toFixed(0):'0')+'%';
                 txt.textContent=`${done} / ${total}`;
                 if(s)status.textContent=s;
+                showEnrichBar(done,total,s||'');
               },ACOUSTID_API_KEY,3,allFiles,allPlKeys[0]).finally(()=>{
                 $('settingsBtn').classList.remove('enriching');
                 prog.style.display='none';
+                hideEnrichBar();
               });
             }else{
               prog.style.display='none';
@@ -769,6 +772,16 @@ async function importPlaylists(e){
   e.target.value='';
 }
 
+function showEnrichBar(done,total,text){
+  const bar=$('enrichBar');const fill=$('enrichBarFill');const t=$('enrichBarText');
+  bar.style.display='block';
+  fill.style.width=(total>0?(done/total*100).toFixed(0):'0')+'%';
+  t.textContent=text||`${done} / ${total}`;
+}
+function hideEnrichBar(){
+  $('enrichBar').style.display='none';
+}
+
 async function doScanFolder(){
   if(!isTauri()){showToast('Folder scanning only available in desktop app');return;}
   const folder=await inv('pick_folder').catch(()=>null);
@@ -808,10 +821,13 @@ async function doScanFolder(){
     if(allFiles.length>0){
       const label=subCount>0?folderName+' + '+subCount+' subfolder'+(subCount>1?'s':''):folderName;
       $('settingsBtn').classList.add('enriching');
+      showEnrichBar(0,allFiles.length,'Identifying...');
       startBackgroundEnrichment(({done,total,status:s})=>{
         prog.update({done,total,status:s||'',label:'Identifying '+esc(label)});
+        showEnrichBar(done,total,s);
       },ACOUSTID_API_KEY,3,allFiles,allPlKeys[0]).finally(()=>{
         $('settingsBtn').classList.remove('enriching');
+        hideEnrichBar();
       });
     }
     if(!prog.cancelled()){
