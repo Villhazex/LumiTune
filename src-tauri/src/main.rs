@@ -403,6 +403,16 @@ fn read_file_bytes_b64(path: String) -> Result<String, String> {
 }
 
 #[tauri::command]
+fn copy_to_temp(path: String) -> Result<String, String> {
+    let src = std::path::Path::new(&path);
+    let ext = src.extension().and_then(|e| e.to_str()).unwrap_or("bin");
+    let stem = uuid::Uuid::new_v4();
+    let dest = std::env::temp_dir().join(format!("lumitune_{}.{}", stem, ext));
+    std::fs::copy(src, &dest).map_err(|e| format!("Copy file: {}", e))?;
+    Ok(dest.to_string_lossy().to_string())
+}
+
+#[tauri::command]
 fn fetch_song_cover(title: String, artist: String, paths: tauri::State<AppPaths>) -> Result<Option<(String, String)>, String> {
     let covers_dir = paths.covers_dir.to_string_lossy().to_string();
     match metadata::fetch_and_save_manual_cover(&title, &artist, &covers_dir) {
@@ -562,7 +572,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             yt_info, yt_download, yt_download_mp3, yt_download_file,
             tb_minimize, tb_maximize, tb_close, tb_is_maximized,
-            scan_library, identify_next, identify_single_file, get_scan_stats, get_pending_ids, pick_folder, fetch_lyrics, read_file_bytes, read_file_bytes_b64, read_cover, fetch_song_cover, save_yt_thumbnail, extract_file_cover, batch_get_covers, retry_failed,
+            scan_library, identify_next, identify_single_file, get_scan_stats, get_pending_ids, pick_folder, fetch_lyrics, read_file_bytes, read_file_bytes_b64, copy_to_temp, read_cover, fetch_song_cover, save_yt_thumbnail, extract_file_cover, batch_get_covers, retry_failed,
             search_deezer_cover, pick_deezer_cover, save_custom_cover,
             start_queue, stop_queue, pause_queue, resume_queue, get_queue_status, drain_processed,
         ])

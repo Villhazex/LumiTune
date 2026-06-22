@@ -108,10 +108,13 @@ function groupSongsBy(field){
   return [...map.entries()].sort((a,b)=>a[0].localeCompare(b[0],undefined,{numeric:true}));
 }
 
-function readID3Tags(file){
+function readID3Tags(file,signal){
   return new Promise(res=>{
     if(!file||typeof jsmediatags==='undefined'){res(null);return;}
+    if(signal?.aborted){res(null);return;}
     const timer=setTimeout(()=>res(null),1500);
+    const onAbort=()=>{clearTimeout(timer);res(null);};
+    signal?.addEventListener('abort',onAbort,{once:true});
     jsmediatags.read(file,{
       onSuccess:t=>{clearTimeout(timer);res(t.tags);},
       onError:()=>{clearTimeout(timer);res(null);}

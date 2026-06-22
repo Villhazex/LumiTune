@@ -34,7 +34,7 @@
       ]
     },
     "security": {
-      "csp": "default-src 'self'; script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; connect-src 'self' https://cdn.jsdelivr.net https://lrclib.net asset:; media-src 'self' blob: asset:; img-src 'self' data: https: blob: asset:; font-src 'self' data: https://fonts.gstatic.com"
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; connect-src 'self' https://cdn.jsdelivr.net https://lrclib.net asset: https://asset.localhost; media-src 'self' blob: asset: https://asset.localhost; img-src 'self' data: https: blob: asset: https://asset.localhost; font-src 'self' data: https://fonts.gstatic.com"
     },
     "windows": [
       {

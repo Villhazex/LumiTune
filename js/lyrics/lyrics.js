@@ -431,11 +431,12 @@ async function applyUserLyrics(songId,forcedType,text){
   if(song){$('lyricEditBtn')?.addEventListener('click',showEditLyricsModal);$('lyricDeleteBtn')?.addEventListener('click',deleteCurrentUserLyrics);}
 }
 async function fetchLyricsForSong(song){
+  if(lyricsAbort){lyricsAbort.abort();lyricsAbort=null;}
+  if(lyricsAbortTimer){clearTimeout(lyricsAbortTimer);lyricsAbortTimer=null;}
   const reqId=++_lyricsReqId;
   lyricsSongId=song.id;
   lastLyricsSong=song;
   loadLyricOffsetForSong(song.id);
-  showLyricsLoading();
   initKuroshiro();
   let title=song.title;
   let artist=song.artist;
@@ -475,17 +476,7 @@ async function fetchLyricsForSong(song){
     return;
   }
 
-  const readTags=!song.metadataEdited&&song.file&&typeof jsmediatags!=='undefined'?readID3Tags(song.file):null;
-  const dataPromise=fetchLyrics(title,artist);
-  if(readTags){
-    const tags=await readTags;
-    if(reqId!==_lyricsReqId)return;
-    if(tags){
-      if(tags.title)title=tags.title;
-      if(tags.artist)artist=tags.artist;
-    }
-  }
-  const data=await dataPromise;
+  const data=await fetchLyrics(title,artist);
   if(reqId!==_lyricsReqId)return;
   if(!data){showLyricsNotFound(song);return;}
   saveCachedLyrics(song,title,artist,data);

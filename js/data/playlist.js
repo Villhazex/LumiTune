@@ -29,7 +29,7 @@ async function handleAddTracks(e){
   const loading=showLoading(`<div class="yt-loading"><div class="yt-spinner"></div><div class="yt-step">0 of ${files.length}</div><div>Adding files&hellip;</div></div>`);
   for(const[idx,file]of files.entries()){
     const id=startId+idx;const fk=`file-${targetKey}-${id}`;
-    const[cover,,tags]=await Promise.all([extractCoverFromFile(file),dbStore(fk,file),readID3Tags(file)]);
+    const[cover,,tags]=await Promise.all([extractCoverFromFile(file),dbStore(fk,file),readID3Tags(file,undefined)]);
     const t=tags||{};
     const dur=typeof t.duration==='number'?fmt(Math.round(t.duration)):t.duration||'--:--';
     const trackTitle=t.title||file.name.replace(/\.[^/.]+$/,'');const fileNameOnly=file.name.replace(/\.[^/.]+$/,'');

@@ -773,7 +773,7 @@ async function rescanSongFromBlob(song){
   if(!blob)return 0;
   try{
     const [tags,cover]=await Promise.all([
-      readID3Tags(blob),
+      readID3Tags(blob,undefined),
       extractCoverFromFile(blob)
     ]);
     if(tags){
