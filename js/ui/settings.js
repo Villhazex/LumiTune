@@ -345,22 +345,9 @@ function showSettingsModal(){
             const plCount=allPlKeys.length;
             showToast(`Added ${allFiles.length} songs across ${plCount} playlist${plCount>1?'s':''}`);
             if(enrichmentEnabled&&allFiles.length>0){
-              status.textContent='Starting background enrichment...';
               $('settingsBtn').classList.add('enriching');
-              showEnrichBar(0,allFiles.length,'Identifying...');
-              startBackgroundEnrichment(({done,total,status:s})=>{
-                fill.style.width=(total>0?(done/total*100).toFixed(0):'0')+'%';
-                txt.textContent=`${done} / ${total}`;
-                if(s)status.textContent=s;
-                showEnrichBar(done,total,s||'');
-              },ACOUSTID_API_KEY,3,allFiles,allPlKeys[0]).finally(()=>{
-                $('settingsBtn').classList.remove('enriching');
-                prog.style.display='none';
-                hideEnrichBar();
-              });
-            }else{
-              prog.style.display='none';
             }
+            prog.style.display='none';
             btn.innerHTML='<svg viewBox="0 0 16 16" fill="currentColor" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px"><path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h4.88a1.5 1.5 0 0 1 1.06.44l.88.88A1.5 1.5 0 0 0 10.38 3H13.5A1.5 1.5 0 0 1 15 4.5V12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V2.5Z"/></svg> Scan Folder';
             btn.disabled=false;
             refreshStats();
@@ -520,14 +507,66 @@ async function runQueueCollect(progEl,fillEl,txtEl,statusEl,key,concurrency){
   return results;
 }
 
-async function startBackgroundEnrichment(onProgress,key,concurrency,scannedFiles,plKey){
-  const total=scannedFiles.length;
-  await inv('start_queue',{acoustidKey:key,concurrency});
+function getCurrentFilePath(){
+  const sid=currentSongIndex>=0?playlists[currentPlaylist]?.songs?.[currentSongIndex]:null;
+  return sid?songs[sid]?.filePath||null:null;
+}
+
+async function triggerEnrichment(){
+  if(window._enrichRunning)return;
+  if(!inv)return;
+  window._enrichRunning=true;
+  showEnrichBar(0,0,'Identifying…');
+  const filePath=getCurrentFilePath();
+  if(!filePath){window._enrichRunning=false;hideEnrichBar();return;}
+  try{
+    const result=await inv('identify_single_file',{path:filePath,acoustidKey:ACOUSTID_API_KEY});
+    const songId=currentSongIndex>=0?playlists[currentPlaylist]?.songs?.[currentSongIndex]:null;
+    const song=songId?songs[songId]:null;
+    if(result&&result.success){
+      if(song)applyCanonicalUpdate(song,result);
+      if(song&&result.cover_data_base64&&!song.cover)song.cover='data:'+result.cover_mime+';base64,'+result.cover_data_base64;
+      saveState();
+      renderSongList($('searchInput').value);
+      renderPlaylistGrid();
+      const loc=song?findSongLocation(song):null;
+      if(loc&&loc.playlistKey===currentPlaylist&&loc.index===currentSongIndex){
+        $('trackTitle').textContent=displayTitle(song);
+        $('trackArtist').textContent=song.artist;
+        updateHeroSection();
+      }
+      showEnrichBar(1,1,`${esc(result.title)} — ${esc(result.artist)} (${result.method})`);
+    }else{
+      showEnrichBar(0,0,'Failed');
+    }
+  }catch(e){
+    console.warn('[enrich] identify_single_file error:',e);
+    showEnrichBar(0,0,'Error');
+  }finally{
+    window._enrichRunning=false;
+    inv('get_queue_status').then(qs=>{
+      if(!qs||qs.total===0)$('settingsBtn').classList.remove('enriching');
+    }).catch(()=>{});
+    setTimeout(()=>hideEnrichBar(),2000);
+  }
+}
+
+async function startBackgroundEnrichment(onProgress,key,concurrency,scannedFiles,plKey,priorityPath){
+  let total=scannedFiles?scannedFiles.length:0;
+  try{
+    await inv('start_queue',{acoustidKey:key,concurrency});
+  }catch(e){
+    console.warn('[enrich] start_queue failed:',e);
+    showToast('Enrichment error: '+e,3000);
+    return;
+  }
   try{
     while(true){
       await sleep(250);
       const qs=await inv('get_queue_status');
       if(!qs.running)break;
+      if(!total)total=qs.total;
+      if(total===0){console.log('[enrich] no pending files');break;}
       const done=qs.completed+qs.errors.length;
       const drain=await inv('drain_processed');
       if(drain.length>0){
@@ -819,16 +858,7 @@ async function doScanFolder(){
     renderPlaylistGrid();
     if(allPlKeys.length>0)switchPlaylist(allPlKeys[0]);
     if(allFiles.length>0){
-      const label=subCount>0?folderName+' + '+subCount+' subfolder'+(subCount>1?'s':''):folderName;
       $('settingsBtn').classList.add('enriching');
-      showEnrichBar(0,allFiles.length,'Identifying...');
-      startBackgroundEnrichment(({done,total,status:s})=>{
-        prog.update({done,total,status:s||'',label:'Identifying '+esc(label)});
-        showEnrichBar(done,total,s);
-      },ACOUSTID_API_KEY,3,allFiles,allPlKeys[0]).finally(()=>{
-        $('settingsBtn').classList.remove('enriching');
-        hideEnrichBar();
-      });
     }
     if(!prog.cancelled()){
       prog.close();

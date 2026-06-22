@@ -28,6 +28,7 @@ pub struct WorkerQueue {
     alive_workers: Arc<AtomicUsize>,
     db: Arc<Database>,
     covers_dir: String,
+    priority_path: Arc<Mutex<Option<String>>>,
 }
 
 const MAX_IDLE_ROUNDS: u32 = 5;
@@ -55,10 +56,11 @@ impl WorkerQueue {
             alive_workers: Arc::new(AtomicUsize::new(0)),
             db: Arc::new(db),
             covers_dir,
+            priority_path: Arc::new(Mutex::new(None)),
         }
     }
 
-    pub fn start(&self, acoustid_key: String, concurrency: usize) -> Result<(), String> {
+    pub fn start(&self, acoustid_key: String, concurrency: usize, priority_path: Option<String>) -> Result<(), String> {
         if self.running.load(Ordering::Relaxed) {
             return Err("Queue already running".into());
         }
@@ -69,6 +71,7 @@ impl WorkerQueue {
         self.errors.lock().unwrap().clear();
         self.current.lock().unwrap().clear();
         self.processed.lock().unwrap().clear();
+        *self.priority_path.lock().unwrap() = priority_path;
 
         // Reset any stale processing files
         self.db.reset_stale_processing().ok();
@@ -82,6 +85,7 @@ impl WorkerQueue {
         let alive = self.alive_workers.clone();
         let db = self.db.clone();
         let covers_dir = self.covers_dir.clone();
+        let priority = self.priority_path.clone();
 
         self.alive_workers.store(concurrency, Ordering::Relaxed);
 
@@ -98,8 +102,9 @@ impl WorkerQueue {
             let db = db.clone();
             let key = acoustid_key.clone();
             let covers = covers_dir.clone();
+            let prio = priority.clone();
             let handle = thread::spawn(move || {
-                worker_loop(r, p, c, e, cur, pr, a, db, key, covers);
+                worker_loop(r, p, c, e, cur, pr, a, db, key, covers, prio);
             });
             handles.push(handle);
         }
@@ -159,6 +164,7 @@ fn worker_loop(
     db: Arc<Database>,
     acoustid_key: String,
     covers_dir: String,
+    priority_path: Arc<Mutex<Option<String>>>,
 ) {
     let mut idle = 0u32;
     while running.load(Ordering::Relaxed) {
@@ -167,7 +173,8 @@ fn worker_loop(
             continue;
         }
 
-        let file = match get_next_file(&db) {
+        let prio = priority_path.lock().unwrap().clone();
+        let file = match get_next_file(&db, &prio) {
             Ok(Some(f)) => {
                 idle = 0;
                 f
@@ -218,7 +225,14 @@ fn worker_loop(
     alive_workers.fetch_sub(1, Ordering::Relaxed);
 }
 
-fn get_next_file(db: &Database) -> Result<Option<FileEntry>, String> {
+fn get_next_file(db: &Database, priority_path: &Option<String>) -> Result<Option<FileEntry>, String> {
+    if let Some(path) = priority_path {
+        if !path.is_empty() {
+            if let Some(f) = db.get_pending_file_by_path(path)? {
+                return Ok(Some(f));
+            }
+        }
+    }
     let pending = db.get_pending_files()?;
     if let Some(f) = pending.into_iter().next() {
         return Ok(Some(f));

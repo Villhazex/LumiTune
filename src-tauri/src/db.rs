@@ -226,6 +226,27 @@ impl Database {
         Ok(files)
     }
 
+    pub fn get_pending_file_by_path(&self, path: &str) -> Result<Option<FileEntry>, String> {
+        let conn = self.conn.lock().map_err(|e| format!("DB lock: {}", e))?;
+        let mut stmt = conn.prepare(
+            "SELECT id, path, size, modified, status, audio_hash FROM files WHERE status = 'pending' AND path = ?1 LIMIT 1"
+        ).map_err(|e| format!("DB prepare: {}", e))?;
+        let rows = stmt.query_map(params![path], |r| {
+            Ok(FileEntry {
+                id: r.get(0)?,
+                path: r.get(1)?,
+                size: r.get(2)?,
+                modified: r.get(3)?,
+                status: r.get(4)?,
+                audio_hash: r.get::<_, Option<String>>(5)?.unwrap_or_default(),
+            })
+        }).map_err(|e| format!("DB query: {}", e))?;
+        for row in rows {
+            return Ok(Some(row.map_err(|e| format!("DB row: {}", e))?));
+        }
+        Ok(None)
+    }
+
     pub fn get_pending_files(&self) -> Result<Vec<FileEntry>, String> {
         let conn = self.conn.lock().map_err(|e| format!("DB lock: {}", e))?;
         let mut stmt = conn.prepare(

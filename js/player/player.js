@@ -123,6 +123,7 @@ async function playSong(index,playlistKey,addToQueue){
     if(!song.cover)extractCoverBg(song);
     if(wasDifferentPlaylist){renderPlaylistNav();renderPlaylistGrid();saveState();}
     updateUpNext();
+    if(typeof triggerEnrichment==='function')triggerEnrichment();
     _pe('playSong-setTimeout0','playSong-setTimeout0');
   },0);
   setTimeout(()=>{

@@ -511,9 +511,9 @@ fn batch_get_covers(db: tauri::State<db::Database>, paths: Vec<String>) -> Resul
 // ── Worker queue commands ──
 
 #[tauri::command]
-fn start_queue(queue: tauri::State<worker::WorkerQueue>, acoustid_key: String, concurrency: u8) -> Result<(), String> {
+fn start_queue(queue: tauri::State<worker::WorkerQueue>, acoustid_key: String, concurrency: u8, priority_path: Option<String>) -> Result<(), String> {
     let c = concurrency.max(1).min(8) as usize;
-    queue.start(acoustid_key, c)
+    queue.start(acoustid_key, c, priority_path)
 }
 
 #[tauri::command]
