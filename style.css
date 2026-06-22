@@ -362,6 +362,12 @@ body {
   font-family: 'DM Mono', monospace;
 }
 .icon-btn:hover { color: var(--text); background: var(--surface3); border-color: var(--border); }
+.icon-btn.enriching { position: relative; }
+.icon-btn.enriching::after {
+  content: ''; position: absolute; top: 1px; right: 1px;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent);
+}
 
 .sidebar-toggle-btn {
   width: 28px; height: 28px;

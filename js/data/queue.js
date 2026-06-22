@@ -3,7 +3,7 @@ function addToQueue(playlistKey,songIndex,silent){
   if(!pl||songIndex<0||songIndex>=pl.songs.length)return;
   queue.push({playlistKey,songIndex});
   updateQueueUI();updateUpNext();
-  if(!silent)showToast('↓ Added to queue');
+  if(!silent)showToast('Added to queue');
 }
 function removeFromQueue(index){
   if(index<0||index>=queue.length)return;

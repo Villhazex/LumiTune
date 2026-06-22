@@ -200,11 +200,11 @@ async function rescanTrack(song){
         fetchLyricsForSong(song);
       }
       const changed=displayTitle(song)!==oldTitle||song.artist!==oldArtist;
-      showToast((changed?'✅ ':'ℹ️ ')+(changed?'Updated: ':'No change to title/artist. ')+displayTitle(song)+' — '+song.artist);
+      showToast((changed?'Updated: ':'No change to title/artist. ')+displayTitle(song)+' — '+song.artist);
     }else{
-      showToast('❌ Rescan failed: '+(result?.error||'Unknown error'));
+      showToast('Rescan failed: '+(result?.error||'Unknown error'));
     }
   }catch(e){
-    showToast('❌ Rescan error: '+e);
+    showToast('Rescan error: '+e);
   }
 }

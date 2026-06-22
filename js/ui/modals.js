@@ -4,7 +4,7 @@ function showConfirm(msg, confirmText){
     o.innerHTML=`<div class="modal-box">
       <div class="modal-msg">${msg}</div>
       <div class="modal-actions">
-        <button class="modal-btn" id="mc" title="Cancel">Cancel</button>
+        <button class="modal-btn" id="mc" title="No">No</button>
         <button class="modal-btn modal-ok" id="mo" title="Confirm">${confirmText||'Delete'}</button>
       </div>
     </div>`;

@@ -343,24 +343,29 @@ function showSettingsModal(){
             if(allPlKeys.length>0)switchPlaylist(allPlKeys[0]);
             const subCount=subDirs.length;
             const plCount=allPlKeys.length;
-            showToast(`✅ Added ${allFiles.length} songs across ${plCount} playlist${plCount>1?'s':''}`);
+            showToast(`Added ${allFiles.length} songs across ${plCount} playlist${plCount>1?'s':''}`);
             if(enrichmentEnabled&&allFiles.length>0){
               status.textContent='Starting background enrichment...';
-              await startBackgroundEnrichment(({done,total,status:s})=>{
+              $('settingsBtn').classList.add('enriching');
+              startBackgroundEnrichment(({done,total,status:s})=>{
                 fill.style.width=(total>0?(done/total*100).toFixed(0):'0')+'%';
                 txt.textContent=`${done} / ${total}`;
                 if(s)status.textContent=s;
-              },ACOUSTID_API_KEY,3,allFiles,allPlKeys[0]);
+              },ACOUSTID_API_KEY,3,allFiles,allPlKeys[0]).finally(()=>{
+                $('settingsBtn').classList.remove('enriching');
+                prog.style.display='none';
+              });
+            }else{
+              prog.style.display='none';
             }
             btn.innerHTML='<svg viewBox="0 0 16 16" fill="currentColor" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px"><path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h4.88a1.5 1.5 0 0 1 1.06.44l.88.88A1.5 1.5 0 0 0 10.38 3H13.5A1.5 1.5 0 0 1 15 4.5V12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V2.5Z"/></svg> Scan Folder';
             btn.disabled=false;
-            prog.style.display='none';
             refreshStats();
           }catch(e){
             btn.innerHTML='<svg viewBox="0 0 16 16" fill="currentColor" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px"><path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h4.88a1.5 1.5 0 0 1 1.06.44l.88.88A1.5 1.5 0 0 0 10.38 3H13.5A1.5 1.5 0 0 1 15 4.5V12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V2.5Z"/></svg> Scan Folder';
             btn.disabled=false;
             status.textContent='Error: '+e;
-            showToast('❌ '+e,3000);
+            showToast('Error: '+e,3000);
           }
         };
         $('sIdentifyAll').onclick=async()=>{
@@ -537,13 +542,22 @@ async function startBackgroundEnrichment(onProgress,key,concurrency,scannedFiles
         applyCanonicalUpdate(song,r);
       }
       if(drain.length>0){
-        saveState();
-        renderSongList($('searchInput').value);
-        renderPlaylistGrid();
+        if(!window._enrichSaveTimer){
+          window._enrichSaveTimer=setTimeout(()=>{
+            window._enrichSaveTimer=null;
+            saveState();
+            renderSongList($('searchInput').value);
+            renderPlaylistGrid();
+          },2000);
+        }
       }
     }
   }finally{
     await inv('stop_queue').catch(()=>{});
+    if(window._enrichSaveTimer){clearTimeout(window._enrichSaveTimer);window._enrichSaveTimer=null;}
+    saveState();
+    renderSongList($('searchInput').value);
+    renderPlaylistGrid();
   }
 }
 
@@ -663,9 +677,9 @@ function createPlaylistFromScan(files,results,playlistName,skipSaveRender){
       const failed=results.filter(r=>!r.success);
       let msg=`${ok}/${results.length} → "${playlistName}"`;
       if(failed.length>0)msg+=` | ${failed.length} failed: ${esc(failed[0].error||'?')}`;
-      showToast(`✅ ${msg}`);
+      showToast(`${msg}`);
     }else{
-      showToast(`✅ Added ${ids.length} songs to "${esc(playlistName)}"`);
+      showToast(`Added ${ids.length} songs to "${esc(playlistName)}"`);
     }
   }
   return plKey;
@@ -793,18 +807,20 @@ async function doScanFolder(){
     if(allPlKeys.length>0)switchPlaylist(allPlKeys[0]);
     if(allFiles.length>0){
       const label=subCount>0?folderName+' + '+subCount+' subfolder'+(subCount>1?'s':''):folderName;
-      prog.update({done:0,total:allFiles.length,status:'Starting identification...',label:'Identifying '+esc(label)});
-      await startBackgroundEnrichment(({done,total,status:s})=>{
+      $('settingsBtn').classList.add('enriching');
+      startBackgroundEnrichment(({done,total,status:s})=>{
         prog.update({done,total,status:s||'',label:'Identifying '+esc(label)});
-      },ACOUSTID_API_KEY,3,allFiles,allPlKeys[0]);
+      },ACOUSTID_API_KEY,3,allFiles,allPlKeys[0]).finally(()=>{
+        $('settingsBtn').classList.remove('enriching');
+      });
     }
     if(!prog.cancelled()){
       prog.close();
       const plCount=allPlKeys.length;
-      showToast(`✅ Added ${allFiles.length} songs across ${plCount} playlist${plCount>1?'s':''}`);
+      showToast(`Added ${allFiles.length} songs across ${plCount} playlist${plCount>1?'s':''}`);
     }
   }catch(e){
     prog.close();
-    showToast('❌ '+e,3000);
+    showToast('Error: '+e,3000);
   }
 }

@@ -44,6 +44,7 @@ async function playSong(index,playlistKey,addToQueue){
   if(lyricsAbortTimer){clearTimeout(lyricsAbortTimer);lyricsAbortTimer=null;}
   _lyricsReqId++;
   lyricsSongId=null;
+  showLyricsLoading();
 
   const wasDifferentPlaylist=playlistKey&&playlistKey!==currentPlaylist;
   if(wasDifferentPlaylist)recordNav();
@@ -336,7 +337,7 @@ function updatePlayBtn(){
   const kpa=$('karaokePauseIcon');if(kpa)kpa.style.display=isPlaying?'inline':'none';
 }
 function toggleShuffle(){isShuffle=!isShuffle;$('shuffleBtn').classList.toggle('active',isShuffle);const hs=$('heroShuffleBtn');if(hs)hs.classList.toggle('active',isShuffle);saveState();showToast('Shuffle '+(isShuffle?'On':'Off'));}
-function toggleRepeat(){repeatMode=(repeatMode+1)%3;$('repeatBtn').classList.toggle('active',repeatMode>0);$('repeatBtn').textContent=repeatMode===2?'↺¹':'↺';const hr=$('heroRepeatBtn');if(hr){hr.classList.toggle('active',repeatMode>0);hr.textContent=repeatMode===2?'↺¹':'↺';}saveState();const labels=['↺ Repeat Off','↺ Repeat All','↺¹ Repeat One'];showToast(labels[repeatMode]);}
+function toggleRepeat(){repeatMode=(repeatMode+1)%3;$('repeatBtn').classList.toggle('active',repeatMode>0);$('repeatBtn').textContent=repeatMode===2?'↺¹':'↺';const hr=$('heroRepeatBtn');if(hr){hr.classList.toggle('active',repeatMode>0);hr.textContent=repeatMode===2?'↺¹':'↺';}saveState();const labels=['Repeat Off','Repeat All','Repeat One'];showToast(labels[repeatMode]);}
 function toggleFav(id){
   id=String(id);
   if(favorites.has(id))favorites.delete(id);else favorites.add(id);
@@ -345,7 +346,7 @@ function toggleFav(id){
   const lb=ar?.querySelector('.like-btn');
   if(lb){lb.classList.toggle('liked',favorites.has(id));lb.textContent=favorites.has(id)?'★':'☆';}
   saveState();
-  showToast(favorites.has(id)?'♥ Added to Favorites':'♡ Removed from Favorites');
+  showToast(favorites.has(id)?'Added to Favorites':'Removed from Favorites');
 }
 function updateLikeBtn(){
   if(currentSongIndex===-1)return;
@@ -405,7 +406,7 @@ function showVolPopup(){
   const existing=document.querySelector('.vol-popup');if(existing)existing.remove();
   const popup=document.createElement('div');
   popup.className='vol-popup';
-  popup.textContent=isMuted?'🔇 0%':'🔊 '+Math.round(volume*100)+'%';
+  popup.textContent=(isMuted?0:Math.round(volume*100))+'%';
   document.body.appendChild(popup);
   requestAnimationFrame(()=>popup.classList.add('show'));
   clearTimeout(window.volPopupTimer);

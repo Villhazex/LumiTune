@@ -99,7 +99,7 @@ $('queueAllBtn')?.addEventListener('click',()=>{
     const items=getQueueAllItems();
     if(!items.length)return;
     items.forEach(item=>addToQueue(item.playlistKey,item.songIndex,true));
-    showToast(`↓ ${items.length} added to queue`);
+    showToast(`${items.length} added to queue`);
     const tab=document.querySelector('.panel-tab:nth-child(2)');
     if(tab)switchTab('queue',tab);
   });
@@ -536,7 +536,7 @@ $('songList').addEventListener('click',e=>{
   }
   closeAllDropdowns();
   const copyBtn=e.target.closest('.copy-btn');if(copyBtn){const inp=copyBtn.closest('.input-wrap')?.querySelector('.modal-input')??$(copyBtn.dataset.copy);if(inp){const t=inp.value;if(!t)return;navigator.clipboard.writeText(t).then(()=>{copyBtn.classList.add('copied','show-tip');setTimeout(()=>copyBtn.classList.remove('copied','show-tip'),1500);}).catch(()=>{});}return;}
-  const qadd=e.target.closest('[data-qadd]');if(qadd){if(qadd.dataset.qpl==='__loose'){showToast('⊕ Add this song to a playlist first');return;}addToQueue(qadd.dataset.qpl,parseInt(qadd.dataset.qadd));return;}
+  const qadd=e.target.closest('[data-qadd]');if(qadd){if(qadd.dataset.qpl==='__loose'){showToast('Add this song to a playlist first');return;}addToQueue(qadd.dataset.qpl,parseInt(qadd.dataset.qadd));return;}
   const addpl=e.target.closest('[data-addpl]');if(addpl){handleAddToAnotherPlaylist(addpl.dataset.addplPl,parseInt(addpl.dataset.addpl));return;}
   const movepl=e.target.closest('[data-movepl]');if(movepl){handleMoveToPlaylist(movepl.dataset.moveplPl,parseInt(movepl.dataset.movepl));return;}
   const edit=e.target.closest('[data-edit]');if(edit){showMetadataEditor(edit.dataset.editPl,parseInt(edit.dataset.edit));return;}
@@ -561,7 +561,7 @@ $('songList').addEventListener('click',e=>{
         return;
       }
       const plKey=row.dataset.playlist||currentPlaylist;
-      if(plKey==='__loose'){showToast('⊕ Add this song to a playlist first');return;}
+      if(plKey==='__loose'){showToast('Add this song to a playlist first');return;}
       currentQueueIdx=-1;playlistCardHistory=[];playSong(parseInt(row.dataset.index),plKey,false);
     }
 });
@@ -715,7 +715,7 @@ function handleDownload(plKey,idx){
           const a=document.createElement('a');a.href=url;a.download=`${name}.mp3`;
           document.body.appendChild(a);a.click();a.remove();
           URL.revokeObjectURL(url);
-          showToast(`⬇ Downloaded ${displayTitle(song)}`);
+          showToast(`Downloaded ${displayTitle(song)}`);
         }catch(e){showToast('Download failed');}
       })();
     }else{
@@ -723,7 +723,7 @@ function handleDownload(plKey,idx){
       a.href=`/api/download-mp3?url=${encodeURIComponent(song.sourceUrl)}`;
       a.download=`${name}.mp3`;
       document.body.appendChild(a);a.click();a.remove();
-      showToast(`⬇ Downloading ${displayTitle(song)}...`);
+      showToast(`Downloading ${displayTitle(song)}...`);
     }
   }else if(song.file){
     const ct=song.file.type;
@@ -739,7 +739,7 @@ function handleDownload(plKey,idx){
     a.href=url;a.download=`${name}.${ext}`;
     document.body.appendChild(a);a.click();a.remove();
     URL.revokeObjectURL(url);
-    showToast(`⬇ Downloaded ${displayTitle(song)}`);
+    showToast(`Downloaded ${displayTitle(song)}`);
   }else showToast('No audio data to download');
 }
 
@@ -921,5 +921,5 @@ $('infinityBtn')?.addEventListener('click',()=>{
   infinityMode=modes[(idx+1)%modes.length];
   saveState();
   updateInfinityIndicator();
-  showToast(infinityMode==='off'?'∞ Infinity Off':infinityMode==='song'?'∞ Random Song':'∞ Random Playlist',1200);
+  showToast(infinityMode==='off'?'Infinity Off':infinityMode==='song'?'Random Song':'Random Playlist',1200);
 });

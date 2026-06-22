@@ -452,6 +452,11 @@ async function fetchLyricsForSong(song){
   initKuroshiro();
   let title=song.title;
   let artist=song.artist;
+  const hasLirik=!!getUserLyrics(song.id)||!!readCachedLyrics(song,title,artist);
+  if(!hasLirik){
+    await new Promise(r=>setTimeout(r,5000));
+    if(reqId!==_lyricsReqId){_pe('fetchLyricsForSong-start','fetchLyricsForSong-start');return;}
+  }
   const user=getUserLyrics(song.id);
   if(user){
     await renderLyrics(user.type==='synced'?{syncedLyrics:user.lyrics}:{plainLyrics:user.lyrics},true);
