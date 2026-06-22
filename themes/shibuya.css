@@ -561,7 +561,7 @@ body[data-theme="shibuya"] .track-actions button:hover { color: var(--red2); bac
 body[data-theme="shibuya"] .track-actions .like-btn { font-size: 15px; }
 body[data-theme="shibuya"] .track-actions .like-btn.liked { color: var(--red2); }
 
-body[data-theme="shibuya"] .badge { display:inline-flex; align-items:center; gap:5px; font-size:10px; letter-spacing:0.08em; padding:3px 9px; border-radius:2px; text-transform:uppercase; font-family:'DM Mono',monospace; }
+body[data-theme="shibuya"] .badge { display:inline-flex; align-items:center; gap:5px; margin-left:8px; font-size:10px; letter-spacing:0.08em; padding:3px 9px; border-radius:2px; text-transform:uppercase; font-family:'DM Mono',monospace; }
 body[data-theme="shibuya"] .badge-playing { background:var(--red-dim); color:var(--red2); border:1px solid var(--red); }
 body[data-theme="shibuya"] .badge-paused { background:var(--surface2); color:var(--text-dim); border:1px solid var(--border-soft); }
 body[data-theme="shibuya"] .badge-dot { width:4px; height:4px; border-radius:50%; background:currentColor; animation:sb-pdot 1.4s ease-in-out infinite; }

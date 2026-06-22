@@ -151,10 +151,22 @@ function debounce(fn,ms){
 
 function updatePlayingRow(){
   const el=$('songList');if(!el)return;
+  el.querySelectorAll('.track-row .badge').forEach(b=>b.remove());
   el.querySelectorAll('.track-row.active').forEach(row=>row.classList.remove('active'));
   const selector=`[data-playlist="${currentPlaylistPlaying}"][data-index="${currentSongIndex}"]`;
   const row=el.querySelector(selector);
-  if(row)row.classList.add('active');
+  if(row){
+    row.classList.add('active');
+    if(!row.querySelector('.badge')){
+      const ta=row.querySelector('.t-artist');
+      if(ta){
+        const b=document.createElement('span');
+        b.className='badge '+(isPlaying?'badge-playing':'badge-paused');
+        b.innerHTML='<span class="badge-dot"></span>'+(isPlaying?'Playing':'Paused');
+        ta.appendChild(b);
+      }
+    }
+  }
 }
 async function rescanTrack(song){
   if(!isTauri()||!inv){showToast('Rescan only available in desktop app');return;}
