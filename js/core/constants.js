@@ -117,4 +117,4 @@ const $=id=>document.getElementById(id);
 const isTauri=()=>typeof window!=='undefined'&&window.__TAURI__;
 const YT_SERVER='http://localhost:3001';
 const LYRICS_CACHE_KEY='lumi-lyrics-cache';
-const convertFileSrc=path=>window.__TAURI_INTERNALS__?.convertFileSrc?.(path)||'asset://localhost/'+encodeURIComponent(path);
+const convertFileSrc=path=>window.__TAURI_INTERNALS__?.convertFileSrc?.(path)||'https://asset.localhost/'+encodeURIComponent(path.replace(/\\/g,'/'));

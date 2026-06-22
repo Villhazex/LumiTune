@@ -1,3 +1,13 @@
+function extractCoverBg(song){
+  if(song.file){extractCoverFromFile(song.file).then(c=>{if(c){song.cover=c;saveState();}});}
+  else if(song.filePath&&isTauri()&&inv){
+    if(song.hasEmbeddedCover!==false)inv('extract_file_cover',{path:song.filePath}).then(r=>{if(r&&r[0]){song.cover='data:'+r[1]+';base64,'+r[0];saveState();}}).catch(()=>{});
+    setTimeout(async()=>{
+      if(!song.cover)try{const r=await inv('batch_get_covers',{paths:[song.filePath]});if(r&&r[0]&&r[0][1]){song.cover='data:'+r[0][2]+';base64,'+r[0][1];saveState();}}catch(e){}
+    },100);
+  }
+}
+let _playReqId=0;
 let _lastSavedVol=-1;
 function setVolume(newVol){
   volume=Math.max(0,Math.min(1,newVol));
@@ -27,13 +37,17 @@ function toggleRightPanelDisplay(){
 }
 
 async function playSong(index,playlistKey,addToQueue){
-  if(playlistKey&&playlistKey!==currentPlaylist){
-    recordNav();audioPlayer.pause();
-    if(currentAudioFile){URL.revokeObjectURL(audioPlayer.src);audioPlayer.src='';currentAudioFile=null;}
-    clearInterval(playbackInterval);
-    currentPlaylist=playlistKey;currentSongIndex=-1;
-    renderPlaylistNav();renderPlaylistGrid();saveState();
-  }
+  const wasDifferentPlaylist=playlistKey&&playlistKey!==currentPlaylist;
+  if(wasDifferentPlaylist)recordNav();
+
+  audioPlayer.pause();
+  if(currentAudioFile){URL.revokeObjectURL(audioPlayer.src);audioPlayer.src='';currentAudioFile=null;}
+  clearInterval(playbackInterval);
+
+  if(playlistKey)currentPlaylist=playlistKey;
+  currentSongIndex=index;
+  currentPlaylistPlaying=currentPlaylist;
+
   recordPlay(currentPlaylist);
   if(!playlists[currentPlaylist])return;
   const songs=playlists[currentPlaylist].songs;
@@ -57,25 +71,7 @@ async function playSong(index,playlistKey,addToQueue){
   const songId=playlists[currentPlaylist].songs[currentSongIndex];
   const song=getSong(songId);
   if(!song)return;
-  if(!song.cover){
-    if(song.file){
-      const cover=await extractCoverFromFile(song.file);
-      if(cover){song.cover=cover;saveState();}
-    }else if(song.filePath&&song.hasEmbeddedCover!==false&&isTauri()&&inv){
-      try{
-        const r=await inv('extract_file_cover',{path:song.filePath});
-        if(r&&r[0]){song.cover='data:'+r[1]+';base64,'+r[0];saveState();}
-      }catch(e){console.warn('extract cover error:',e);}
-    }
-    if(!song.cover&&song.filePath&&isTauri()&&inv){
-      try{
-        const r=await inv('batch_get_covers',{paths:[song.filePath]});
-        if(r&&r[0]&&r[0][1]){song.cover='data:'+r[0][2]+';base64,'+r[0][1];saveState();}
-      }catch(e){console.warn('db cover fallback error:',e);}
-    }
-  }
-  incrementPlayCount(song.id,displayTitle(song),song.artist);
-  trackRecentPlay(song,currentPlaylist);
+
   $('trackTitle').textContent=displayTitle(song);
   $('trackArtist').textContent=song.artist;
   const aa=$('albumArt');
@@ -99,41 +95,57 @@ async function playSong(index,playlistKey,addToQueue){
   lastTrackedPos=0;
   updateHeroSection();
   updatePlayingRow();
-  updateUpNext();
 
-  if(!song.file&&song.filePath&&isTauri()&&inv){
-    try{
-      const bytes=await inv('read_file_bytes',{path:song.filePath});
-      const ext=song.filePath.split('.').pop().toLowerCase();
-      const mime={mp3:'audio/mpeg',wav:'audio/wav',flac:'audio/flac',ogg:'audio/ogg',m4a:'audio/mp4',aac:'audio/aac',wma:'audio/x-ms-wma'}[ext]||'audio/mpeg';
-      song.file=new Blob([new Uint8Array(bytes)],{type:mime});
-    }catch(e){console.warn('read_file_bytes failed:',e);}
-  }
   if(song.file||song.filePath)playReal(song.file,song);else simPlay(song.duration);
-  fetchLyricsForSong(song).catch(e=>console.warn('fetchLyricsForSong error:',e));
+
+  setTimeout(()=>{
+    incrementPlayCount(song.id,displayTitle(song),song.artist);
+    trackRecentPlay(song,currentPlaylist);
+    if(!song.cover)extractCoverBg(song);
+    if(wasDifferentPlaylist){renderPlaylistNav();renderPlaylistGrid();saveState();}
+    updateUpNext();
+    fetchLyricsForSong(song).catch(e=>console.warn('fetchLyricsForSong error:',e));
+  },0);
 }
 
 async function playReal(file,song){
+  const reqId=++_playReqId;
   clearInterval(playbackInterval);
-  currentAudioFile=file||true;
+  currentAudioFile=null;
   let src;
   if(file){
     src=URL.createObjectURL(file);
-  }else if(song.filePath){
-    src=convertFileSrc(song.filePath);
+    currentAudioFile=file;
+  }else if(song.filePath&&inv){
+    try{
+      const b64=await inv('read_file_bytes_b64',{path:song.filePath});
+      if(reqId!==_playReqId)return;
+      const binary=atob(b64);
+      const bytes=new Uint8Array(binary.length);
+      for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+      const ext=song.filePath.split('.').pop().toLowerCase();
+      const mime={mp3:'audio/mpeg',wav:'audio/wav',flac:'audio/flac',ogg:'audio/ogg',m4a:'audio/mp4',aac:'audio/aac'}[ext]||'audio/mpeg';
+      const blob=new Blob([bytes],{type:mime});
+      if(reqId!==_playReqId)return;
+      src=URL.createObjectURL(blob);
+      currentAudioFile=blob;
+    }catch(e){
+      console.warn('read_file_bytes_b64 failed:',e);
+      return;
+    }
   }else return;
-  console.log('playReal src:',src,'filePath:',song.filePath,'hasFile:',!!file);
+  console.log('playReal src:',src,'filePath:',song.filePath,'hasFile:',!!file, 'hasInv:',!!inv);
+  audioPlayer.onerror=()=>console.warn('Audio error:',audioPlayer.error?.code,audioPlayer.error?.message,'src:',audioPlayer.src);
+  audioPlayer.onloadedmetadata=()=>{totalDuration=audioPlayer.duration;$('totalTime').textContent=fmt(totalDuration);$('heroTotalTime').textContent=fmt(totalDuration);const ktt=$('karaokeTotalTime');if(ktt)ktt.textContent=fmt(totalDuration);song.duration=fmt(totalDuration);const activeRow=$('songList')?.querySelector('.track-row.active');if(activeRow){const durEl=activeRow.querySelector('.t-dur');if(durEl)durEl.textContent=song.duration;}};
+  audioPlayer.ontimeupdate=()=>{if(!isDraggingProgress){currentPlaybackTime=audioPlayer.currentTime;if(isPlaying){const delta=currentPlaybackTime-lastTrackedPos;if(delta>0&&delta<5){totalPlayTime+=delta;sessionPlayTime+=delta;}}lastTrackedPos=currentPlaybackTime;updateLyricHighlight(currentPlaybackTime);$('currentTime').textContent=fmt(currentPlaybackTime);$('progressFill').style.width=`${(currentPlaybackTime/totalDuration)*100}%`;const kct=$('karaokeCurrentTime');if(kct)kct.textContent=fmt(currentPlaybackTime);const kpf=$('karaokeProgressFill');if(kpf)kpf.style.width=`${(currentPlaybackTime/totalDuration)*100}%`;updateHeroProgress();}};
+  audioPlayer.onended=handleEnd;
+  audioPlayer.volume=isMuted?0:volume;
   audioPlayer.src=src;
   audioPlayer.load();
-  audioPlayer.onerror=()=>console.warn('Audio error:',audioPlayer.error?.code,audioPlayer.error?.message,'src:',audioPlayer.src);
-  audioPlayer.volume=isMuted?0:volume;
   audioPlayer.play().catch(e=>console.warn('play() failed:',e));
   clearInterval(loudnessInterval);
   loudnessInterval=null;
   if(audioStabilize){initAudioChain();applyGain(song);measureLoudness(song);}
-  audioPlayer.onloadedmetadata=()=>{totalDuration=audioPlayer.duration;$('totalTime').textContent=fmt(totalDuration);$('heroTotalTime').textContent=fmt(totalDuration);const ktt=$('karaokeTotalTime');if(ktt)ktt.textContent=fmt(totalDuration);song.duration=fmt(totalDuration);const activeRow=$('songList')?.querySelector('.track-row.active');if(activeRow){const durEl=activeRow.querySelector('.t-dur');if(durEl)durEl.textContent=song.duration;}};
-  audioPlayer.ontimeupdate=()=>{if(!isDraggingProgress){currentPlaybackTime=audioPlayer.currentTime;if(isPlaying){const delta=currentPlaybackTime-lastTrackedPos;if(delta>0&&delta<5){totalPlayTime+=delta;sessionPlayTime+=delta;}}lastTrackedPos=currentPlaybackTime;updateLyricHighlight(currentPlaybackTime);$('currentTime').textContent=fmt(currentPlaybackTime);$('progressFill').style.width=`${(currentPlaybackTime/totalDuration)*100}%`;const kct=$('karaokeCurrentTime');if(kct)kct.textContent=fmt(currentPlaybackTime);const kpf=$('karaokeProgressFill');if(kpf)kpf.style.width=`${(currentPlaybackTime/totalDuration)*100}%`;updateHeroProgress();}};
-  audioPlayer.onended=handleEnd;
 }
 
 function simPlay(durStr){

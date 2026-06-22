@@ -67,7 +67,7 @@ function getRomajiCache(key){
 function saveRomajiCache(key,data){
   try{localStorage.setItem(key,JSON.stringify(data));}catch(e){}
 }
-async function convertLinesToRomaji(lines){
+async function convertLinesToRomaji(lines,checkSid){
   if(!kuroshiroReady){
     await initKuroshiro();
     if(!kuroshiroReady)return null;
@@ -78,6 +78,7 @@ async function convertLinesToRomaji(lines){
   if(cached)return cached;
   const result=[];
   for(const l of lines){
+    if(checkSid!==void 0&&lyricsSongId!==checkSid)return null;
     let romaji='';
     if(hasJapanese(l.text)){
       try{romaji=await window.kuroshiroInst.convert(l.text,{to:'romaji',mode:'spaced'});}catch(e){}
@@ -185,6 +186,7 @@ function renderLyricLines(lines,showEdit){
 }
 async function renderLyrics(data,showEdit){
   const el=$('lyricsContent');if(!el)return;
+  const _renderSid=lyricsSongId;
   lyricLines=[];
   lyricsSynced=false;
   if(!data){el.innerHTML=`<div class="lyrics-none">Lyrics not found for this track</div>`;syncKaraokeLyrics();return;}
@@ -192,7 +194,8 @@ async function renderLyrics(data,showEdit){
     const parsed=parseLRC(data.syncedLyrics);
     if(parsed.length){
       lyricsSynced=true;
-      const romajiData=await convertLinesToRomaji(parsed);
+      const romajiData=await convertLinesToRomaji(parsed,_renderSid);
+      if(_renderSid!==lyricsSongId)return;
       if(romajiData&&romajiData.length){
         lyricLines=romajiData;
         renderLyricLines(romajiData,showEdit);
@@ -313,6 +316,7 @@ function updateLyricHighlight(time){
 }
 let lyricsSongId=null;
 let lastLyricsSong=null;
+let _lyricsReqId=0;
 
 /* ── USER LYRICS ── */
 function getUserLyrics(songId){
@@ -427,6 +431,7 @@ async function applyUserLyrics(songId,forcedType,text){
   if(song){$('lyricEditBtn')?.addEventListener('click',showEditLyricsModal);$('lyricDeleteBtn')?.addEventListener('click',deleteCurrentUserLyrics);}
 }
 async function fetchLyricsForSong(song){
+  const reqId=++_lyricsReqId;
   lyricsSongId=song.id;
   lastLyricsSong=song;
   loadLyricOffsetForSong(song.id);
@@ -437,12 +442,14 @@ async function fetchLyricsForSong(song){
   const user=getUserLyrics(song.id);
   if(user){
     await renderLyrics(user.type==='synced'?{syncedLyrics:user.lyrics}:{plainLyrics:user.lyrics},true);
+    if(reqId!==_lyricsReqId)return;
     setTimeout(()=>{$('lyricEditBtn')?.addEventListener('click',showEditLyricsModal);$('lyricDeleteBtn')?.addEventListener('click',deleteCurrentUserLyrics);},0);
     return;
   }
   const cached=readCachedLyrics(song,title,artist);
   if(cached){
     await renderLyrics(cached);
+    if(reqId!==_lyricsReqId)return;
     return;
   }
 
@@ -472,15 +479,16 @@ async function fetchLyricsForSong(song){
   const dataPromise=fetchLyrics(title,artist);
   if(readTags){
     const tags=await readTags;
-    if(lyricsSongId!==song.id)return;
+    if(reqId!==_lyricsReqId)return;
     if(tags){
       if(tags.title)title=tags.title;
       if(tags.artist)artist=tags.artist;
     }
   }
   const data=await dataPromise;
-  if(lyricsSongId!==song.id)return;
+  if(reqId!==_lyricsReqId)return;
   if(!data){showLyricsNotFound(song);return;}
   saveCachedLyrics(song,title,artist,data);
   await renderLyrics(data);
+  if(reqId!==_lyricsReqId)return;
 }

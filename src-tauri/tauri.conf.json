@@ -14,7 +14,8 @@
       "all": false,
       "shell": { "open": true },
       "dialog": { "all": true },
-      "window": { "all": true }
+      "window": { "all": true },
+      "protocol": { "asset": true, "assetScope": ["**"] }
     },
     "bundle": {
       "active": true,
@@ -33,7 +34,7 @@
       ]
     },
     "security": {
-      "csp": "default-src 'self'; script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; connect-src 'self' https://cdn.jsdelivr.net https://lrclib.net; media-src 'self' blob:; img-src 'self' data: https: blob:; font-src 'self' data: https://fonts.gstatic.com"
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; connect-src 'self' https://cdn.jsdelivr.net https://lrclib.net asset:; media-src 'self' blob: asset:; img-src 'self' data: https: blob: asset:; font-src 'self' data: https://fonts.gstatic.com"
     },
     "windows": [
       {
